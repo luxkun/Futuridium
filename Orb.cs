@@ -9,7 +9,11 @@ namespace StupidAivGame
 		private Character owner;
 
 		public int orbRange = 100;
-		public double orbSpeed = 0.1;
+		private double _orbStretch = 0.0;
+		private bool orbStretching; // true: decrease ; false: increase
+		public int orbStretchSteps = 50;
+		public double orbStretch = 0.5; // orbRange goes from orbRange * orbStretch to orbRange
+		public double orbSpeed = 0.04;
 
 		private double angleTick = 0;
 
@@ -28,11 +32,22 @@ namespace StupidAivGame
 
 		public Tuple<int, int> getPoints (double angle)
 		{
-			return Tuple.Create((int) (Math.Cos(angle) * orbRange), (int) (Math.Sin(angle) * orbRange));
+			return Tuple.Create((int) (Math.Cos(angle) * orbRange * (1 - _orbStretch)), (int) (Math.Sin(angle) * orbRange * (1 - _orbStretch)));
+		}
+
+		private void ManageStretch () 
+		{
+			if (_orbStretch <= 0.0) {
+				orbStretching = true;
+			} else if (_orbStretch >= orbStretch) {
+				orbStretching = false;
+			}
+			_orbStretch += orbStretch / orbStretchSteps * (orbStretching ? 1 : -1);
 		}
 
 		public override void Update ()
 		{
+			ManageStretch ();
 			// rotate
 			angleTick += orbSpeed;
 			Tuple<int, int> points = getPoints (angleTick);
@@ -48,7 +63,7 @@ namespace StupidAivGame
 					Game game = (Game) this.engine.objects ["game"];
 
 					Enemy enemy = collision.other as Enemy;
-					// broken, willingly
+					// broken, deliberately
 					game.Hits (owner, enemy, collision);
 
 					break;

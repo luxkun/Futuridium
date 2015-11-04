@@ -3,6 +3,8 @@ using Aiv.Engine;
 using System.Collections.Generic;
 using System.Text;
 
+// this is a simple game written for learning that uses AivEngine
+// the game doesn't and won't have any story since the only purpose of the game itself is to try new algorithm and gaming paradigms 
 namespace StupidAivGame
 {
 	class MainClass
