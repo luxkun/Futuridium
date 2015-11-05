@@ -52,8 +52,10 @@ namespace StupidAivGame
 			foreach (Enemy enemy in enemies) {
 				Console.WriteLine ("Spawning enemy: {0} n.{1}", enemy.name, count);
 				if (enemy.useAnimations) {
+					// TODO: use animations... 
 					enemy.currentSprite = (SpriteAsset)game.engine.GetAsset(game.spritesAnimations [enemy.characterName] [0]);
 				} else {
+					// TODO: add all sprites
 					enemy.currentSprite = (SpriteAsset)game.engine.GetAsset ("goblin");//enemy.name);
 				}
 				game.engine.SpawnObject (enemy.name + count++, enemy);

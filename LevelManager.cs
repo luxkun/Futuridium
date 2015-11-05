@@ -47,11 +47,6 @@ namespace StupidAivGame
 		private void CreateLevelUpTable (Level level0)
 		{
 			levelUpTable = new Level[100];
-			// level x:
-			//	neededXP = 200 * x
-			//  speed = 8 * (1 + x/4)
-			//  shootDelay = (101 - x*3) * 10
-			// max level 100
 			Level lvl;
 			levelUpTable [0] = level0;
 			for (int level = 1; level < 100; level++) {

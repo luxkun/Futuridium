@@ -27,7 +27,7 @@ namespace StupidAivGame
 		{
 			this.x = owner.x + orbRange;
 			this.y = owner.y;
-			this.AddHitBox ("mass", 0, 0, 10, 10);
+			this.AddHitBox ("mass", 0, 0, this.radius * 2, this.radius * 2);
 		}
 
 		public Tuple<int, int> getPoints (double angle)

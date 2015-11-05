@@ -23,7 +23,7 @@ namespace StupidAivGame
 		}
 
 		// TEMP
-		// TODO: A* algorithm
+		// TODO: A* algorithm if there will ever be obstacles 
 		// TODO: (futuro) algoritmo intelligente che mette in conto dove sta andando il player
 		private void Follow (Player player)
 		{
@@ -63,7 +63,7 @@ namespace StupidAivGame
 				lastMove -= this.deltaTicks;
 			if (lastMove <= 0) {
 				Follow (((Game) this.engine.objects ["game"]).player);
-				lastMove = 5; // move every 5ms
+				lastMove = 50000; // move every 5ms
 			}
 		}
 	}

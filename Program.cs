@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Text;
 
 // this is a simple game written for learning that uses AivEngine
-// the game doesn't and won't have any story since the only purpose of the game itself is to try new algorithm and gaming paradigms 
+// the game doesn't and won't have any story and game balance since the only purpose of the game itself is to try new algorithm and gaming paradigms 
 namespace StupidAivGame
 {
 	class MainClass
@@ -12,7 +12,7 @@ namespace StupidAivGame
 		public static void Main (string[] args)
 		{
 			Engine engine = new Engine ("StupidAivGame", 1024, 768, 30);
-			//engine.debugCollisions = true;
+			engine.debugCollisions = true;
 
 			Game game = new Game (engine);
 
