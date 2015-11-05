@@ -12,7 +12,8 @@ namespace StupidAivGame
 		public static void Main (string[] args)
 		{
 			Engine engine = new Engine ("StupidAivGame", 1024, 768, 30);
-			engine.debugCollisions = true;
+			//engine.debugCollisions = true;
+			Aiv.Engine.Input.Initialize(engine);
 
 			Game game = new Game (engine);
 

@@ -11,6 +11,9 @@ namespace StupidAivGame
 		private const int maxHitsPerTime = 1000; // 500ms immunity after gets hit
 		private int lastHit = 0;
 		private int spawnedOrbs = 0;
+
+		private Engine.Joystick joystick;
+		//private List<int> pressedJoyButtons;
 		public Player () : base ("player", "Player", "player")
 		{
 			level0.maxHP = 100;
@@ -22,11 +25,14 @@ namespace StupidAivGame
 			level0.shotRange = 500;
 			level0.shotRadius = 5;
 			isCloseCombat = false;
+
+			//pressedJoyButtons = new List<int> ();
 		}
 
 		public override void Start () 
 		{
 			this.AddHitBox ("player", 0, 0, this.width, this.height);
+
 		}
 
 
@@ -38,30 +44,32 @@ namespace StupidAivGame
 			if (this.engine.IsKeyDown (Keys.Right)) {
 				this.x += level.speed;
 			}
-
 			if (this.engine.IsKeyDown (Keys.Left)) {
 				this.x -= level.speed;
 			}
-
 			if (this.engine.IsKeyDown (Keys.Up)) {
 				this.y -= level.speed;
 			}
-
 			if (this.engine.IsKeyDown (Keys.Down)) {
 				this.y += level.speed;
 			}
 
-			// avoid the player to go out of the screen
+			// joystick controls
+			if (joystick != null) {
+				double axisX = joystick.x / 127.0;
+				double axisY = joystick.y / 127.0;
+				this.x += (int) (level.speed * axisX);
+				this.y += (int) (level.speed * axisY);
+			}
 
+			// avoid the player to go out of the screen
 			if (this.y < 0)
 				this.y = 0;
-
 			if (this.x < 0)
 				this.x = 0;
 
 			if (this.x > this.engine.width - this.width)
 				this.x = this.engine.width - this.width;
-
 			if (this.y > this.engine.height - this.height)
 				this.y = this.engine.height - this.height;
 		}
@@ -112,21 +120,21 @@ namespace StupidAivGame
 				// spawn a new bullet in a choosen direction
 				// 0 left; 1 top; 2 right; 3 bottom; 4: top-left; 5: top-right; 6: bottom-left; 7: bottom-right
 				int direction = -1;
-				if (this.engine.IsKeyDown (Keys.A))
+				if (this.engine.IsKeyDown (Keys.A) || joystick.buttons[2])
 					direction = 0;
-				else if (this.engine.IsKeyDown (Keys.W))
+				else if (this.engine.IsKeyDown (Keys.W) || joystick.buttons[5])
 					direction = 1;
-				else if (this.engine.IsKeyDown (Keys.D))
+				else if (this.engine.IsKeyDown (Keys.D) || joystick.buttons[4])
 					direction = 2;
-				else if (this.engine.IsKeyDown (Keys.S))
+				else if (this.engine.IsKeyDown (Keys.S) || joystick.buttons[3])
 					direction = 3;
-				else if (this.engine.IsKeyDown (Keys.Q))
+				else if (this.engine.IsKeyDown (Keys.Q) || joystick.buttons[8])
 					direction = 4;
-				else if (this.engine.IsKeyDown (Keys.E))
+				else if (this.engine.IsKeyDown (Keys.E) || joystick.buttons[9])
 					direction = 5;
-				else if (this.engine.IsKeyDown (Keys.Z))
+				else if (this.engine.IsKeyDown (Keys.Z) || joystick.buttons[6])
 					direction = 6;
-				else if (this.engine.IsKeyDown (Keys.C))
+				else if (this.engine.IsKeyDown (Keys.C) || joystick.buttons[7])
 					direction = 7;
 				if (direction >= 0) {
 					Shot (direction);
@@ -193,9 +201,34 @@ namespace StupidAivGame
 			}
 		}
 
+		private void ManageJoystick ()
+		{
+			joystick = null;
+			foreach (Engine.Joystick joy in engine.joysticks) {
+				if (joy != null) {
+					joystick = joy;
+					break;
+				}
+			}
+			if (joystick != null) {
+				for (int i=0; i < joystick.buttons.Length; i++) {
+					if (joystick.buttons [i]) {
+						Console.WriteLine ("Pressed ({0})", i);
+						//if (!pressedJoyButtons.Contains(i))
+						//	pressedJoyButtons.Add (i);
+					}// else if (pressedJoyButtons.Contains(i)) {
+						//pressedJoyButtons.Remove(i);
+					//}
+				}
+				Console.WriteLine ("{0}.{1} {2}", joystick.x, joystick.y, 
+					(joystick.buttons.Length > 0) ? joystick.anyButton().ToString () : "N");
+			}
+		}
+
 		public override void Update ()
 		{
 			base.Update ();
+			ManageJoystick ();
 			ManageControls ();
 			ManageShot ();
 			ManageCollisions ();
