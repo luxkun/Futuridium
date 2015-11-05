@@ -63,7 +63,7 @@ namespace StupidAivGame
 				lastMove -= this.deltaTicks;
 			if (lastMove <= 0) {
 				Follow (((Game) this.engine.objects ["game"]).player);
-				lastMove = 50000; // move every 5ms
+				lastMove = 5; // move every 5ms
 			}
 		}
 	}
