@@ -8,6 +8,7 @@ namespace StupidAivGame
 	{
 		public bool gameOver = false;
 		private int gameOverTimer = 1000;
+		private int floorIndex = -1;
 
 		public Player player;
 
@@ -22,10 +23,11 @@ namespace StupidAivGame
 			spritesAnimations = new Dictionary<string, List<string>> ();
 		}
 
-		public void initializeFloor ()
+		public void initializeNewFloor ()
 		{
 			// TODO: when floor is cleared created a new random floor with higher level monsters
-			currentFloor = Floor.randomFloor (this, 3, 6);
+			floorIndex++;
+			currentFloor = Floor.randomFloor (this, (int) (3 * ((floorIndex + 1) / 2.0)), (int) (6 * ((floorIndex + 1) / 2.0)), floorIndex);
 			currentFloor.OpenRoom (0);
 		}
 
@@ -46,7 +48,7 @@ namespace StupidAivGame
 			engine.SpawnObject ("statistics", statistics);
 			((TextObject) engine.objects ["statistics"]).y = 25;
 
-			initializeFloor ();
+			initializeNewFloor ();
 		}
 
 		// override Start vs constructor?
@@ -60,7 +62,7 @@ namespace StupidAivGame
 		// character hits enemy
 		public bool Hits (Character character, Character enemy, Collision collision)
 		{ 
-			enemy.DoDamage (character);
+			enemy.GetDamage (character);
 
 			if (!enemy.isAlive) {
 				collision.other.Destroy ();
@@ -80,8 +82,7 @@ namespace StupidAivGame
 						if ((currentFloor.currentRoomIndex + 1) < currentFloor.rooms.Count) { 
 							currentFloor.OpenRoom (currentFloor.currentRoomIndex + 1);
 						} else {
-							currentFloor = Floor.randomFloor (this, 3, 6);
-							currentFloor.OpenRoom (0);
+							initializeNewFloor ();
 						}
 					}
 				}

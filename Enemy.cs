@@ -51,22 +51,26 @@ namespace StupidAivGame
 					}
 				}
 			}
-			//Console.WriteLine("{0} {1} {2} {3} {4}", playerV, agentV, nextStep, bestDelta, level.speed);
-			this.x = (int) nextStep.X;
-			this.y = (int) nextStep.Y;
+			if (distance > 0) {
+				//Console.WriteLine("{0} {1} {2} {3} {4}", playerV, agentV, nextStep, bestDelta, level.speed);
+				this.x = (int)nextStep.X;
+				this.y = (int)nextStep.Y;
+			}
 		}
 
 		public override void Update () 
 		{
 			base.Update ();
-			Shot(0);
+			//Shot(0);
 			if (lastMove > 0)
 				lastMove -= this.deltaTicks;
 			if (lastMove <= 0) {
 				Follow (((Game) this.engine.objects ["game"]).player);
 				lastMove = 5; // move every 5ms
 			}
+			//Shot (1);
 		}
+
 	}
 }
 

@@ -92,21 +92,21 @@ namespace StupidAivGame
 				// spawn a new bullet in a choosen direction
 				// 0 left; 1 top; 2 right; 3 bottom; 4: top-left; 5: top-right; 6: bottom-left; 7: bottom-right
 				int direction = -1;
-				if (this.engine.IsKeyDown (Keys.A) || joystick.buttons[joyStickConfig["S"]])
+				if (this.engine.IsKeyDown (Keys.A) || (joystick != null && joystick.buttons[joyStickConfig["S"]]))
 					direction = 0;
-				else if (this.engine.IsKeyDown (Keys.W) || joystick.buttons[joyStickConfig["T"]])
+				else if (this.engine.IsKeyDown (Keys.W) || (joystick != null && joystick.buttons[joyStickConfig["T"]]))
 					direction = 1;
-				else if (this.engine.IsKeyDown (Keys.D) || joystick.buttons[joyStickConfig["C"]])
+				else if (this.engine.IsKeyDown (Keys.D) || (joystick != null && joystick.buttons[joyStickConfig["C"]]))
 					direction = 2;
-				else if (this.engine.IsKeyDown (Keys.S) || joystick.buttons[joyStickConfig["X"]])
+				else if (this.engine.IsKeyDown (Keys.S) || (joystick != null && joystick.buttons[joyStickConfig["X"]]))
 					direction = 3;
-				else if (this.engine.IsKeyDown (Keys.Q) || joystick.buttons[joyStickConfig["L2"]])
+				else if (this.engine.IsKeyDown (Keys.Q) || (joystick != null && joystick.buttons[joyStickConfig["L2"]]))
 					direction = 4;
-				else if (this.engine.IsKeyDown (Keys.E) || joystick.buttons[joyStickConfig["R2"]])
+				else if (this.engine.IsKeyDown (Keys.E) || (joystick != null && joystick.buttons[joyStickConfig["R2"]]))
 					direction = 5;
-				else if (this.engine.IsKeyDown (Keys.Z) || joystick.buttons[joyStickConfig["L1"]])
+				else if (this.engine.IsKeyDown (Keys.Z) || (joystick != null && joystick.buttons[joyStickConfig["L1"]]))
 					direction = 6;
-				else if (this.engine.IsKeyDown (Keys.C) || joystick.buttons[joyStickConfig["R1"]])
+				else if (this.engine.IsKeyDown (Keys.C) || (joystick != null && joystick.buttons[joyStickConfig["R1"]]))
 					direction = 7;
 				if (direction >= 0) {
 					Shot (direction);
@@ -153,7 +153,7 @@ namespace StupidAivGame
 				if (collisions.Count > 0)
 					Console.WriteLine ("Character '{0}' collides with n.{1}", name, collisions.Count);
 				foreach (Collision collision in collisions) {
-					Console.WriteLine ("Character '{0}' hits '{1}'", name, collision.other.name);
+					Console.WriteLine ("Character '{0}' touches '{1}'", name, collision.other.name);
 					if (collision.other.name.StartsWith ("enemy")) {
 						Game game = (Game)this.engine.objects ["game"];
 

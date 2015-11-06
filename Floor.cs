@@ -12,13 +12,16 @@ namespace StupidAivGame
 		public List<Room> rooms;
 		public Game game;
 
-		public Floor (Game game, List<Room> rooms)
+		public int floorIndex;
+
+		public Floor (Game game, List<Room> rooms, int floorIndex)
 		{
 			this.game = game;
 			this.rooms = rooms;
+			this.floorIndex = floorIndex;
 		}
 
-		public static Floor randomFloor (Game game, int minRoom, int maxRoom)
+		public static Floor randomFloor (Game game, int minRoom, int maxRoom, int floorIndex)
 		{
 			Random rnd = new Random((int) DateTime.Now.Ticks);
 			int numberOfRooms = rnd.Next (minRoom, maxRoom);
@@ -26,10 +29,10 @@ namespace StupidAivGame
 			// different name? static scope?
 			List<Room> randomRooms = new List<Room>();
 			for (int i = 0; i < numberOfRooms; i++) {
-				Room newRoom = Room.randomRoom (i, game, 2, 5, 1);
+				Room newRoom = Room.randomRoom (i, game, (int) (2 * ((floorIndex + 1) / 2.0)), (int) (5 * ((floorIndex + 1) / 2.0)),  (int) ((floorIndex + 1) / 2.0));
 				randomRooms.Add (newRoom);
 			}
-			return new Floor (game, randomRooms);
+			return new Floor (game, randomRooms, floorIndex);
 		}
 
 		public void OpenRoom (int roomIndex) 

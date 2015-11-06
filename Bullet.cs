@@ -11,7 +11,7 @@ namespace StupidAivGame
 		private int speed = 25;
 		private const int MINSPEED = 2;
 		public GameObject owner;
-		private int direction;
+		private int direction; // TODO: switch to vector
 
 		private int rangeToGo;
 
@@ -95,7 +95,6 @@ namespace StupidAivGame
 		// doesn't and won't handle collision between two moving objects
 		private void BounceOrDie (Collision collision)
 		{
-			// TODO: FIX THIS
 			int collisionDirection = -1;
 			HitBox hitBox = this.hitBoxes [collision.hitBox];
 			HitBox otherHitBox =  collision.other.hitBoxes [collision.otherHitBox];
@@ -171,6 +170,8 @@ namespace StupidAivGame
 				speed = (int) (speed * bounceMod);
 				if (speed <= MINSPEED)
 					speed = MINSPEED;
+				else
+					rangeToGo = (int) (rangeToGo * bounceMod);
 				lastColliderHitBox = colliderHitBox;
 			} else {
 				this.Destroy ();

@@ -51,7 +51,7 @@ namespace StupidAivGame
 
 		public void Shot (int direction)
 		{
-			Console.WriteLine ("Shotting to direction: " + direction);
+			Console.WriteLine ("{0} is shotting to direction: {1}", this.name, direction);
 			// 0 left; 1 top; 2 right; 3 bottom; 4: top-left; 5: top-right; 6: bottom-left; 7: bottom-right
 			Bullet bullet = new Bullet (this, direction);
 			if (direction == 7) {
@@ -86,7 +86,7 @@ namespace StupidAivGame
 			bulletCounter++;
 		}
 
-		public int DoDamage (Character enemy)
+		public int GetDamage (Character enemy)
 		{
 			LevelCheck (); // could happen that the player kills the enemy before he fully spawn (before Start "starts")
 			enemy.LevelCheck();
