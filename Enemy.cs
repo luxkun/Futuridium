@@ -59,6 +59,7 @@ namespace StupidAivGame
 		public override void Update () 
 		{
 			base.Update ();
+			Shot(0);
 			if (lastMove > 0)
 				lastMove -= this.deltaTicks;
 			if (lastMove <= 0) {

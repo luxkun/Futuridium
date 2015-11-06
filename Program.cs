@@ -11,7 +11,7 @@ namespace StupidAivGame
 	{
 		public static void Main (string[] args)
 		{
-			Engine engine = new Engine ("StupidAivGame", 1024, 768, 30);
+			Engine engine = new Engine ("StupidAivGame", 1024, 768, 60);
 			//engine.debugCollisions = true;
 			Aiv.Engine.Input.Initialize(engine);
 
@@ -34,6 +34,7 @@ namespace StupidAivGame
 			}
 
 			engine.LoadAsset ("background", new SpriteAsset ("background.jpg"));
+			engine.LoadAsset ("block", new SpriteAsset ("block.png"));
 			Background background = new Background ();
 			background.currentSprite = (SpriteAsset) engine.GetAsset ("background");
 			engine.SpawnObject ("background", background);

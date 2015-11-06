@@ -13,6 +13,10 @@ namespace StupidAivGame
 		private int spawnedOrbs = 0;
 
 		private Engine.Joystick joystick;
+		// T (triangle) -> int etc.
+		public Dictionary<string, int> ds4Config = new Dictionary<string, int> { {"T", 5}, {"C", 4}, {"S", 2}, {"X", 3}, {"L1", 6}, {"R1", 7}, {"L2", 8}, {"R2", 9}};
+		public Dictionary<string, int> thrustmasterConfig = new Dictionary<string, int> { {"T", 6}, {"C", 5}, {"S", 4}, {"X", 3}, {"L1", 7}, {"R1", 9}, {"L2", 8}, {"R2", 10}};
+		public Dictionary<string, int> joyStickConfig;
 		//private List<int> pressedJoyButtons;
 		public Player () : base ("player", "Player", "player")
 		{
@@ -25,6 +29,8 @@ namespace StupidAivGame
 			level0.shotRange = 500;
 			level0.shotRadius = 5;
 			isCloseCombat = false;
+
+			joyStickConfig = thrustmasterConfig;
 
 			//pressedJoyButtons = new List<int> ();
 		}
@@ -63,78 +69,44 @@ namespace StupidAivGame
 			}
 
 			// avoid the player to go out of the screen
-			if (this.y < 0)
-				this.y = 0;
-			if (this.x < 0)
-				this.x = 0;
+			int blockW = ((Background) engine.objects["background"]).blockW;
+			int blockH = ((Background) engine.objects["background"]).blockH;
+			if (this.y < blockH)
+				this.y = blockH;
+			if (this.x < blockW)
+				this.x = blockW;
 
-			if (this.x > this.engine.width - this.width)
-				this.x = this.engine.width - this.width;
-			if (this.y > this.engine.height - this.height)
-				this.y = this.engine.height - this.height;
-		}
-
-		private void Shot (int direction)
-		{
-			Console.WriteLine ("Shotting to direction: " + direction);
-			// 0 left; 1 top; 2 right; 3 bottom; 4: top-left; 5: top-right; 6: bottom-left; 7: bottom-right
-			Bullet bullet = new Bullet (this, direction);
-			if (direction == 7) {
-				bullet.x = this.x + this.width;
-				bullet.y = this.y + this.height;
-			} else if (direction == 6) {
-				bullet.x = this.x;
-				bullet.y = this.y + this.height;
-			} else if (direction == 5) {
-				bullet.x = this.x + this.width;
-				bullet.y = this.y;
-			} else if (direction == 4) {
-				bullet.x = this.x;
-				bullet.y = this.y;
-			} else if (direction == 3) {
-				bullet.x = this.x + (this.width / 2);
-				bullet.y = this.y + this.height;
-			} else if (direction == 2) {
-				bullet.x = this.x + this.width;
-				bullet.y = this.y + (this.height / 2);
-			} else if (direction == 1) {
-				bullet.x = this.x + (this.width / 2);
-				bullet.y = this.y;// - this.height;
-			} else if (direction == 0) {
-				bullet.x = this.x;// - this.width;
-				bullet.y = this.y + (this.height / 2);
-			}
-
-			bullet.radius = level.shotRadius;
-			bullet.color = Color.White;
-			this.engine.SpawnObject ("bullet_" + bulletCounter, bullet);
-			bulletCounter++;
+			if (this.x > this.engine.width - this.width - blockW)
+				this.x = this.engine.width - this.width - blockW;
+			if (this.y > this.engine.height - this.height - blockH)
+				this.y = this.engine.height - this.height - blockH;
 		}
 
 		private void ManageShot ()
 		{
 			if (lastShot > 0)
 				lastShot -= this.deltaTicks;
-
+			
 			if (lastShot <= 0) {
+				// TODO: use vector instead of int/hardcoded direction
 				// spawn a new bullet in a choosen direction
 				// 0 left; 1 top; 2 right; 3 bottom; 4: top-left; 5: top-right; 6: bottom-left; 7: bottom-right
 				int direction = -1;
-				if (this.engine.IsKeyDown (Keys.A) || joystick.buttons[2])
+				if (this.engine.IsKeyDown (Keys.A) || joystick.buttons[joyStickConfig["S"]])
 					direction = 0;
-				else if (this.engine.IsKeyDown (Keys.W) || joystick.buttons[5])
+				else if (this.engine.IsKeyDown (Keys.W) || joystick.buttons[joyStickConfig["T"]])
 					direction = 1;
-				else if (this.engine.IsKeyDown (Keys.D) || joystick.buttons[4])
+				else if (this.engine.IsKeyDown (Keys.D) || joystick.buttons[joyStickConfig["C"]])
 					direction = 2;
-				else if (this.engine.IsKeyDown (Keys.S) || joystick.buttons[3])
+				else if (this.engine.IsKeyDown (Keys.S) || joystick.buttons[joyStickConfig["X"]])
 					direction = 3;
-				else if (this.engine.IsKeyDown (Keys.Q) || joystick.buttons[8])
+				else if (this.engine.IsKeyDown (Keys.Q) || joystick.buttons[joyStickConfig["L2"]])
 					direction = 4;
-				else if (this.engine.IsKeyDown (Keys.E) || joystick.buttons[9])
+				else if (this.engine.IsKeyDown (Keys.E) || joystick.buttons[joyStickConfig["R2"]])
 					direction = 5;
-				else if (this.engine.IsKeyDown (Keys.Z) || joystick.buttons[6])
+				else if (this.engine.IsKeyDown (Keys.Z) || joystick.buttons[joyStickConfig["L1"]])
 					direction = 6;
-				else if (this.engine.IsKeyDown (Keys.C) || joystick.buttons[7])
+				else if (this.engine.IsKeyDown (Keys.C) || joystick.buttons[joyStickConfig["R1"]])
 					direction = 7;
 				if (direction >= 0) {
 					Shot (direction);
@@ -220,8 +192,8 @@ namespace StupidAivGame
 						//pressedJoyButtons.Remove(i);
 					//}
 				}
-				Console.WriteLine ("{0}.{1} {2}", joystick.x, joystick.y, 
-					(joystick.buttons.Length > 0) ? joystick.anyButton().ToString () : "N");
+				//Console.WriteLine ("{0}.{1} {2}", joystick.x, joystick.y, 
+				//	(joystick.buttons.Length > 0) ? joystick.anyButton().ToString () : "N");
 			}
 		}
 

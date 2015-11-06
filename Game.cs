@@ -32,6 +32,8 @@ namespace StupidAivGame
 		public override void Start ()
 		{
 			player = new Player ();
+			player.x = 40;
+			player.y = 40;
 			player.currentSprite = (SpriteAsset) engine.GetAsset ("player");
 			engine.SpawnObject ("player", player);
 
@@ -58,7 +60,7 @@ namespace StupidAivGame
 		// character hits enemy
 		public bool Hits (Character character, Character enemy, Collision collision)
 		{ 
-			enemy.doDamage (character);
+			enemy.DoDamage (character);
 
 			if (!enemy.isAlive) {
 				collision.other.Destroy ();
@@ -75,7 +77,12 @@ namespace StupidAivGame
 					}
 
 					if (currentFloor.currentRoom.enemies.Count == 0) {
-						currentFloor.OpenRoom (currentFloor.currentRoomIndex + 1);
+						if ((currentFloor.currentRoomIndex + 1) < currentFloor.rooms.Count) { 
+							currentFloor.OpenRoom (currentFloor.currentRoomIndex + 1);
+						} else {
+							currentFloor = Floor.randomFloor (this, 3, 6);
+							currentFloor.OpenRoom (0);
+						}
 					}
 				}
 			}

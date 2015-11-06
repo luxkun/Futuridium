@@ -20,7 +20,9 @@ namespace StupidAivGame
 		private const int fadeAwayRange = 10;
 
 		private int lastBounce = 0;
-		private int bounceDelay = 100;
+		// the same collider can collide once every bounceDelay 
+		private int bounceDelay = 50;
+		private HitBox lastColliderHitBox;
 		private double bounceMod = 0.66; // speed = bounceMod * speed
 
 		private Tuple<int, int> lastPoint;
@@ -128,16 +130,16 @@ namespace StupidAivGame
 
 				Console.WriteLine ("Collision direction:" + collisionDirection);
 				if (collisionDirection != -1)
-					BounceOrDie (collisionDirection);
+					BounceOrDie (collisionDirection, otherHitBox);
 			}
 		}
 		// collisionDirection: 0: X collision ; 1: Y collision
-		private void BounceOrDie (int collisionDirection) 
+		private void BounceOrDie (int collisionDirection, HitBox colliderHitBox) 
 		{
 			if (bounceBullet) {
 				if (lastBounce > 0)
 					lastBounce -= this.deltaTicks;
-				if (lastBounce > 0)
+				if (lastBounce > 0 && (colliderHitBox == null || lastColliderHitBox == colliderHitBox))
 					return;
 				if (bounceMap.ContainsKey (direction))
 					direction = bounceMap [direction];
@@ -169,6 +171,7 @@ namespace StupidAivGame
 				speed = (int) (speed * bounceMod);
 				if (speed <= MINSPEED)
 					speed = MINSPEED;
+				lastColliderHitBox = colliderHitBox;
 			} else {
 				this.Destroy ();
 			}
@@ -204,24 +207,36 @@ namespace StupidAivGame
 			else if (direction == 0)
 				this.x -= speed;
 			rangeToGo -= speed;
-			if (this.x > this.engine.width || this.x < 0) {
-				BounceOrDie (0);
-			} else if (this.y > this.engine.height || this.y < 0) {
-				BounceOrDie (1);
+
+			int blockW = ((Background) engine.objects["background"]).blockW;
+			int blockH = ((Background) engine.objects["background"]).blockH;
+			if (this.x > (this.engine.width - blockW - this.radius*2)) {
+				BounceOrDie (0, null);
+				this.x = this.engine.width - blockW - this.radius * 2 - 1;
+			} else if (this.x < blockW) {
+				BounceOrDie (0, null);
+				this.x = blockW + 1;
+			} else if (this.y > (this.engine.height - blockH - this.radius * 2)) {
+				BounceOrDie (1, null);
+				this.y = this.engine.height - blockH - this.radius * 2 - 1;
+			} else if (this.y < blockH) {
+				BounceOrDie (1, null);
+				this.y = blockH + 1;
 			}
 
 			List<Collision> collisions = this.CheckCollisions ();
 			if (collisions.Count > 0)
 				Console.WriteLine ("Bullet collides with n." + collisions.Count);
 			foreach (Collision collision in collisions) {
+				if (collision.other.name == owner.name || collision.other.name.StartsWith("bullet") || collision.other.name.StartsWith("orb"))
+					continue;
 				Console.WriteLine ("Bullet hits enemy: " + collision.other.name);
+				BounceOrDie (collision);
 				if (collision.other.name.StartsWith ("enemy")) {
 					Game game = (Game) this.engine.objects ["game"];
 
 					Enemy enemy = collision.other as Enemy;
 					game.Hits (this, enemy, collision);
-
-					BounceOrDie (collision);
 
 					break;
 				}
