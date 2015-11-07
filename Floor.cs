@@ -29,7 +29,7 @@ namespace StupidAivGame
 			// different name? static scope?
 			List<Room> randomRooms = new List<Room>();
 			for (int i = 0; i < numberOfRooms; i++) {
-				Room newRoom = Room.randomRoom (i, game, (int) (2 * ((floorIndex + 1) / 2.0)), (int) (5 * ((floorIndex + 1) / 2.0)),  (int) ((floorIndex + 1) / 2.0));
+				Room newRoom = Room.randomRoom (i, game, (int) (2 * ((floorIndex + 1) / 2.0)), (int) (5 * ((floorIndex + 1) / 2.0)),  floorIndex);
 				randomRooms.Add (newRoom);
 			}
 			return new Floor (game, randomRooms, floorIndex);

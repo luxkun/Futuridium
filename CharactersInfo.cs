@@ -47,7 +47,7 @@ namespace StupidAivGame
 			}
 		}
 
-		public Enemy randomEnemy (int counter)
+		public Enemy randomEnemy (int counter, int level)
 		{
 			Random rnd = new Random((int) DateTime.Now.Ticks);
 
@@ -63,7 +63,7 @@ namespace StupidAivGame
 			for (int i = 0; range > 0.0 && i < enemies.Count; i++) {
 				range -= enemiesList.Current.Value;
 				enemyInfo = enemiesList.Current.Key;
-				if (i + 1 < enemies.Count)
+				if ((i + 1) < enemies.Count)
 					enemiesList.MoveNext ();
 			}
 
@@ -72,6 +72,9 @@ namespace StupidAivGame
 			Level level0 = enemyInfo.level0.Clone ();
 			result.useAnimations = enemyInfo.useAnimations;
 			result.level0 = level0;
+			result.LevelCheck ();
+			result.xp = result.levelManager.levelUpTable [level].neededXP;
+			result.LevelCheck ();
 			return result;
 		}
 	}

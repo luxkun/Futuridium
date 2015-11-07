@@ -37,7 +37,7 @@ namespace StupidAivGame
 	public class LevelManager
 	{
 		Character character;
-		Level[] levelUpTable;
+		public Level[] levelUpTable;
 		public LevelManager (Character character, Level level0)
 		{
 			this.character = character;
@@ -52,16 +52,16 @@ namespace StupidAivGame
 			for (int level = 1; level < 100; level++) {
 				lvl = new Level ();
 				lvl.level = level;
-				lvl.maxHP = (int) (level0.maxHP * (1 + level / 4.0));
+				lvl.maxHP = (int) (level0.maxHP * (1 + level / 6.0));
 				lvl.hp = lvl.maxHP;
-				lvl.neededXP = (long) level0.neededXP * level;
+				lvl.neededXP = (long) (level0.neededXP * Math.Pow(2, (int) (level/2.0)));
 				lvl.xpReward = (long) level0.xpReward * level;
 				lvl.attack = (int) (level0.attack * (1 + level / 4.0));
-				lvl.speed = (int) (level0.speed * (1 + level / 8.0));
+				lvl.speed = (int) (level0.speed * (1 + level / 15.0));
 				lvl.shotDelay = (int) (level0.shotDelay * (1 - level / 100.0));
-				lvl.shotSpeed = (int) (level0.shotSpeed * (1 + level / 4.0));
-				lvl.shotRange = (int) (level0.shotRange * (1 + level / 4.0));
-				lvl.shotRadius = (int) (level0.shotRadius * (1 + level / 4.0));
+				lvl.shotSpeed = (int) (level0.shotSpeed * (1 + level / 6.0));
+				lvl.shotRange = (int) (level0.shotRange * (1 + level / 10.0));
+				lvl.shotRadius = (int) (level0.shotRadius * (1 + level / 10.0));
 				levelUpTable [level] = lvl;
 			}
 		}

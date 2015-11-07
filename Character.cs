@@ -30,7 +30,7 @@ namespace StupidAivGame
 			this.characterName = characterName;
 		}
 
-		private void LevelCheck ()
+		public void LevelCheck ()
 		{
 			if (levelManager == null)
 				levelManager = new LevelManager (this, level0);
@@ -86,7 +86,7 @@ namespace StupidAivGame
 			bulletCounter++;
 		}
 
-		public int GetDamage (Character enemy)
+		public virtual int GetDamage (Character enemy)
 		{
 			LevelCheck (); // could happen that the player kills the enemy before he fully spawn (before Start "starts")
 			enemy.LevelCheck();

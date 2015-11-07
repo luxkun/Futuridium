@@ -3,6 +3,7 @@ using Aiv.Engine;
 using System.Windows.Forms;
 using System.Drawing;
 using System.Collections.Generic;
+using System.Threading;
 
 namespace StupidAivGame
 {
@@ -11,6 +12,8 @@ namespace StupidAivGame
 		private const int maxHitsPerTime = 1000; // 500ms immunity after gets hit
 		private int lastHit = 0;
 		private int spawnedOrbs = 0;
+
+		protected RectangleObject redWindow;
 
 		private Engine.Joystick joystick;
 		// T (triangle) -> int etc.
@@ -30,7 +33,7 @@ namespace StupidAivGame
 			level0.shotRadius = 5;
 			isCloseCombat = false;
 
-			joyStickConfig = thrustmasterConfig;
+			joyStickConfig = ds4Config;
 
 			//pressedJoyButtons = new List<int> ();
 		}
@@ -39,6 +42,15 @@ namespace StupidAivGame
 		{
 			this.AddHitBox ("player", 0, 0, this.width, this.height);
 
+			redWindow = new RectangleObject ();
+			redWindow.width = 0;
+			redWindow.height = 0;
+			redWindow.name = "redWindow";
+			redWindow.color = Color.Red;
+			redWindow.x = 0;
+			redWindow.y = 0;
+			redWindow.fill = true;
+			this.engine.SpawnObject ("redWindow", redWindow);
 		}
 
 
@@ -195,6 +207,25 @@ namespace StupidAivGame
 				//Console.WriteLine ("{0}.{1} {2}", joystick.x, joystick.y, 
 				//	(joystick.buttons.Length > 0) ? joystick.anyButton().ToString () : "N");
 			}
+		}
+
+		public override int GetDamage (Character enemy)
+		{
+			redWindow.width = engine.width;
+			redWindow.height = engine.height;
+			Console.WriteLine ("Player got damaged.");
+			Thread thr = new Thread(
+				() =>
+				{
+					Thread.Sleep(50);
+
+					redWindow.width = 0;
+					redWindow.height = 0;
+				}
+			);
+			thr.Start();
+
+			return base.GetDamage(enemy);
 		}
 
 		public override void Update ()

@@ -27,7 +27,7 @@ namespace StupidAivGame
 			int numberOfEnemies = rnd.Next(minEnemies, maxEnemies);
 			List<Enemy> randomEnemies = new List<Enemy>();
 			for (int i = 0; i < numberOfEnemies; i++) {
-				randomEnemies.Add(charactersInfo.randomEnemy (i + 1));
+				randomEnemies.Add(charactersInfo.randomEnemy (i + 1, level));
 			}
 			Room room = new Room (randomName, game, randomEnemies);
 			return room;
