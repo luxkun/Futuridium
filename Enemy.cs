@@ -15,6 +15,7 @@ namespace StupidAivGame
 		const double MINBESTDELTA = 0.01;
 
 		private Vector2 nextStep;
+		private Vector2 virtPos;
 		private double lastMove = 0;
 		public Enemy (string name, string formattedName, string characterName) : base (name, formattedName, characterName)
 		{
@@ -55,8 +56,17 @@ namespace StupidAivGame
 			}
 			if (distance > 0) {
 				//Console.WriteLine("{0} {1} {2} {3} {4}", playerV, agentV, nextStep, bestDelta, level.speed);
-				this.x = (int)nextStep.X;
-				this.y = (int)nextStep.Y;
+				this.virtPos.X = (nextStep.X - this.x) * (this.deltaTicks / 100f);
+				this.virtPos.Y = (nextStep.Y - this.y) * (this.deltaTicks / 100f);
+
+				if (Math.Abs (this.virtPos.X) > 1) {
+					this.x += (int)this.virtPos.X;
+					this.virtPos.X -= (int)this.virtPos.X;
+				}
+				if (Math.Abs (this.virtPos.Y) > 1) {
+					this.y += (int)this.virtPos.Y;
+					this.virtPos.Y -= (int)this.virtPos.Y;
+				}
 			}
 		}
 

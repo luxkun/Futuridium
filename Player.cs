@@ -22,6 +22,7 @@ namespace StupidAivGame
 		protected RectangleObject redWindow;
 
 		private Vector2 lastPosition;
+		private Vector2 virtPos = new Vector2();
 
 		//private List<int> pressedJoyButtons;
 		public Player () : base ("player", "Player", "player")
@@ -29,11 +30,11 @@ namespace StupidAivGame
 			this.order = 7;
 
 			level0.maxHP = 200;
-			level0.speed = 6;
+			level0.speed = 15;
 			level0.shotDelay = 1500;
 			level0.attack = 50;
 			level0.neededXP = 100;
-			level0.shotSpeed = 5;
+			level0.shotSpeed = 20;
 			level0.shotRange = 400;
 			level0.shotRadius = 8;
 			isCloseCombat = false;
@@ -68,16 +69,16 @@ namespace StupidAivGame
 			// why need casting?
 			lastPosition = new Vector2 (this.x, this.y);
 			if (this.engine.IsKeyDown ((int) OpenTK.Input.Key.Right)) {
-				this.x += level.speed;
+				this.virtPos.X += level.speed * (this.deltaTicks / 100f);
 			}
 			if (this.engine.IsKeyDown ((int) OpenTK.Input.Key.Left)) {
-				this.x -= level.speed;
+				this.virtPos.X -= level.speed * (this.deltaTicks / 100f);
 			}
 			if (this.engine.IsKeyDown ((int) OpenTK.Input.Key.Up)) {
-				this.y -= level.speed;
+				this.virtPos.Y -= level.speed * (this.deltaTicks / 100f);
 			}
 			if (this.engine.IsKeyDown ((int) OpenTK.Input.Key.Down)) {
-				this.y += level.speed;
+				this.virtPos.Y += level.speed * (this.deltaTicks / 100f);
 			}
 
 			// joystick controls
@@ -85,24 +86,19 @@ namespace StupidAivGame
 				JoystickState gamePadState = Joystick.GetState (((Game) engine.objects["game"]).joystick);
 				Vector2 moveDirection = new Vector2 (gamePadState.GetAxis(JoystickAxis.Axis0), gamePadState.GetAxis(JoystickAxis.Axis1));
 				if (moveDirection.LengthFast > 0.1) {
-					this.x += (int)(level.speed * moveDirection.X);
-					this.y += (int)(level.speed * moveDirection.Y);
+					this.virtPos.X += level.speed * moveDirection.X * (this.deltaTicks / 100f);
+					this.virtPos.Y += level.speed * moveDirection.Y * (this.deltaTicks / 100f);
 				}
 			}
 
-			// avoid the player to go out of the screen
-			//int blockW = ((Game)engine.objects["game"]).currentFloor.currentRoom.gameBackground.blockW;//((Background) engine.objects["background"]).blockW;
-			//int blockH = ((Game)engine.objects["game"]).currentFloor.currentRoom.gameBackground.blockH;//((Background) engine.objects["background"]).blockH;
-
-			/*if (this.y < blockH)
-				this.y = blockH;
-			if (this.x < blockW)
-				this.x = blockW;
-
-			if (this.x > (((this.engine.width - 1) / blockW) * blockW))
-				this.x = this.engine.width - this.width - blockW;
-			if (this.y > (((this.engine.height - 1) / blockH) * blockH))
-				this.y = this.engine.height - this.height - blockH;*/
+			if (Math.Abs (this.virtPos.X) > 1) {
+				this.x += (int)this.virtPos.X;
+				this.virtPos.X -= (int)this.virtPos.X;
+			}
+			if (Math.Abs (this.virtPos.Y) > 1) {
+				this.y += (int)this.virtPos.Y;
+				this.virtPos.Y -= (int)this.virtPos.Y;
+			}
 		}
 
 		private void ManageShot ()

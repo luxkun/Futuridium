@@ -19,10 +19,11 @@ namespace StupidAivGame
 
 		public bool bounceBullet = true;
 
-		private const float fadeAwayRange = 0.4f;
+		private const float fadeAwayRange = 0.2f;
 		private const float fadeAwayMod = 0.8f;
 		private const int minRadius = 1;
-		private double virtRadius = 0.0;
+		private double virtRadius;
+		private Vector2 virtPos;
 
 		private int lastBounce = 0;
 		// the same collider can collide once every bounceDelay 
@@ -31,10 +32,6 @@ namespace StupidAivGame
 		private double bounceMod = 0.8; // speed = bounceMod * speed
 
 		private Vector2 lastPoint;
-
-		// 0 left; 1 top; 2 right; 3: bottom; 4: top-left; 5: top-right; 6: bottom-left; 7: bottom-right
-		private Dictionary<int, int> bounceMap = new Dictionary<int, int> {{0, 2}, {1, 3}, {2, 0}, {3, 1}};
-		//{4, 7}, {5, 6}, {6, 5}, {7, 4}
 
 		public Bullet (GameObject owner, Vector2 direction)
 		{
@@ -131,10 +128,14 @@ namespace StupidAivGame
 			if (bounceBullet) {
 				if (lastBounce > 0 && colliderHitBox != null && lastColliderHitBox == colliderHitBox)
 					return false;
-				if (collisionDirection == 0)
+				if (collisionDirection == 0) {
 					direction.X *= -1;
-				if (collisionDirection == 1)
+					virtPos.X = 0;
+				}
+				if (collisionDirection == 1) {
+					virtPos.Y = 0;
 					direction.Y *= -1;
+				}
 				speed = (int) (speed * bounceMod);
 				if (speed <= MINSPEED)
 					speed = MINSPEED;
@@ -156,13 +157,23 @@ namespace StupidAivGame
 			if (rangeToGo <= 0) {
 				this.Destroy ();
 			}
-			this.x += (int)(speed * direction.X);
-			this.y += (int)(speed * direction.Y);
-			rangeToGo -= speed;
+			this.virtPos.X += (int)(speed * direction.X * (this.deltaTicks/100.0));
+			this.virtPos.Y += (int)(speed * direction.Y * (this.deltaTicks/100.0));
+			if (Math.Abs(this.virtPos.X) > 1) {
+				this.x += (int)this.virtPos.X;
+				this.virtPos.X -= (int)this.virtPos.X;
+			}
+			if (Math.Abs(this.virtPos.Y) > 1) {
+				this.y += (int)this.virtPos.Y;
+				this.virtPos.Y -= (int)this.virtPos.Y;
+			}
+			rangeToGo -= (int)(speed * (this.deltaTicks/100.0));
 		}
 
 		public override void Update ()
 		{
+			if (this.deltaTicks > 100) // super lag or bug? bug!
+				this.deltaTicks = 0;
 			if (((Game)engine.objects ["game"]).mainWindow == "game") {
 				if (lastBounce > 0)
 					lastBounce -= this.deltaTicks;

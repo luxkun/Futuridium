@@ -16,6 +16,8 @@ namespace StupidAivGame
 		public double orbStretch = 0.5; // orbRange goes from orbRange * orbStretch to orbRange
 		public double orbSpeed = 0.08;
 
+		private Vector2 virtPos = new Vector2 ();
+
 		private double angleTick = 0;
 
 		public Orb (Character owner)
@@ -52,10 +54,21 @@ namespace StupidAivGame
 			if (((Game)engine.objects ["game"]).mainWindow == "game") {
 				ManageStretch ();
 				// rotate
-				angleTick += orbSpeed;
+				this.x = owner.x;
+				this.y = owner.y;
+				angleTick += orbSpeed * (this.deltaTicks / 100.0);
 				Vector2 points = GetNextStep (angleTick);
-				this.x = owner.x + (int)points.X;
-				this.y = owner.y + (int)points.Y;
+
+				this.virtPos.X += (int)(points.X);
+				this.virtPos.Y += (int)(points.Y);
+				if (Math.Abs(this.virtPos.X) > 1) {
+					this.x += (int)this.virtPos.X;
+					this.virtPos.X -= (int)this.virtPos.X;
+				}
+				if (Math.Abs(this.virtPos.Y) > 1) {
+					this.y += (int)this.virtPos.Y;
+					this.virtPos.Y -= (int)this.virtPos.Y;
+				}
 
 				List<Collision> collisions = this.CheckCollisions ();
 				if (collisions.Count > 0)

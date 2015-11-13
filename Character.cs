@@ -104,6 +104,12 @@ namespace StupidAivGame
 		{
 			get { return level.hp > 0; }
 		}
+
+		public override void Update ()
+		{
+			if (this.deltaTicks > 100) // super lag or bug? bug!
+				this.deltaTicks = 0;
+		}
 	}
 }
 
