@@ -38,6 +38,9 @@
     </Reference>
     <Reference Include="WindowsBase" />
     <Reference Include="MonoMac, Version=0.0.0.0, Culture=neutral" />
+    <Reference Include="OpenTK">
+      <HintPath>..\..\..\Downloads\opentk-2014-07-23\Binaries\OpenTK\Release\OpenTK.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Program.cs" />
@@ -53,6 +56,11 @@
     <Compile Include="Floor.cs" />
     <Compile Include="Background.cs" />
     <Compile Include="Orb.cs" />
+    <Compile Include="Door.cs" />
+    <Compile Include="Map.cs" />
+    <Compile Include="Pause.cs" />
+    <Compile Include="GameBackground.cs" />
+    <Compile Include="Hud.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>

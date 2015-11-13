@@ -12,28 +12,27 @@ namespace StupidAivGame
 		private const int maxHitsPerTime = 1000; // 500ms immunity after gets hit
 		private int lastHit = 0;
 		private int spawnedOrbs = 0;
+		private int lastFloorChange = 0;
+		private int changeFloorDelay = 2000;
+
+		private bool initHUD = false;
 
 		protected RectangleObject redWindow;
 
-		private Engine.Joystick joystick;
-		// T (triangle) -> int etc.
-		public Dictionary<string, int> ds4Config = new Dictionary<string, int> { {"T", 5}, {"C", 4}, {"S", 2}, {"X", 3}, {"L1", 6}, {"R1", 7}, {"L2", 8}, {"R2", 9}};
-		public Dictionary<string, int> thrustmasterConfig = new Dictionary<string, int> { {"T", 6}, {"C", 5}, {"S", 4}, {"X", 3}, {"L1", 7}, {"R1", 9}, {"L2", 8}, {"R2", 10}};
-		public Dictionary<string, int> joyStickConfig;
 		//private List<int> pressedJoyButtons;
 		public Player () : base ("player", "Player", "player")
 		{
-			level0.maxHP = 100;
-			level0.speed = 10;
+			this.order = 7;
+
+			level0.maxHP = 200;
+			level0.speed = 6;
 			level0.shotDelay = 1500;
 			level0.attack = 50;
-			level0.neededXP = 30;
+			level0.neededXP = 100;
 			level0.shotSpeed = 10;
-			level0.shotRange = 500;
+			level0.shotRange = 400;
 			level0.shotRadius = 5;
 			isCloseCombat = false;
-
-			joyStickConfig = ds4Config;
 
 			//pressedJoyButtons = new List<int> ();
 		}
@@ -51,6 +50,8 @@ namespace StupidAivGame
 			redWindow.y = 0;
 			redWindow.fill = true;
 			this.engine.SpawnObject ("redWindow", redWindow);
+
+			base.Start ();
 		}
 
 
@@ -59,30 +60,31 @@ namespace StupidAivGame
 
 			// keyboard controls
 
-			if (this.engine.IsKeyDown (Keys.Right)) {
+			// why need casting?
+			if (this.engine.IsKeyDown ((int) OpenTK.Input.Key.Right)) {
 				this.x += level.speed;
 			}
-			if (this.engine.IsKeyDown (Keys.Left)) {
+			if (this.engine.IsKeyDown ((int) OpenTK.Input.Key.Left)) {
 				this.x -= level.speed;
 			}
-			if (this.engine.IsKeyDown (Keys.Up)) {
+			if (this.engine.IsKeyDown ((int) OpenTK.Input.Key.Up)) {
 				this.y -= level.speed;
 			}
-			if (this.engine.IsKeyDown (Keys.Down)) {
+			if (this.engine.IsKeyDown ((int) OpenTK.Input.Key.Down)) {
 				this.y += level.speed;
 			}
 
 			// joystick controls
-			if (joystick != null) {
-				double axisX = joystick.x / 127.0;
-				double axisY = joystick.y / 127.0;
+			if (((Game) engine.objects["game"]).joystick != null) {
+				double axisX = ((Game) engine.objects["game"]).joystick.x / 127.0;
+				double axisY = ((Game) engine.objects["game"]).joystick.y / 127.0;
 				this.x += (int) (level.speed * axisX);
 				this.y += (int) (level.speed * axisY);
 			}
 
 			// avoid the player to go out of the screen
-			int blockW = ((Background) engine.objects["background"]).blockW;
-			int blockH = ((Background) engine.objects["background"]).blockH;
+			int blockW = ((Game)engine.objects["game"]).currentFloor.currentRoom.gameBackground.blockW;//((Background) engine.objects["background"]).blockW;
+			int blockH = ((Game)engine.objects["game"]).currentFloor.currentRoom.gameBackground.blockH;//((Background) engine.objects["background"]).blockH;
 			if (this.y < blockH)
 				this.y = blockH;
 			if (this.x < blockW)
@@ -104,21 +106,23 @@ namespace StupidAivGame
 				// spawn a new bullet in a choosen direction
 				// 0 left; 1 top; 2 right; 3 bottom; 4: top-left; 5: top-right; 6: bottom-left; 7: bottom-right
 				int direction = -1;
-				if (this.engine.IsKeyDown (Keys.A) || (joystick != null && joystick.buttons[joyStickConfig["S"]]))
+				Engine.Joystick joystick = ((Game)engine.objects ["game"]).joystick;
+				var joyStickConfig = ((Game)engine.objects ["game"]).joyStickConfig;
+				if (this.engine.IsKeyDown ((int)OpenTK.Input.Key.A) || (joystick != null && joystick.buttons[joyStickConfig["S"]]))
 					direction = 0;
-				else if (this.engine.IsKeyDown (Keys.W) || (joystick != null && joystick.buttons[joyStickConfig["T"]]))
+				else if (this.engine.IsKeyDown ((int)OpenTK.Input.Key.W) || (joystick != null && joystick.buttons[joyStickConfig["T"]]))
 					direction = 1;
-				else if (this.engine.IsKeyDown (Keys.D) || (joystick != null && joystick.buttons[joyStickConfig["C"]]))
+				else if (this.engine.IsKeyDown ((int)OpenTK.Input.Key.D) || (joystick != null && joystick.buttons[joyStickConfig["C"]]))
 					direction = 2;
-				else if (this.engine.IsKeyDown (Keys.S) || (joystick != null && joystick.buttons[joyStickConfig["X"]]))
+				else if (this.engine.IsKeyDown ((int)OpenTK.Input.Key.S) || (joystick != null && joystick.buttons[joyStickConfig["X"]]))
 					direction = 3;
-				else if (this.engine.IsKeyDown (Keys.Q) || (joystick != null && joystick.buttons[joyStickConfig["L2"]]))
+				else if (this.engine.IsKeyDown ((int)OpenTK.Input.Key.Q) || (joystick != null && joystick.buttons[joyStickConfig["L2"]]))
 					direction = 4;
-				else if (this.engine.IsKeyDown (Keys.E) || (joystick != null && joystick.buttons[joyStickConfig["R2"]]))
+				else if (this.engine.IsKeyDown ((int)OpenTK.Input.Key.E) || (joystick != null && joystick.buttons[joyStickConfig["R2"]]))
 					direction = 5;
-				else if (this.engine.IsKeyDown (Keys.Z) || (joystick != null && joystick.buttons[joyStickConfig["L1"]]))
+				else if (this.engine.IsKeyDown ((int)OpenTK.Input.Key.Z) || (joystick != null && joystick.buttons[joyStickConfig["L1"]]))
 					direction = 6;
-				else if (this.engine.IsKeyDown (Keys.C) || (joystick != null && joystick.buttons[joyStickConfig["R1"]]))
+				else if (this.engine.IsKeyDown ((int)OpenTK.Input.Key.C) || (joystick != null && joystick.buttons[joyStickConfig["R1"]]))
 					direction = 7;
 				if (direction >= 0) {
 					Shot (direction);
@@ -139,26 +143,12 @@ namespace StupidAivGame
 			}
 		}
 
-		private void ManageStatistics () 
-		{
-			string newTextScore;
-			string newTextStatistics;
-			TextObject scoreTextObject = (TextObject)this.engine.objects ["xp"];
-			TextObject statisticsTextObject = (TextObject)this.engine.objects ["statistics"];
-
-			newTextScore = string.Format ("HP: {0}/{1}", level.hp, level.maxHP);
-			newTextStatistics = string.Format ("XP: {0}/{1} - Level: {2}", xp, level.neededXP, level.level);
-			// useless?
-			if (scoreTextObject.text != newTextScore)
-				scoreTextObject.text = newTextScore;
-			if (statisticsTextObject.text != newTextStatistics)
-				statisticsTextObject.text = newTextStatistics;
-		}
-
 		private void ManageCollisions () 
 		{
 			if (lastHit > 0)
 				lastHit -= this.deltaTicks;
+			if (lastFloorChange > 0)
+				lastFloorChange -= this.deltaTicks;
 
 			if (lastHit <= 0) {
 				List<Collision> collisions = this.CheckCollisions ();
@@ -166,11 +156,10 @@ namespace StupidAivGame
 					Console.WriteLine ("Character '{0}' collides with n.{1}", name, collisions.Count);
 				foreach (Collision collision in collisions) {
 					Console.WriteLine ("Character '{0}' touches '{1}'", name, collision.other.name);
+					Game game = (Game)this.engine.objects ["game"];
 					if (collision.other.name.StartsWith ("enemy")) {
-						Game game = (Game)this.engine.objects ["game"];
-
 						Enemy enemy = collision.other as Enemy;
-						game.Hits (enemy, this, collision);
+						game.Hits (enemy, this, collision, null);
 
 						Console.WriteLine ("{0}, {1}", level.hp, isAlive);
 						if (!isAlive) {
@@ -180,36 +169,28 @@ namespace StupidAivGame
 						lastHit = maxHitsPerTime;
 
 						break;
+					} else if (collision.other.name.EndsWith ("door") && lastFloorChange <= 0 && collision.other.enabled) {
+						Console.WriteLine ("About to change room to: " + collision.other.name);
+						bool changedFloor = false;
+						if (collision.other.name.EndsWith ("top_door"))
+							changedFloor = game.currentFloor.OpenRoom (game.currentFloor.currentRoom.top);
+						else if (collision.other.name.EndsWith ("left_door"))
+							changedFloor = game.currentFloor.OpenRoom (game.currentFloor.currentRoom.left);
+						else if (collision.other.name.EndsWith ("bottom_door"))
+							changedFloor = game.currentFloor.OpenRoom (game.currentFloor.currentRoom.bottom);
+						else if (collision.other.name.EndsWith ("right_door"))
+							changedFloor = game.currentFloor.OpenRoom (game.currentFloor.currentRoom.right);
+						if (changedFloor)
+							lastFloorChange = changeFloorDelay;
+					} else if (collision.other.name.StartsWith("escape_floor_")) {
+						game.initializeNewFloor();
+						collision.other.Destroy ();
 					}
 				}
 			}
 		}
 
-		private void ManageJoystick ()
-		{
-			joystick = null;
-			foreach (Engine.Joystick joy in engine.joysticks) {
-				if (joy != null) {
-					joystick = joy;
-					break;
-				}
-			}
-			if (joystick != null) {
-				for (int i=0; i < joystick.buttons.Length; i++) {
-					if (joystick.buttons [i]) {
-						Console.WriteLine ("Pressed ({0})", i);
-						//if (!pressedJoyButtons.Contains(i))
-						//	pressedJoyButtons.Add (i);
-					}// else if (pressedJoyButtons.Contains(i)) {
-						//pressedJoyButtons.Remove(i);
-					//}
-				}
-				//Console.WriteLine ("{0}.{1} {2}", joystick.x, joystick.y, 
-				//	(joystick.buttons.Length > 0) ? joystick.anyButton().ToString () : "N");
-			}
-		}
-
-		public override int GetDamage (Character enemy)
+		public override int GetDamage (Character enemy, Func<Character, Character, int> damageFunc)
 		{
 			redWindow.width = engine.width;
 			redWindow.height = engine.height;
@@ -225,19 +206,25 @@ namespace StupidAivGame
 			);
 			thr.Start();
 
-			return base.GetDamage(enemy);
+			return base.GetDamage(enemy, damageFunc);
 		}
 
 		public override void Update ()
 		{
 			base.Update ();
-			ManageJoystick ();
-			ManageControls ();
-			ManageShot ();
-			ManageCollisions ();
-			ManageStatistics ();
-			//if (this.engine.IsKeyDown (Keys.O))
-			SpawnOrb ();
+			if (((Game)engine.objects ["game"]).mainWindow == "game") {
+				if (!initHUD) {
+					initHUD = true;
+					hud = ((Hud)engine.objects ["hud"]);
+					hud.UpdateHPBar ();
+					hud.UpdateXPBar ();
+				}
+				ManageControls ();
+				ManageShot ();
+				ManageCollisions ();
+				//if (this.engine.IsKeyDown (Keys.O))
+				SpawnOrb ();
+			}
 		}
 	}
 }

@@ -3,14 +3,18 @@ using Aiv.Engine;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
+using OpenTK;
 
 namespace StupidAivGame
 {
 	public class Enemy : Character
 	{
+		private int timeBeforeActivation = 0;
+		const int delayBeforeActivation = 500;
+		private bool activated = false;
 		const double MINBESTDELTA = 0.01;
 
-		private Vector nextStep;
+		private Vector2 nextStep;
 		private double lastMove = 0;
 		public Enemy (string name, string formattedName, string characterName) : base (name, formattedName, characterName)
 		{
@@ -18,8 +22,6 @@ namespace StupidAivGame
 
 		public override void Start () 
 		{
-			// TODO: resize to WxH
-			this.AddHitBox ("enemy_" + name, 0, 0, this.width, this.height);
 		}
 
 		// TEMP
@@ -29,14 +31,14 @@ namespace StupidAivGame
 		{
 			// regga tangente per due punti (x - player.x) / (this.x - player.x) = (y - player.y) / (this.y - player.y)
 
-			Vector playerV = new Vector (player.x, player.y);
-			Vector agentV = new Vector (this.x, this.y);
+			Vector2 playerV = new Vector2 (player.x, player.y);
+			Vector2 agentV = new Vector2 (this.x, this.y);
 			//List<Vector> points = new List<Vector> ();
 			int distance = (int) ((playerV - agentV).Length * 2); // sucks
 			double bestDelta = engine.width; // flag?
-			nextStep = new Vector();
+			nextStep = new Vector2();
 			for (int i = 0; i <= distance; i++) {
-				Vector newPoint = (playerV - agentV) * ((double) i / distance) + agentV;
+				Vector2 newPoint = (playerV - agentV) * ((float) i / distance) + agentV;
 				newPoint.X = (int) newPoint.X;
 				newPoint.Y = (int) newPoint.Y;
 				//if (!points.Contains(newPoint)) // sucks
@@ -61,14 +63,30 @@ namespace StupidAivGame
 		public override void Update () 
 		{
 			base.Update ();
-			//Shot(0);
-			if (lastMove > 0)
-				lastMove -= this.deltaTicks;
-			if (lastMove <= 0) {
-				Follow (((Game) this.engine.objects ["game"]).player);
-				lastMove = 5; // move every 5ms
+			if (((Game) engine.objects["game"]).mainWindow == "game") {
+				if (!activated) {
+					if (timeBeforeActivation == 0)
+						timeBeforeActivation = delayBeforeActivation;
+					else {
+						if (timeBeforeActivation > 0)
+							timeBeforeActivation -= this.deltaTicks;
+						if (timeBeforeActivation < 0) {
+							activated = true;
+							this.AddHitBox ("enemy_" + name, 0, 0, this.width, this.height);
+						}
+					}
+				}
+				if (activated) {
+					//Shot(0);
+					if (lastMove > 0)
+						lastMove -= this.deltaTicks;
+					if (lastMove <= 0) {
+						Follow (((Game) this.engine.objects ["game"]).player);
+						lastMove = 5; // move every 5ms
+					}
+					//Shot (1);
+				}
 			}
-			//Shot (1);
 		}
 
 	}

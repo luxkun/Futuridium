@@ -1,6 +1,7 @@
 ﻿using System;
 using Aiv.Engine;
 using System.Collections.Generic;
+using OpenTK;
 
 namespace StupidAivGame
 {
@@ -19,6 +20,7 @@ namespace StupidAivGame
 
 		public Orb (Character owner)
 		{
+			this.order = 5;
 			this.owner = owner;
 			this.fill = true;
 		}
@@ -30,9 +32,9 @@ namespace StupidAivGame
 			this.AddHitBox ("mass", 0, 0, this.radius * 2, this.radius * 2);
 		}
 
-		public Tuple<int, int> getPoints (double angle)
+		public Vector2 GetNextStep (double angle)
 		{
-			return Tuple.Create((int) (Math.Cos(angle) * orbRange * (1 - _orbStretch)), (int) (Math.Sin(angle) * orbRange * (1 - _orbStretch)));
+			return new Vector2 ((int) (Math.Cos(angle) * orbRange * (1 - _orbStretch)), (int) (Math.Sin(angle) * orbRange * (1 - _orbStretch)));
 		}
 
 		private void ManageStretch () 
@@ -47,26 +49,28 @@ namespace StupidAivGame
 
 		public override void Update ()
 		{
-			ManageStretch ();
-			// rotate
-			angleTick += orbSpeed;
-			Tuple<int, int> points = getPoints (angleTick);
-			this.x = owner.x + points.Item1;
-			this.y = owner.y + points.Item2;
+			if (((Game)engine.objects ["game"]).mainWindow == "game") {
+				ManageStretch ();
+				// rotate
+				angleTick += orbSpeed;
+				Vector2 points = GetNextStep (angleTick);
+				this.x = owner.x + (int)points.X;
+				this.y = owner.y + (int)points.Y;
 
-			List<Collision> collisions = this.CheckCollisions ();
-			if (collisions.Count > 0)
-				Console.WriteLine ("Orb collides with n." + collisions.Count);
-			foreach (Collision collision in collisions) {
-				Console.WriteLine ("Orb hits enemy: " + collision.other.name);
-				if (collision.other.name.StartsWith ("enemy")) {
-					Game game = (Game) this.engine.objects ["game"];
+				List<Collision> collisions = this.CheckCollisions ();
+				if (collisions.Count > 0)
+					Console.WriteLine ("Orb collides with n." + collisions.Count);
+				foreach (Collision collision in collisions) {
+					Console.WriteLine ("Orb hits enemy: " + collision.other.name);
+					if (collision.other.name.StartsWith ("enemy")) {
+						Game game = (Game)this.engine.objects ["game"];
 
-					Enemy enemy = collision.other as Enemy;
-					// broken, deliberately
-					game.Hits (owner, enemy, collision);
+						Enemy enemy = collision.other as Enemy;
+						// broken, deliberately
+						game.Hits (owner, enemy, collision, null);
 
-					break;
+						break;
+					}
 				}
 			}
 		}

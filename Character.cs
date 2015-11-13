@@ -7,7 +7,6 @@ namespace StupidAivGame
 {
 	public class Character : SpriteObject
 	{
-		public Level level;
 		public Level level0;
 		public LevelManager levelManager;
 
@@ -16,14 +15,43 @@ namespace StupidAivGame
 		protected int lastShot = 0;
 		protected bool isCloseCombat = true;
 
-		public long xp = 0;
+		public Hud hud = null;
+
+		protected long _xp;
+		public long xp {
+			get {
+				return _xp;
+			}
+			set {
+				_xp = value;
+				if (hud != null) {
+					hud.UpdateXPBar ();
+				}
+				LevelCheck ();
+			}
+		}
+		protected Level _level;
+		public Level level {
+			get {
+				return _level;
+			}
+			set {
+				_level = value;
+				if (hud != null) {
+					hud.UpdateXPBar ();
+					hud.UpdateHPBar ();
+				}
+			}
+		}
 
 		public string formattedName;
 		public string characterName;
 
-		private Color shotColor = Color.White;
+		private Color shotColor = Color.GhostWhite;
 		public Character (string name, string formattedName, string characterName)
 		{
+			this.order = 6;
+
 			level0 = new Level ();
 			this.name = name;
 			this.formattedName = formattedName;
@@ -39,11 +67,6 @@ namespace StupidAivGame
 
 		// not started before update??
 		public override void Start ()
-		{
-			LevelCheck ();
-		}
-
-		public override void Update ()
 		{
 			LevelCheck ();
 		}
@@ -86,11 +109,13 @@ namespace StupidAivGame
 			bulletCounter++;
 		}
 
-		public virtual int GetDamage (Character enemy)
+		public virtual int GetDamage (Character enemy, Func<Character, Character, int> damageFunc)
 		{
 			LevelCheck (); // could happen that the player kills the enemy before he fully spawn (before Start "starts")
 			enemy.LevelCheck();
-			level.hp -= enemy.level.attack;
+			level.hp -= damageFunc (this, enemy);//enemy.level.attack;
+			if (hud != null)
+				hud.UpdateHPBar ();
 			return level.hp;
 		}
 

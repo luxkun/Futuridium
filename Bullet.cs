@@ -2,13 +2,15 @@
 using Aiv.Engine;
 using System.Collections.Generic;
 using System.Diagnostics;
+using OpenTK;
 
 namespace StupidAivGame
 {
 	public class Bullet : CircleObject
 	{
 		private int range = 500;
-		private int speed = 25;
+		public int startingSpeed = 25;
+		public int speed;
 		private const int MINSPEED = 2;
 		public GameObject owner;
 		private int direction; // TODO: switch to vector
@@ -21,11 +23,11 @@ namespace StupidAivGame
 
 		private int lastBounce = 0;
 		// the same collider can collide once every bounceDelay 
-		private int bounceDelay = 50;
+		private int bounceDelay = 750;
 		private HitBox lastColliderHitBox;
-		private double bounceMod = 0.66; // speed = bounceMod * speed
+		private double bounceMod = 0.8; // speed = bounceMod * speed
 
-		private Tuple<int, int> lastPoint;
+		private Vector2 lastPoint;
 
 		// 0 left; 1 top; 2 right; 3: bottom; 4: top-left; 5: top-right; 6: bottom-left; 7: bottom-right
 		private Dictionary<int, int> bounceMap = new Dictionary<int, int> {{0, 2}, {1, 3}, {2, 0}, {3, 1}};
@@ -36,19 +38,21 @@ namespace StupidAivGame
 			this.owner = owner;
 			Character ownerCharacter = owner as Character;
 			if (owner != null) {
-				this.speed = ownerCharacter.level.shotSpeed;
+				this.startingSpeed = ownerCharacter.level.shotSpeed;
 				this.range = ownerCharacter.level.shotRange;
 			}
-			this.order = 2;
+			this.speed = this.startingSpeed;
 			this.direction = direction;
 
 			this.rangeToGo = this.range;
+			this.fill = true;
+			this.order = 6;
 		}
 
 		public override void Start ()
 		{
 			this.AddHitBox ("mass", 0, 0, this.radius * 2, this.radius * 2);
-			lastPoint = Tuple.Create (this.x, this.y);
+			lastPoint = new Vector2 (this.x, this.y);
 		}
 
 		// simulate collision between two GameObject rectangles
@@ -66,8 +70,8 @@ namespace StupidAivGame
 			int h1 = hitBox1.height;
 
 			// should have same abs value
-			int diffX = this.x - lastPoint.Item1;
-			int diffY = this.y - lastPoint.Item2;
+			int diffX = this.x - (int)lastPoint.X;
+			int diffY = this.y - (int)lastPoint.Y;
 			Debug.Assert (Math.Abs(diffX) == Math.Abs(diffY));
 			// ignores first step
 			// could optimize by starting near second hitbox
@@ -93,14 +97,16 @@ namespace StupidAivGame
 		}
 
 		// doesn't and won't handle collision between two moving objects
-		private void BounceOrDie (Collision collision)
+		private bool BounceOrDie (Collision collision)
 		{
-			int collisionDirection = -1;
-			HitBox hitBox = this.hitBoxes [collision.hitBox];
-			HitBox otherHitBox =  collision.other.hitBoxes [collision.otherHitBox];
-			if (otherHitBox == null) {
-				Console.WriteLine ("Collission with non-character objects not supported.");
-			} else {
+			if (bounceBullet) {
+				int collisionDirection = -1;
+				HitBox hitBox = this.hitBoxes [collision.hitBox];
+				HitBox otherHitBox = collision.other.hitBoxes [collision.otherHitBox];
+				if (otherHitBox == null) {
+					Console.WriteLine ("Collission with non-character objects not supported.");
+				} else {
+					/*
 				int D = hitBox.width;//this.radius * 2; square hitbox
 				int x1 = otherHitBox.x + collision.other.x;
 				int y1 = otherHitBox.y + collision.other.y;
@@ -125,21 +131,29 @@ namespace StupidAivGame
 					collisionDirection = 1;
 				else { // could replace all the other if, but is more costy... 
 					collisionDirection = SimulateCollision(collision);
-				}
+				}*/
+					collisionDirection = SimulateCollision (collision);
 
-				Console.WriteLine ("Collision direction:" + collisionDirection);
-				if (collisionDirection != -1)
-					BounceOrDie (collisionDirection, otherHitBox);
+					Console.WriteLine ("Collision direction:" + collisionDirection);
+					if (collisionDirection != -1) {
+						BounceOrDie (collisionDirection, otherHitBox);
+						/*this.x = (int)lastPoint.X;
+						this.y = (int)lastPoint.Y;*/
+						return true;
+					}
+				}
+				return false;
+			} else {
+				this.Destroy ();
+				return false;
 			}
 		}
 		// collisionDirection: 0: X collision ; 1: Y collision
-		private void BounceOrDie (int collisionDirection, HitBox colliderHitBox) 
+		private bool BounceOrDie (int collisionDirection, HitBox colliderHitBox) 
 		{
 			if (bounceBullet) {
-				if (lastBounce > 0)
-					lastBounce -= this.deltaTicks;
-				if (lastBounce > 0 && (colliderHitBox == null || lastColliderHitBox == colliderHitBox))
-					return;
+				if (lastBounce > 0 && colliderHitBox != null && lastColliderHitBox == colliderHitBox)
+					return false;
 				if (bounceMap.ContainsKey (direction))
 					direction = bounceMap [direction];
 				else {
@@ -166,27 +180,27 @@ namespace StupidAivGame
 							direction = 6;
 					}
 				}
-				lastBounce = bounceDelay;
 				speed = (int) (speed * bounceMod);
 				if (speed <= MINSPEED)
 					speed = MINSPEED;
 				else
 					rangeToGo = (int) (rangeToGo * bounceMod);
-				lastColliderHitBox = colliderHitBox;
+				if (colliderHitBox != null) {
+					lastBounce = bounceDelay;
+					lastColliderHitBox = colliderHitBox;
+				}
+				return true;
 			} else {
 				this.Destroy ();
+				return false;
 			}
 		}
 
-		public override void Update ()
+		public void NextMove ()
 		{
 			if (rangeToGo <= 0) {
 				this.Destroy ();
 			}
-			if (rangeToGo <= fadeAwayRange) {
-				// resize...
-			}
-			// 0 left; 1 top; 2 right; 3 bottom; 4: top-left; 5: top-right; 6: bottom-left; 7: bottom-right
 			if (direction == 7) {
 				this.x += speed / 2;
 				this.y += speed / 2;
@@ -208,41 +222,55 @@ namespace StupidAivGame
 			else if (direction == 0)
 				this.x -= speed;
 			rangeToGo -= speed;
+		}
 
-			int blockW = ((Background) engine.objects["background"]).blockW;
-			int blockH = ((Background) engine.objects["background"]).blockH;
-			if (this.x > (this.engine.width - blockW - this.radius*2)) {
-				BounceOrDie (0, null);
-				this.x = this.engine.width - blockW - this.radius * 2 - 1;
-			} else if (this.x < blockW) {
-				BounceOrDie (0, null);
-				this.x = blockW + 1;
-			} else if (this.y > (this.engine.height - blockH - this.radius * 2)) {
-				BounceOrDie (1, null);
-				this.y = this.engine.height - blockH - this.radius * 2 - 1;
-			} else if (this.y < blockH) {
-				BounceOrDie (1, null);
-				this.y = blockH + 1;
-			}
-
-			List<Collision> collisions = this.CheckCollisions ();
-			if (collisions.Count > 0)
-				Console.WriteLine ("Bullet collides with n." + collisions.Count);
-			foreach (Collision collision in collisions) {
-				if (collision.other.name == owner.name || collision.other.name.StartsWith("bullet") || collision.other.name.StartsWith("orb"))
-					continue;
-				Console.WriteLine ("Bullet hits enemy: " + collision.other.name);
-				BounceOrDie (collision);
-				if (collision.other.name.StartsWith ("enemy")) {
-					Game game = (Game) this.engine.objects ["game"];
-
-					Enemy enemy = collision.other as Enemy;
-					game.Hits (this, enemy, collision);
-
-					break;
+		public override void Update ()
+		{
+			if (((Game)engine.objects ["game"]).mainWindow == "game") {
+				if (lastBounce > 0)
+					lastBounce -= this.deltaTicks;
+				if (rangeToGo <= fadeAwayRange) {
+					// resize...
 				}
+				// 0 left; 1 top; 2 right; 3 bottom; 4: top-left; 5: top-right; 6: bottom-left; 7: bottom-right
+				NextMove();
+
+				int blockW = ((Game)engine.objects["game"]).currentFloor.currentRoom.gameBackground.blockW;
+				int blockH = ((Game)engine.objects["game"]).currentFloor.currentRoom.gameBackground.blockH;
+				if (this.x > (this.engine.width - blockW - this.radius * 2)) {
+					BounceOrDie (0, null);
+					this.x = this.engine.width - blockW - this.radius * 2 - 1;
+				} else if (this.x < blockW) {
+					BounceOrDie (0, null);
+					this.x = blockW + 1;
+				} else if (this.y > (this.engine.height - blockH - this.radius * 2)) {
+					BounceOrDie (1, null);
+					this.y = this.engine.height - blockH - this.radius * 2 - 1;
+				} else if (this.y < blockH) {
+					BounceOrDie (1, null);
+					this.y = blockH + 1;
+				} else {
+					List<Collision> collisions = this.CheckCollisions ();
+					if (collisions.Count > 0)
+						Console.WriteLine ("Bullet collides with n." + collisions.Count);
+					foreach (Collision collision in collisions) {
+						if (collision.other.name == owner.name || collision.other.name.StartsWith ("bullet") || collision.other.name.StartsWith ("orb"))
+							continue;
+						Console.WriteLine ("Bullet hits enemy: " + collision.other.name);
+						if (BounceOrDie (collision))
+							NextMove ();
+						if (collision.other.name.StartsWith ("enemy")) {
+							Game game = (Game)this.engine.objects ["game"];
+
+							Enemy enemy = collision.other as Enemy;
+							game.Hits (this, enemy, collision);
+
+							break;
+						}
+					}
+				}
+				lastPoint = new Vector2 (this.x, this.y);
 			}
-			lastPoint = Tuple.Create (this.x, this.y);
 		}
 	}
 }

@@ -11,37 +11,38 @@ namespace StupidAivGame
 		{
 			//Character ogre = new Character ("Ogre", 150, 120, 20, 0, 10, game);
 			//Character troll = new Character ("Troll", 200, 75, 35, 0, 15, game);
-			Enemy goblin = new Enemy ("enemy_goblin", "Goblin", "goblin");
-			goblin.level0.maxHP = 70;
-			goblin.level0.attack = 40;
-			goblin.level0.xpReward = 5;
-			goblin.level0.speed = 5;
+			Enemy bigMonkey = new Enemy ("enemy_bigmonkey", "Big Monkey", "bigmonkey");
+			bigMonkey.level0.maxHP = 120;
+			bigMonkey.level0.attack = 100;
+			bigMonkey.level0.xpReward = 12;
+			bigMonkey.level0.speed = 4;
+			//bigMonkey.useAnimations = true;
 
-			Enemy undeadGoblin = new Enemy ("enemy_undeadgoblin", "Undead Goblin", "undeadgoblin");
-			undeadGoblin.level0.maxHP = 80;
-			undeadGoblin.level0.attack = 100;
-			undeadGoblin.level0.xpReward = 10;
-			undeadGoblin.level0.speed = 2;
-			undeadGoblin.useAnimations = true;
+			Enemy monkey = new Enemy ("enemy_monkey", "Monkey", "monkey");
+			monkey.level0.maxHP = 80;
+			monkey.level0.attack = 60;
+			monkey.level0.xpReward = 8;
+			monkey.level0.speed = 6;
 
-			Enemy drowner = new Enemy ("enemy_drowner", "Drowner", "undeadgoblin");
-			drowner.level0.maxHP = 80;
-			drowner.level0.attack = 60;
-			drowner.level0.xpReward = 8;
-			drowner.level0.speed = 6;
+			Enemy bear = new Enemy ("enemy_bear", "Bear", "bear");
+			bear.level0.maxHP = 400;
+			bear.level0.attack = 120;
+			bear.level0.xpReward = 25;
+			bear.level0.speed = 5;
 
-			Enemy floppyWiener = new Enemy ("enemy_floppywiener", "Floppy Wiener", "undeadgoblin");
-			floppyWiener.level0.maxHP = 400;
-			floppyWiener.level0.attack = 60;
-			floppyWiener.level0.xpReward = 200;
-			floppyWiener.level0.speed = 1;
+			// TODO: boss
+			Enemy megaMonkey = new Enemy ("enemy_megamonkey", "Mega Monkey", "megamonkey");
+			megaMonkey.level0.maxHP = 999;
+			megaMonkey.level0.attack = 180;
+			megaMonkey.level0.xpReward = 50;
+			megaMonkey.level0.speed = 8;
 
 
 			enemies = new Dictionary<Enemy, double> ();
-			enemies[goblin] = 1.0;
-			enemies[undeadGoblin] = 0.5;
-			enemies[drowner] = 1.0;
-			enemies[floppyWiener] = 0.1;
+			enemies[megaMonkey] = 0.15;
+			enemies[bear] = 0.2;
+			enemies[bigMonkey] = 0.6;
+			enemies[monkey] = 1.0;
 			foreach (KeyValuePair<Enemy, double> pair in enemies) {
 				rndRange += pair.Value;
 			}

@@ -5,68 +5,87 @@ namespace StupidAivGame
 {
 	public class Background : SpriteObject
 	{
-		private SpriteObject[,] blocks;
+		public GameObject [,] blocks;
 		public int blockW;
 		public int blockH;
 
+		// use blockasset, if not available use blockobject
+		public SpriteAsset blockAsset = null;
+		public Func<GameObject> blockObject = null;
+
+		public bool blocksWithHitBox = true;
+
 		public Background ()
 		{
-			this.order = -1;
 			blockW = 32;
 			blockH = 32;
 		}
 
 		public override void Start () 
 		{
-			this.x = 0;
-			this.y = 0;
-			blocks = new SpriteObject[engine.width / blockW, engine.height / blockH];
-			SpawnBorders ();
-			blockW = 32;//((SpriteAsset)engine.GetAsset ("block")).sprite.Width;
-			blockH = 32;//((SpriteAsset)engine.GetAsset ("block")).sprite.Height;
+			blocks = new GameObject[engine.width / blockW + 1, engine.height / blockH + 1];
 		}
 
-		private void SpawnBlock (int x, int y)
+		protected void SpawnBlock (int bx, int by)
 		{
-			if (blocks [x, y] == null) {
-				string blockName = string.Format ("block_{0}_{1}", x, y);
-				blocks [x, y] = new SpriteObject ();
-				blocks [x, y].currentSprite = (SpriteAsset) engine.GetAsset ("block");
-				blocks [x, y].x = x * blockW;
-				blocks [x, y].y = y * blockH;
-				blocks [x, y].AddHitBox (blockName, 0, 0, blockW, blockH);
-				Console.WriteLine ("Spawned block {0}.{1} at {2}.{3}", x, y, blocks [x, y].x, blocks [x, y].y);
-				engine.SpawnObject (blockName, blocks [x, y]);
+			string blockName = string.Format ("{0}_{1}_{2}", name, bx, by);
+			GameObject block;
+			if (blockAsset != null) {
+				SpriteObject blockSprite = new SpriteObject ();
+				blockSprite.currentSprite = blockAsset;
+				block = blockSprite;
+			} else if (blockObject != null) {
+				block = blockObject();
+			} else {
+				return;
+			}
+			SpawnBlock (bx, by, block, blockName);
+		}
+
+		public void SpawnBlock (int bx, int by, GameObject spriteObj, string blockName)
+		{
+			Console.WriteLine ("bx: {0}, by: {1}, {2} {3}", bx, by, blocks.GetLength (0), blocks.Length);
+			if (blocks [bx, by] == null) {
+				blocks [bx, by] = spriteObj;
+				blocks [bx, by].name = blockName;
+				//blocks [x, y].currentSprite = (SpriteAsset) engine.GetAsset ("block");
+				blocks [bx, by].x = bx * blockW;
+				blocks [bx, by].y = by * blockH;
+				blocks [bx, by].order = 1;
+				if (blocksWithHitBox)
+					blocks [bx, by].AddHitBox (blockName, 0, 0, blockW, blockH);
+				Console.WriteLine ("Spawned block {0}.{1} at {2}.{3}", bx, by, blocks [bx, by].x, blocks [bx, by].y);
+				engine.SpawnObject (blockName, blocks [bx, by]);
 			}
 		}
 
-		private void DestroyBlock (int x, int y)
+		public void DestroyBlock (int bx, int by)
 		{
-			if (blocks [x, y] != null) {
-				blocks [x, y].Destroy ();
-				blocks [x, y] = null;
+			if (blocks [bx, by] != null) {
+				blocks [bx, by].Destroy ();
+				blocks [bx, by] = null;
 			}
 		}
 
 		public void SpawnBorders () 
 		{
 			Console.WriteLine ("Spawning borders.");
-			int y = 0;
-			int x = 0;
-			for (x = 0; x < (engine.width / blockW); x++) {
-				SpawnBlock (x, y);
+			int by = 0;
+			int bx = 0;
+			for (bx = 0; bx < (engine.width / blockW); bx++) {
+				SpawnBlock (bx, by);
 			}
-			y = (engine.height - 1) / blockH;
-			for (x = 0; x < (engine.width / blockW); x++) {
-				SpawnBlock (x, y);
+			by = (engine.height - 1) / blockH;
+			for (bx = 0; bx < (engine.width / blockW); bx++) {
+				SpawnBlock (bx, by);
 			}
-			x = 0;
-			for (y = 0; y < (engine.height / blockH); y++) {
-				SpawnBlock (x, y);
+			bx = 0;
+			for (by = 0; by < (engine.height / blockH); by++) {
+				SpawnBlock (bx, by);
 			}
-			x = (engine.width - 1) / blockW;;
-			for (y = 0; y < (engine.height / blockH); y++) {
-				SpawnBlock (x, y);
+			bx = (engine.width - 1) / blockW;;
+			for (by = 0; by < (engine.height / blockH); by++) {
+				SpawnBlock (bx, by);
 			}
 		}
 	}

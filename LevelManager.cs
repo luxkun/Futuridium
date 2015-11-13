@@ -54,8 +54,8 @@ namespace StupidAivGame
 				lvl.level = level;
 				lvl.maxHP = (int) (level0.maxHP * (1 + level / 6.0));
 				lvl.hp = lvl.maxHP;
-				lvl.neededXP = (long) (level0.neededXP * Math.Pow(2, (int) (level/2.0)));
-				lvl.xpReward = (long) level0.xpReward * level;
+				lvl.neededXP = (long) (level0.neededXP * level*level*level); // x^3
+				lvl.xpReward = (long) (level0.xpReward * level*level); // x^2
 				lvl.attack = (int) (level0.attack * (1 + level / 4.0));
 				lvl.speed = (int) (level0.speed * (1 + level / 15.0));
 				lvl.shotDelay = (int) (level0.shotDelay * (1 - level / 100.0));
@@ -72,6 +72,7 @@ namespace StupidAivGame
 			if (character.level == null) {
 				character.level = levelUpTable [0];
 				character.level.LevelUp (null);
+				CheckLevelUp ();
 				return true;
 			}
 			if (character.level.level == (levelUpTable.Length - 1))
@@ -80,6 +81,7 @@ namespace StupidAivGame
 			if (character.xp >= nextLevel.neededXP) {
 				nextLevel.LevelUp (character.level);
 				character.level = nextLevel;
+				CheckLevelUp ();
 				return true;
 			}
 			return false;

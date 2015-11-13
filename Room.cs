@@ -4,24 +4,41 @@ using Aiv.Engine;
 
 namespace StupidAivGame
 {
-	public class Room {
-		public string name;
+	public class Room : GameObject {
 		public List<Enemy> enemies;
 
 		public Game game;
 
-		public Room (string name, Game game, List<Enemy> enemies) 
+		public Room left;
+		public Room top;
+		public Room bottom;
+		public Room right;
+
+		public Tuple<int, int> roomIndex;
+
+		public GameBackground gameBackground;
+		public Floor floor; 
+
+		public Room (string name, List<Enemy> enemies, Tuple<int, int> roomIndex, Floor floor) 
 		{
 			this.name = name;
-			this.game = game;
 			this.enemies = enemies;
+			this.roomIndex = roomIndex;
+			this.floor = floor;
 		}
 
-		public static Room randomRoom (int counter, Game game, int minEnemies, int maxEnemies, int level) 
+		public override void Start ()
+		{
+			//engine.SpawnObject(string.Format("room_{0}", name), background);
+			gameBackground = new GameBackground (floor.floorBackgroundType, this);
+			engine.SpawnObject (gameBackground.name, gameBackground);
+		}
+
+		public static Room RandomRoom (int counter, int minEnemies, int maxEnemies, Floor floor, int level, Tuple<int, int> roomIndex) 
 		{ // random room
 			//name = Tools.RandomString(5);
 			// TODO: levels
-			string randomName = "Room" + counter;
+			string randomName = string.Format("Room_{0}", counter);
 			Random rnd = new Random((int) DateTime.Now.Ticks);
 			CharactersInfo charactersInfo = new CharactersInfo ();
 			int numberOfEnemies = rnd.Next(minEnemies, maxEnemies);
@@ -29,7 +46,9 @@ namespace StupidAivGame
 			for (int i = 0; i < numberOfEnemies; i++) {
 				randomEnemies.Add(charactersInfo.randomEnemy (i + 1, level));
 			}
-			Room room = new Room (randomName, game, randomEnemies);
+			//string[] availableBackgroundAssets = new string[] { "background_0", "background_1" };
+			//GameBackground gameBackground = new GameBackground (availableBackgroundAssets[rnd.Next(0, availableBackgroundAssets.Length)]);
+			Room room = new Room (randomName, randomEnemies, roomIndex, floor);
 			return room;
 		}
 
@@ -47,22 +66,25 @@ namespace StupidAivGame
 
 		public void SpawnEnemies ()
 		{
+			Game game = (Game)engine.objects ["game"];
 			Random rnd = new Random((int) DateTime.Now.Ticks);;
 			int count = 0;
 			foreach (Enemy enemy in enemies) {
 				Console.WriteLine ("Spawning enemy: {0} n.{1}", enemy.name, count);
 				if (enemy.useAnimations) {
 					// TODO: use animations... 
-					enemy.currentSprite = (SpriteAsset)game.engine.GetAsset(game.spritesAnimations [enemy.characterName] [0]);
+					enemy.currentSprite = (SpriteAsset)engine.GetAsset(game.spritesAnimations [enemy.characterName] [0]);
 				} else {
 					// TODO: add all sprites
-					enemy.currentSprite = (SpriteAsset)game.engine.GetAsset ("goblin");//enemy.name);
+					enemy.currentSprite = (SpriteAsset)engine.GetAsset (enemy.characterName);//enemy.name);
 				}
-				game.engine.SpawnObject (enemy.name + count++, enemy);
+				engine.SpawnObject (enemy.name + count++, enemy);
+				enemy.AddHitBox ("tmp_enemy_" + name, 0, 0, enemy.width, enemy.height);
 				do {
-					enemy.x = rnd.Next (50, game.engine.width - enemy.width - 5);
-					enemy.y = rnd.Next (0, game.engine.height - enemy.height - 5);
+					enemy.x = rnd.Next (50, engine.width - enemy.width - 5);
+					enemy.y = rnd.Next (0, engine.height - enemy.height - 5);
 				} while (enemy.CheckCollisions ().Count > 0);
+				enemy.hitBoxes.Clear ();
 			}
 		}
 	}

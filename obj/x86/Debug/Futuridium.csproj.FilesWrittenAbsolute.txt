@@ -1,0 +1,7 @@
+/Users/lucianoferraro/Projects/StupidAivGame/StupidAivGame/obj/x86/Debug/.NETFramework,Version=v4.5.AssemblyAttribute.cs
+/Users/lucianoferraro/Projects/StupidAivGame/StupidAivGame/obj/x86/Debug/StupidAivGame.exe
+/Users/lucianoferraro/Projects/StupidAivGame/StupidAivGame/obj/x86/Debug/StupidAivGame.exe.mdb
+/Users/lucianoferraro/Projects/StupidAivGame/StupidAivGame/bin/Debug/aivengine.dll
+/Users/lucianoferraro/Projects/StupidAivGame/StupidAivGame/bin/Debug/OpenTK.dll
+/Users/lucianoferraro/Projects/StupidAivGame/StupidAivGame/bin/Debug/StupidAivGame.exe.mdb
+/Users/lucianoferraro/Projects/StupidAivGame/StupidAivGame/bin/Debug/StupidAivGame.exe
