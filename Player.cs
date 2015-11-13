@@ -33,12 +33,13 @@ namespace StupidAivGame
 			level0.shotDelay = 1500;
 			level0.attack = 50;
 			level0.neededXP = 100;
-			level0.shotSpeed = 10;
+			level0.shotSpeed = 5;
 			level0.shotRange = 400;
-			level0.shotRadius = 5;
+			level0.shotRadius = 8;
 			isCloseCombat = false;
 
 			//pressedJoyButtons = new List<int> ();
+
 		}
 
 		public override void Start () 
@@ -90,8 +91,8 @@ namespace StupidAivGame
 			}
 
 			// avoid the player to go out of the screen
-			int blockW = ((Game)engine.objects["game"]).currentFloor.currentRoom.gameBackground.blockW;//((Background) engine.objects["background"]).blockW;
-			int blockH = ((Game)engine.objects["game"]).currentFloor.currentRoom.gameBackground.blockH;//((Background) engine.objects["background"]).blockH;
+			//int blockW = ((Game)engine.objects["game"]).currentFloor.currentRoom.gameBackground.blockW;//((Background) engine.objects["background"]).blockW;
+			//int blockH = ((Game)engine.objects["game"]).currentFloor.currentRoom.gameBackground.blockH;//((Background) engine.objects["background"]).blockH;
 
 			/*if (this.y < blockH)
 				this.y = blockH;
@@ -200,7 +201,8 @@ namespace StupidAivGame
 						if (changedFloor)
 							lastFloorChange = changeFloorDelay;
 					} else if (collision.other.name.StartsWith("escape_floor_")) {
-						game.initializeNewFloor();
+						//game.initializeNewFloor();
+						game.StartBossFight();
 						collision.other.Destroy ();
 					}
 				}

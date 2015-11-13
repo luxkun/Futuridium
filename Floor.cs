@@ -91,7 +91,7 @@ namespace StupidAivGame
 			int minEnemies = (int)(2 * ((floorIndex + 1) / 2.0));
 			int maxEnemies = (int)(5 * ((floorIndex + 1) / 2.0));
 
-			Console.WriteLine ("Number of rooms: " + numberOfRooms);
+			Console.WriteLine ("Randomizing floor, number of rooms: {0} ; background type: {1}", numberOfRooms, floorBackgroundType);
 			rooms = new Room[numberOfRooms, numberOfRooms]; // worst-case linear floor
 
 			Tuple<int, int> lastRoomIndex = Tuple.Create(numberOfRooms / 2, numberOfRooms / 2);

@@ -43,7 +43,13 @@ namespace StupidAivGame
 			joyStickConfig = thrustmasterConfig;
 		}
 
-		public void initializeNewFloor ()
+		// fight the boss of this floor
+		public void StartBossFight ()
+		{
+			
+		}
+
+		public void InitializeNewFloor ()
 		{
 			if (floorIndex > 0) {
 				Game.OnDestroyHelper (currentFloor.currentRoom);
@@ -79,7 +85,7 @@ namespace StupidAivGame
 			Hud hud = new Hud ();
 			engine.SpawnObject ("hud", hud);
 
-			initializeNewFloor ();
+			InitializeNewFloor ();
 		}
 
 		// override Start vs constructor?
@@ -117,15 +123,6 @@ namespace StupidAivGame
 					foreach (Enemy en in currentFloor.currentRoom.enemies) {
 						Console.Write("{0} - ", en.name);
 					}
-
-					/*
-					if (currentFloor.currentRoom.enemies.Count == 0) {
-						if ((currentFloor.currentRoomIndex + 1) < currentFloor.rooms.Count) { 
-							currentFloor.OpenRoom (currentFloor.currentRoomIndex + 1);
-						} else {
-							initializeNewFloor ();
-						}
-					}*/
 				}
 			}
 			return enemy.isAlive;

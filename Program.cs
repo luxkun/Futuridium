@@ -46,7 +46,7 @@ namespace StupidAivGame
 				for (int x = 0; x < 4; x++) {
 					string key = "background_2_" + game.spritesAnimations ["background_2"].Count;
 					engine.LoadAsset(key, new SpriteAsset(
-						"background_1.png", x * 50, y * 50, 50, 50)); // TODO: fix
+						"background_2.png", x * 50, y * 50, 50, 50)); // TODO: fix
 					game.spritesAnimations["background_2"].Add(key);
 				}
 			}

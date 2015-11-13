@@ -19,7 +19,10 @@ namespace StupidAivGame
 
 		public bool bounceBullet = true;
 
-		private const int fadeAwayRange = 10;
+		private const float fadeAwayRange = 0.4f;
+		private const float fadeAwayMod = 0.8f;
+		private const int minRadius = 1;
+		private double virtRadius = 0.0;
 
 		private int lastBounce = 0;
 		// the same collider can collide once every bounceDelay 
@@ -163,8 +166,17 @@ namespace StupidAivGame
 			if (((Game)engine.objects ["game"]).mainWindow == "game") {
 				if (lastBounce > 0)
 					lastBounce -= this.deltaTicks;
-				if (rangeToGo <= fadeAwayRange) {
-					// resize...
+				if (rangeToGo <= (fadeAwayRange * range)) {
+					double deltaRadius = (this.radius - (this.radius * fadeAwayMod)) * (this.deltaTicks/100.0);
+					if (deltaRadius > 0) {
+						this.virtRadius += deltaRadius;
+						if (virtRadius > 1.0) {
+							this.x += (int)((int)virtRadius / 2);
+							this.y += (int)((int)virtRadius / 2);
+							this.radius -= (int)virtRadius;
+							this.virtRadius -= (int)virtRadius;
+						}
+					}
 				}
 				// 0 left; 1 top; 2 right; 3 bottom; 4: top-left; 5: top-right; 6: bottom-left; 7: bottom-right
 				NextMove();
