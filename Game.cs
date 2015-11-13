@@ -300,6 +300,12 @@ namespace StupidAivGame
 				ManageFloor ();
 			}
 		}
+
+		public static void NormalizeTicks (ref int outerDeltaTicks)
+		{
+			if (outerDeltaTicks > 500) // super lag/debug or bug? bug!
+				outerDeltaTicks = 0;
+		}
 	}
 }
 

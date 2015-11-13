@@ -9,11 +9,11 @@ namespace StupidAivGame
 	{
 		private Character owner;
 
-		public int orbRange = 100;
+		public int orbRange = 150;
 		private double _orbStretch = 0.0;
 		private bool orbStretching; // true: decrease ; false: increase
 		public int orbStretchSteps = 50;
-		public double orbStretch = 0.5; // orbRange goes from orbRange * orbStretch to orbRange
+		public double orbStretch = 0.4; // orbRange goes from orbRange * orbStretch to orbRange
 		public double orbSpeed = 0.08;
 
 		private Vector2 virtPos = new Vector2 ();
@@ -71,11 +71,9 @@ namespace StupidAivGame
 				}
 
 				List<Collision> collisions = this.CheckCollisions ();
-				if (collisions.Count > 0)
-					Console.WriteLine ("Orb collides with n." + collisions.Count);
 				foreach (Collision collision in collisions) {
-					Console.WriteLine ("Orb hits enemy: " + collision.other.name);
 					if (collision.other.name.StartsWith ("enemy")) {
+						Console.WriteLine ("Orb hits enemy: " + collision.other.name);
 						Game game = (Game)this.engine.objects ["game"];
 
 						Enemy enemy = collision.other as Enemy;

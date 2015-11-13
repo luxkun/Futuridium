@@ -26,10 +26,11 @@ namespace StupidAivGame
 		private Vector2 virtPos;
 
 		private int lastBounce = 0;
-		// the same collider can collide once every bounceDelay 
-		private int bounceDelay = 750;
-		private HitBox lastColliderHitBox;
+		private int bounceDelay = 250;
 		private double bounceMod = 0.8; // speed = bounceMod * speed
+
+		private const int maxLifeSpan = 5000; // dies after 5s
+		private int lifeSpan = 0;
 
 		private Vector2 lastPoint;
 
@@ -56,7 +57,7 @@ namespace StupidAivGame
 		}
 
 		// simulate collision between two GameObject rectangles
-		// returns 0: X collision ; 1: Y collision - defaults to 0
+		// returns 0: X collision ; 1: Y collision
 		public int SimulateCollision (Collision collision)
 		{
 			HitBox hitBox1 = this.hitBoxes [collision.hitBox]; // bullet
@@ -77,20 +78,30 @@ namespace StupidAivGame
 			// could optimize by starting near second hitbox
 			int xCollisions = 0;
 			int yCollisions = 0;
-			for (int step = Math.Abs(diffX); step >= 0; step--) {
+			int steps = Math.Max (Math.Abs (diffX), Math.Abs (diffY));
+			for (int step = steps; step >= 0; step--) {
 				int x1 = hitBox1.x + this.x - Math.Sign(diffX) * step;
 				int y1 = hitBox1.y + this.y - Math.Sign(diffY) * step;
 
-				xCollisions = Math.Min(x2+w2, x1+w1) - Math.Max(x2, x1);
+				int tempxCollisions = Math.Min(x2+w2, x1+w1) - Math.Max(x2, x1);
 				if (y1 != y2 && (y1 + h1) != (y2 + h2) && y1 != (y2 + h2) && (y1 + h1) != y2)
-					xCollisions = 0;
-				yCollisions = Math.Min(y2+h2, y1+h1) - Math.Max(y1, y2);
+					tempxCollisions = 0;
+				int tempyCollisions = Math.Min(y2+h2, y1+h1) - Math.Max(y1, y2);
 				if (x1 != x2 && (x1 + w1) != (x2 + w2) && x1 != (x2 + w2) && (x1 + w1) != x2)
-					yCollisions = 0;
+					tempyCollisions = 0;
+				if (tempxCollisions > xCollisions)
+					xCollisions = tempxCollisions;
+				if (tempyCollisions > yCollisions)
+					yCollisions = tempyCollisions;
+				// keeping tempcollisions for now
 				if (yCollisions > 0 || xCollisions > 0)
 					break;
 			}
-			int result = (yCollisions < xCollisions) ? 1 : 0;
+			int result = -1;
+			if (yCollisions < xCollisions)
+				result = 1;
+			else if (yCollisions > xCollisions || (yCollisions == xCollisions && yCollisions > 0))
+				result = 0;
 			Console.WriteLine ("Collision Simulation result: {0} ({1} vs {2})", result, xCollisions, yCollisions);
 
 			return result;
@@ -103,18 +114,16 @@ namespace StupidAivGame
 				int collisionDirection = -1;
 				HitBox hitBox = this.hitBoxes [collision.hitBox];
 				HitBox otherHitBox = collision.other.hitBoxes [collision.otherHitBox];
+				if (lastBounce > 0)
+					return false;
 				if (otherHitBox == null) {
 					Console.WriteLine ("Collission with non-character objects not supported.");
 				} else {
 					collisionDirection = SimulateCollision (collision);
 
-					Console.WriteLine ("Collision direction:" + collisionDirection);
-					if (collisionDirection != -1) {
-						BounceOrDie (collisionDirection, otherHitBox);
-						/*this.x = (int)lastPoint.X;
-						this.y = (int)lastPoint.Y;*/
-						return true;
-					}
+					return BounceOrDie (collisionDirection, otherHitBox);
+					/*this.x = (int)lastPoint.X;
+					this.y = (int)lastPoint.Y;*/
 				}
 				return false;
 			} else {
@@ -126,14 +135,19 @@ namespace StupidAivGame
 		private bool BounceOrDie (int collisionDirection, HitBox colliderHitBox) 
 		{
 			if (bounceBullet) {
-				if (lastBounce > 0 && colliderHitBox != null && lastColliderHitBox == colliderHitBox)
-					return false;
+				Console.WriteLine ("Collision direction:" + collisionDirection);
 				if (collisionDirection == 0) {
 					direction.X *= -1;
 					virtPos.X = 0;
-				}
-				if (collisionDirection == 1) {
+				} else if (collisionDirection == 1) {
+					direction.Y *= -1;
 					virtPos.Y = 0;
+				} else {
+					// if the collission simulation failed (ex. reason: multiple moving stuff?)
+					//  then bounce back
+					virtPos.X = 0;
+					virtPos.Y = 0;
+					direction.X *= -1;
 					direction.Y *= -1;
 				}
 				speed = (int) (speed * bounceMod);
@@ -141,10 +155,9 @@ namespace StupidAivGame
 					speed = MINSPEED;
 				else
 					rangeToGo = (int) (rangeToGo * bounceMod);
-				if (colliderHitBox != null) {
-					lastBounce = bounceDelay;
-					lastColliderHitBox = colliderHitBox;
-				}
+				lastBounce = bounceDelay;
+				this.x = (int)lastPoint.X;
+				this.y = (int)lastPoint.Y;
 				return true;
 			} else {
 				this.Destroy ();
@@ -172,8 +185,11 @@ namespace StupidAivGame
 
 		public override void Update ()
 		{
-			if (this.deltaTicks > 100) // super lag or bug? bug!
-				this.deltaTicks = 0;
+			Game.NormalizeTicks (ref this.deltaTicks);
+			// the opposite of the usual solution
+			this.lifeSpan += this.deltaTicks;
+			if (this.lifeSpan > maxLifeSpan)
+				this.Destroy ();
 			if (((Game)engine.objects ["game"]).mainWindow == "game") {
 				if (lastBounce > 0)
 					lastBounce -= this.deltaTicks;
@@ -186,46 +202,35 @@ namespace StupidAivGame
 							this.y += (int)((int)virtRadius / 2);
 							this.radius -= (int)virtRadius;
 							this.virtRadius -= (int)virtRadius;
+							this.hitBoxes ["mass"].height = this.radius * 2;
+							this.hitBoxes ["mass"].width = this.radius * 2;
 						}
 					}
 				}
 				// 0 left; 1 top; 2 right; 3 bottom; 4: top-left; 5: top-right; 6: bottom-left; 7: bottom-right
 				NextMove();
 
-				int blockW = ((Game)engine.objects["game"]).currentFloor.currentRoom.gameBackground.blockW;
-				int blockH = ((Game)engine.objects["game"]).currentFloor.currentRoom.gameBackground.blockH;
-				if (this.x > (this.engine.width - blockW - this.radius * 2)) {
-					BounceOrDie (0, null);
-					this.x = this.engine.width - blockW - this.radius * 2 - 1;
-				} else if (this.x < blockW) {
-					BounceOrDie (0, null);
-					this.x = blockW + 1;
-				} else if (this.y > (this.engine.height - blockH - this.radius * 2)) {
-					BounceOrDie (1, null);
-					this.y = this.engine.height - blockH - this.radius * 2 - 1;
-				} else if (this.y < blockH) {
-					BounceOrDie (1, null);
-					this.y = blockH + 1;
-				} else {
-					List<Collision> collisions = this.CheckCollisions ();
-					if (collisions.Count > 0)
-						Console.WriteLine ("Bullet collides with n." + collisions.Count);
-					foreach (Collision collision in collisions) {
-						if (collision.other.name == owner.name || collision.other.name.StartsWith ("bullet") || collision.other.name.StartsWith ("orb"))
-							continue;
-						Console.WriteLine ("Bullet hits enemy: " + collision.other.name);
-						if (BounceOrDie (collision))
-							NextMove ();
-						if (collision.other.name.StartsWith ("enemy")) {
-							Game game = (Game)this.engine.objects ["game"];
+				List<Collision> collisions = this.CheckCollisions ();
+				if (collisions.Count > 0)
+					Console.WriteLine ("Bullet collides with n." + collisions.Count);
+				bool bounced = false;
+				foreach (Collision collision in collisions) {
+					if (collision.other.name == owner.name || collision.other.name.StartsWith ("bullet") || collision.other.name.StartsWith ("orb"))
+						continue;
+					Console.WriteLine ("Bullet hits enemy: " + collision.other.name);
+					if (BounceOrDie (collision))
+						bounced = true;
+					if (collision.other.name.StartsWith ("enemy")) {
+						Game game = (Game)this.engine.objects ["game"];
 
-							Enemy enemy = collision.other as Enemy;
-							game.Hits (this, enemy, collision);
+						Enemy enemy = collision.other as Enemy;
+						game.Hits (this, enemy, collision);
 
-							break;
-						}
+						break;
 					}
 				}
+				if (bounced)
+					NextMove ();
 				lastPoint = new Vector2 (this.x, this.y);
 			}
 		}
