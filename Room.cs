@@ -39,7 +39,7 @@ namespace StupidAivGame
 			//name = Tools.RandomString(5);
 			// TODO: levels
 			string randomName = string.Format("Room_{0}", counter);
-			Random rnd = new Random((int) DateTime.Now.Ticks);
+			Random rnd = new Random((int)DateTime.Now.Ticks);
 			CharactersInfo charactersInfo = new CharactersInfo ();
 			int numberOfEnemies = rnd.Next(minEnemies, maxEnemies);
 			List<Enemy> randomEnemies = new List<Enemy>();

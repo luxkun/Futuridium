@@ -50,7 +50,7 @@ namespace StupidAivGame
 
 		public Enemy randomEnemy (int counter, int level)
 		{
-			Random rnd = new Random((int) DateTime.Now.Ticks);
+			Random rnd = new Random((int)DateTime.Now.Ticks);
 
 			// enemy.randomMod: probability to spawn
 			// range = SUM(randomMods) 
@@ -61,6 +61,7 @@ namespace StupidAivGame
 			double range = rnd.NextDouble () * rndRange;
 			Dictionary<Enemy, double>.Enumerator enemiesList = enemies.GetEnumerator ();
 			Enemy enemyInfo = null;
+			enemiesList.MoveNext ();
 			for (int i = 0; range > 0.0 && i < enemies.Count; i++) {
 				range -= enemiesList.Current.Value;
 				enemyInfo = enemiesList.Current.Key;

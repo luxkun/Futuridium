@@ -13,7 +13,7 @@ namespace StupidAivGame
 		public int speed;
 		private const int MINSPEED = 2;
 		public GameObject owner;
-		private int direction; // TODO: switch to vector
+		private Vector2 direction;
 
 		private int rangeToGo;
 
@@ -33,7 +33,7 @@ namespace StupidAivGame
 		private Dictionary<int, int> bounceMap = new Dictionary<int, int> {{0, 2}, {1, 3}, {2, 0}, {3, 1}};
 		//{4, 7}, {5, 6}, {6, 5}, {7, 4}
 
-		public Bullet (GameObject owner, int direction)
+		public Bullet (GameObject owner, Vector2 direction)
 		{
 			this.owner = owner;
 			Character ownerCharacter = owner as Character;
@@ -106,32 +106,6 @@ namespace StupidAivGame
 				if (otherHitBox == null) {
 					Console.WriteLine ("Collission with non-character objects not supported.");
 				} else {
-					/*
-				int D = hitBox.width;//this.radius * 2; square hitbox
-				int x1 = otherHitBox.x + collision.other.x;
-				int y1 = otherHitBox.y + collision.other.y;
-				int w1 = otherHitBox.width;
-				int h1 = otherHitBox.height;
-
-				int x2 = hitBox.x + this.x;
-				int y2 = hitBox.y + this.y;
-				int w2 = D;
-				int h2 = D;
-				// ball going left collides on the left
-				if (direction == 0 && x2 < x1 && y2 < (y1 + h1) && y2 > y1)
-					collisionDirection = 0;
-				// ball going top collides on top
-				else if (direction == 1 && y2 < y1 && (x2 + w2) > x1 && x2 < (x1 + w1))
-					collisionDirection = 1;
-				// ball going right collides on the right
-				else if (direction == 2 && (x2 + w2) > x1 && y2 > y1 && y2 < (y1 + h1))
-					collisionDirection = 0;
-				// ball going bottom collides on the bottom
-				else if (direction == 3 && (y2 + h2) > y1 && x2 < (x1 + w1) && (x2 + w2) > x1)
-					collisionDirection = 1;
-				else { // could replace all the other if, but is more costy... 
-					collisionDirection = SimulateCollision(collision);
-				}*/
 					collisionDirection = SimulateCollision (collision);
 
 					Console.WriteLine ("Collision direction:" + collisionDirection);
@@ -154,32 +128,10 @@ namespace StupidAivGame
 			if (bounceBullet) {
 				if (lastBounce > 0 && colliderHitBox != null && lastColliderHitBox == colliderHitBox)
 					return false;
-				if (bounceMap.ContainsKey (direction))
-					direction = bounceMap [direction];
-				else {
-					// 4: top-left; 5: top-right; 6: bottom-left; 7: bottom-right
-					if (direction == 4) {
-						if (collisionDirection == 1)
-							direction = 6;
-						else if (collisionDirection == 0)
-							direction = 5;
-					} else if (direction == 5) {
-						if (collisionDirection == 1)
-							direction = 7;
-						else if (collisionDirection == 0)
-							direction = 4;
-					} else if (direction == 6) {
-						if (collisionDirection == 1)
-							direction = 4;
-						else if (collisionDirection == 0)
-							direction = 7;
-					} else if (direction == 7) {
-						if (collisionDirection == 1)
-							direction = 5;
-						else if (collisionDirection == 0)
-							direction = 6;
-					}
-				}
+				if (collisionDirection == 0)
+					direction.X *= -1;
+				if (collisionDirection == 1)
+					direction.Y *= -1;
 				speed = (int) (speed * bounceMod);
 				if (speed <= MINSPEED)
 					speed = MINSPEED;
@@ -201,26 +153,8 @@ namespace StupidAivGame
 			if (rangeToGo <= 0) {
 				this.Destroy ();
 			}
-			if (direction == 7) {
-				this.x += speed / 2;
-				this.y += speed / 2;
-			} else if (direction == 6) {
-				this.x -= speed / 2;
-				this.y += speed / 2;
-			} else if (direction == 5) {
-				this.x += speed / 2;
-				this.y -= speed / 2;
-			} else if (direction == 4) {
-				this.x -= speed / 2;
-				this.y -= speed / 2;
-			} else if (direction == 3)
-				this.y += speed;
-			else if (direction == 2)
-				this.x += speed;
-			else if (direction == 1)
-				this.y -= speed;
-			else if (direction == 0)
-				this.x -= speed;
+			this.x += (int)(speed * direction.X);
+			this.y += (int)(speed * direction.Y);
 			rangeToGo -= speed;
 		}
 

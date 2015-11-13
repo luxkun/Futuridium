@@ -2,6 +2,7 @@
 using Aiv.Engine;
 using System.Collections.Generic;
 using System.Drawing;
+using OpenTK;
 
 namespace StupidAivGame
 {
@@ -72,36 +73,16 @@ namespace StupidAivGame
 		}
 
 
-		public void Shot (int direction)
+		public void Shot (Vector2 direction)
 		{
+			direction.Normalize ();
 			Console.WriteLine ("{0} is shotting to direction: {1}", this.name, direction);
 			// 0 left; 1 top; 2 right; 3 bottom; 4: top-left; 5: top-right; 6: bottom-left; 7: bottom-right
 			Bullet bullet = new Bullet (this, direction);
-			if (direction == 7) {
-				bullet.x = this.x + this.width;
-				bullet.y = this.y + this.height;
-			} else if (direction == 6) {
-				bullet.x = this.x;
-				bullet.y = this.y + this.height;
-			} else if (direction == 5) {
-				bullet.x = this.x + this.width;
-				bullet.y = this.y;
-			} else if (direction == 4) {
-				bullet.x = this.x;
-				bullet.y = this.y;
-			} else if (direction == 3) {
-				bullet.x = this.x + (this.width / 2);
-				bullet.y = this.y + this.height;
-			} else if (direction == 2) {
-				bullet.x = this.x + this.width;
-				bullet.y = this.y + (this.height / 2);
-			} else if (direction == 1) {
-				bullet.x = this.x + (this.width / 2);
-				bullet.y = this.y;// - this.height;
-			} else if (direction == 0) {
-				bullet.x = this.x;// - this.width;
-				bullet.y = this.y + (this.height / 2);
-			}
+			float xMod = direction.X + 0.5f;
+			float yMod = direction.Y + 0.5f;
+			bullet.x = this.x + (int)(this.width * xMod);
+			bullet.y = this.y + (int)(this.height * yMod);
 
 			bullet.radius = level.shotRadius;
 			bullet.color = shotColor;

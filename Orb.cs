@@ -34,7 +34,7 @@ namespace StupidAivGame
 
 		public Vector2 GetNextStep (double angle)
 		{
-			return new Vector2 ((int) (Math.Cos(angle) * orbRange * (1 - _orbStretch)), (int) (Math.Sin(angle) * orbRange * (1 - _orbStretch)));
+			return new Vector2 ((int)(Math.Cos(angle) * orbRange * (1 - _orbStretch)), (int)(Math.Sin(angle) * orbRange * (1 - _orbStretch)));
 		}
 
 		private void ManageStretch () 

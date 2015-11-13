@@ -5,3 +5,4 @@
 /Users/lucianoferraro/Projects/StupidAivGame/StupidAivGame/bin/Debug/OpenTK.dll
 /Users/lucianoferraro/Projects/StupidAivGame/StupidAivGame/bin/Debug/StupidAivGame.exe.mdb
 /Users/lucianoferraro/Projects/StupidAivGame/StupidAivGame/bin/Debug/StupidAivGame.exe
+/Users/lucianoferraro/Projects/StupidAivGame/StupidAivGame/bin/Debug/aivengine-opentk.dll

@@ -28,7 +28,7 @@ namespace StupidAivGame
 
 		protected void SpawnBlock (int bx, int by)
 		{
-			string blockName = string.Format ("{0}_{1}_{2}", name, bx, by);
+			string blockName = string.Format ("{0}_{1}_{2}_block", name, bx, by);
 			GameObject block;
 			if (blockAsset != null) {
 				SpriteObject blockSprite = new SpriteObject ();

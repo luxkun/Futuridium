@@ -39,8 +39,8 @@ namespace StupidAivGame
 			nextStep = new Vector2();
 			for (int i = 0; i <= distance; i++) {
 				Vector2 newPoint = (playerV - agentV) * ((float) i / distance) + agentV;
-				newPoint.X = (int) newPoint.X;
-				newPoint.Y = (int) newPoint.Y;
+				//newPoint.X = (int)newPoint.X;
+				//newPoint.Y = (int)newPoint.Y;
 				//if (!points.Contains(newPoint)) // sucks
 				//	points.Add (newPoint);
 				double pointDelta =  Math.Abs(level.speed - (newPoint - agentV).Length);

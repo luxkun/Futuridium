@@ -6,6 +6,7 @@ using System.Text;
 // this is a simple game written for learning that uses AivEngine
 // the game doesn't and won't have any story and game balance since the only purpose of the game itself is to try new algorithm and gaming paradigms 
 using System.Drawing;
+using OpenTK.Input;
 
 
 namespace StupidAivGame
@@ -16,7 +17,6 @@ namespace StupidAivGame
 		{
 			FastEngine engine = new FastEngine ("Futuridium", 1920, 1080, 60);
 			//engine.debugCollisions = true;
-			Aiv.Engine.Input.Initialize(engine);
 
 			Game game = new Game (engine);
 

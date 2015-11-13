@@ -83,7 +83,7 @@ namespace StupidAivGame
 
 		public void RandomizeFloor (int minRoom, int maxRoom)
 		{
-			Random rnd = new Random((int) DateTime.Now.Ticks);
+			Random rnd = new Random((int)DateTime.Now.Ticks);
 
 			floorBackgroundType = rnd.Next (0, 3);
 

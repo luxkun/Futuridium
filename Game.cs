@@ -3,6 +3,7 @@ using Aiv.Engine;
 using System.Collections.Generic;
 using System.Windows.Forms;
 using System.Drawing;
+using OpenTK.Input;
 
 namespace StupidAivGame
 {
@@ -20,21 +21,26 @@ namespace StupidAivGame
 
 		public Dictionary<string, List<string>> spritesAnimations;
 
-		public Engine.Joystick joystick;
+		public int joystick;
 		// T (triangle) -> int etc.
-		public Dictionary<string, int> ds4Config = new Dictionary<string, int> { {"T", 5}, {"C", 4}, {"S", 2}, {"X", 3}, {"L1", 6}, {"R1", 7}, {"L2", 8}, {"R2", 9}, {"SL", 10}, {"ST", 11}};
-		public Dictionary<string, int> thrustmasterConfig = new Dictionary<string, int> { {"T", 6}, {"C", 5}, {"S", 4}, {"X", 3}, {"L1", 7}, {"R1", 9}, {"L2", 8}, {"R2", 10}, {"SL", -1}, {"ST", -1}}; //TODO: SL
-		public Dictionary<string, int> joyStickConfig;
+		// TODO: do.
+		//public Dictionary<string, int> ds4Config = new Dictionary<string, int> { {"T", 5}, {"C", 4}, {"S", 2}, {"X", 3}, {"L1", 6}, {"R1", 7}, {"L2", 8}, {"R2", 9}, {"SL", 10}, {"ST", 11}};
+		public Dictionary<string, JoystickButton> thrustmasterConfig = new Dictionary<string, JoystickButton> { 
+			{"T", JoystickButton.Button3}, {"C", JoystickButton.Button2}, {"S", JoystickButton.Button1}, {"X", JoystickButton.Button0}, {"SL", JoystickButton.Button8}, {"ST", JoystickButton.Button9}
+		};
+		public Dictionary<string, JoystickButton> joyStickConfig;
 
 		private int lastWindowChange = 0;
 		private int windowChangeDelay = 500;
+		private int gameOverTimer = 0;
+		private int gameOverDelay = 1000;
 			
 		public Game (Engine engine)
 		{
 			this.engine = engine;
 			spritesAnimations = new Dictionary<string, List<string>> ();
 
-			joyStickConfig = ds4Config;
+			joyStickConfig = thrustmasterConfig;
 		}
 
 		public void initializeNewFloor ()
@@ -143,26 +149,28 @@ namespace StupidAivGame
 
 		private void ManageJoystick ()
 		{
-			joystick = null;
-			foreach (Engine.Joystick joy in engine.joysticks) {
-				if (joy != null) {
-					joystick = joy;
+			joystick = -1;
+			for (int i = 0; i < 8; i++) {
+				if (OpenTK.Input.Joystick.GetCapabilities (i).IsConnected) {
+					joystick = i;
 					break;
 				}
 			}
-			if (joystick != null) {
-				for (int i=0; i < joystick.buttons.Length; i++) {
-					if (joystick.buttons [i]) {
-						Console.WriteLine ("Pressed ({0})", i);
-						//if (!pressedJoyButtons.Contains(i))
-						//	pressedJoyButtons.Add (i);
-					}// else if (pressedJoyButtons.Contains(i)) {
-					//pressedJoyButtons.Remove(i);
-					//}
+			/*
+			if (joystick != -1) {
+				JoystickState joystickState = Joystick.GetState (joystick);
+				Console.WriteLine ("Axis: {0} {1} {2} {3}", joystickState.GetAxis (JoystickAxis.Axis0), joystickState.GetAxis (JoystickAxis.Axis1), joystickState.GetAxis (JoystickAxis.Axis2), joystickState.GetAxis (JoystickAxis.Axis3));
+				Console.Write ("Buttons: ");
+				foreach (string key in joyStickConfig.Keys) {
+					if (joystickState.GetButton(joyStickConfig[key]) == OpenTK.Input.ButtonState.Pressed)
+						Console.Write ("{0}", key);
 				}
-				//Console.WriteLine ("{0}.{1} {2}", joystick.x, joystick.y, 
-				//	(joystick.buttons.Length > 0) ? joystick.anyButton().ToString () : "N");
-			}
+				Console.WriteLine ();
+				/*foreach (OpenTK.Input.JoystickButton button in Enum.GetValues(typeof(OpenTK.Input.JoystickButton))) {
+					if ((OpenTK.Input.ButtonState)gamePadState.Buttons.GetType ().GetProperty (button.ToString()).GetValue(gamePadState) == OpenTK.Input.ButtonState.Pressed)
+						Console.WriteLine ("Pressed joystick button: " + button);
+				}*/
+			//}
 		}
 
 		private void OpenMap ()
@@ -208,28 +216,46 @@ namespace StupidAivGame
 				lastWindowChange -= this.deltaTicks;
 			if (lastWindowChange <= 0) {
 				string startingWindow = mainWindow;
+				JoystickState joystickState;
+				joystickState = Joystick.GetState (joystick);
+
 				if (mainWindow == "game") {
-					// select, open map
-					if (engine.IsKeyDown ((int)OpenTK.Input.Key.M) || (joystick != null && joystick.buttons [joyStickConfig ["SL"]]))
+					if (engine.IsKeyDown ((int)OpenTK.Input.Key.M) || (joystick != -1 && joystickState.GetButton(joyStickConfig["SL"]) == OpenTK.Input.ButtonState.Pressed))
 						OpenMap ();
-					else if (this.engine.IsKeyDown ((int)OpenTK.Input.Key.Escape) || (joystick != null && joystick.buttons [joyStickConfig ["ST"]]))
+					else if (this.engine.IsKeyDown ((int)OpenTK.Input.Key.Escape) || (joystick != -1 && joystickState.GetButton(joyStickConfig["ST"]) == OpenTK.Input.ButtonState.Pressed))
 						Pause ();
 				} else if (mainWindow == "map") {
-					if (this.engine.IsKeyDown ((int)OpenTK.Input.Key.M) || this.engine.IsKeyDown ((int)OpenTK.Input.Key.Escape) || (joystick != null && joystick.buttons [joyStickConfig ["SL"]]))
+					if (this.engine.IsKeyDown ((int)OpenTK.Input.Key.M) || this.engine.IsKeyDown ((int)OpenTK.Input.Key.Escape) ||
+						(joystick != -1 && joystickState.GetButton(joyStickConfig["SL"]) == OpenTK.Input.ButtonState.Pressed))
 						CloseMap ();
 				} else if (mainWindow == "pause") {
-					if (this.engine.IsKeyDown ((int)OpenTK.Input.Key.P) || this.engine.IsKeyDown ((int)OpenTK.Input.Key.Escape) || (joystick != null && joystick.buttons [joyStickConfig ["ST"]]))
+					if (this.engine.IsKeyDown ((int)OpenTK.Input.Key.P) || this.engine.IsKeyDown ((int)OpenTK.Input.Key.Escape) ||
+						(joystick != -1 && joystickState.GetButton(joyStickConfig["ST"]) == OpenTK.Input.ButtonState.Pressed))
 						UnPause ();
 				} else if (mainWindow == "logo") {
-					if (AnyKeyDown() || (joystick != null && joystick.anyButton()))
+					if (AnyKeyDown() || (joystick != -1 && AnyJoystickButtonPressed()))
 						StartGame ();
 				} else if (mainWindow == "gameover") {
-					if (AnyKeyDown() || (joystick != null && joystick.anyButton()))
+					if (gameOverTimer > 0)
+						gameOverTimer -= this.deltaTicks;
+					if (gameOverTimer <= 0 && (AnyKeyDown() || (joystick != -1 && AnyJoystickButtonPressed())))
 						this.engine.isGameRunning = false;
 				}
 				if (startingWindow != mainWindow)
 					lastWindowChange = windowChangeDelay;
 			}
+		}
+
+		public bool AnyJoystickButtonPressed ()
+		{
+			if (joystick == -1)
+				return false;
+			JoystickState joystickState = Joystick.GetState(joystick);
+			foreach (string key in joyStickConfig.Keys) {
+				if (joystickState.GetButton (joyStickConfig [key]) == OpenTK.Input.ButtonState.Pressed)
+					return true;
+			}
+			return false;
 		}
 
 		// TODO: better way to do this through the engine
@@ -259,6 +285,7 @@ namespace StupidAivGame
 			gameOver.y = engine.height / 2 - gameOverSize.Height / 2;
 			gameOver.order = 11;
 			engine.SpawnObject ("gameover_text", gameOver);
+			gameOverTimer = gameOverDelay;
 		}
 
 		public override void Update ()

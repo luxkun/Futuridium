@@ -7,7 +7,7 @@ namespace StupidAivGame
 	{
 		public override void Start ()
 		{
-			this.AddHitBox (this.name, 0, 0, 32, 32);
+			this.AddHitBox (this.name, -5, -5, 42, 42);
 		}
 	}
 }

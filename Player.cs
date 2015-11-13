@@ -4,6 +4,8 @@ using System.Windows.Forms;
 using System.Drawing;
 using System.Collections.Generic;
 using System.Threading;
+using OpenTK;
+using OpenTK.Input;
 
 namespace StupidAivGame
 {
@@ -18,6 +20,8 @@ namespace StupidAivGame
 		private bool initHUD = false;
 
 		protected RectangleObject redWindow;
+
+		private Vector2 lastPosition;
 
 		//private List<int> pressedJoyButtons;
 		public Player () : base ("player", "Player", "player")
@@ -61,6 +65,7 @@ namespace StupidAivGame
 			// keyboard controls
 
 			// why need casting?
+			lastPosition = new Vector2 (this.x, this.y);
 			if (this.engine.IsKeyDown ((int) OpenTK.Input.Key.Right)) {
 				this.x += level.speed;
 			}
@@ -75,25 +80,28 @@ namespace StupidAivGame
 			}
 
 			// joystick controls
-			if (((Game) engine.objects["game"]).joystick != null) {
-				double axisX = ((Game) engine.objects["game"]).joystick.x / 127.0;
-				double axisY = ((Game) engine.objects["game"]).joystick.y / 127.0;
-				this.x += (int) (level.speed * axisX);
-				this.y += (int) (level.speed * axisY);
+			if (((Game) engine.objects["game"]).joystick != -1) {
+				JoystickState gamePadState = Joystick.GetState (((Game) engine.objects["game"]).joystick);
+				Vector2 moveDirection = new Vector2 (gamePadState.GetAxis(JoystickAxis.Axis0), gamePadState.GetAxis(JoystickAxis.Axis1));
+				if (moveDirection.LengthFast > 0.1) {
+					this.x += (int)(level.speed * moveDirection.X);
+					this.y += (int)(level.speed * moveDirection.Y);
+				}
 			}
 
 			// avoid the player to go out of the screen
 			int blockW = ((Game)engine.objects["game"]).currentFloor.currentRoom.gameBackground.blockW;//((Background) engine.objects["background"]).blockW;
 			int blockH = ((Game)engine.objects["game"]).currentFloor.currentRoom.gameBackground.blockH;//((Background) engine.objects["background"]).blockH;
-			if (this.y < blockH)
+
+			/*if (this.y < blockH)
 				this.y = blockH;
 			if (this.x < blockW)
 				this.x = blockW;
 
-			if (this.x > this.engine.width - this.width - blockW)
+			if (this.x > (((this.engine.width - 1) / blockW) * blockW))
 				this.x = this.engine.width - this.width - blockW;
-			if (this.y > this.engine.height - this.height - blockH)
-				this.y = this.engine.height - this.height - blockH;
+			if (this.y > (((this.engine.height - 1) / blockH) * blockH))
+				this.y = this.engine.height - this.height - blockH;*/
 		}
 
 		private void ManageShot ()
@@ -105,26 +113,30 @@ namespace StupidAivGame
 				// TODO: use vector instead of int/hardcoded direction
 				// spawn a new bullet in a choosen direction
 				// 0 left; 1 top; 2 right; 3 bottom; 4: top-left; 5: top-right; 6: bottom-left; 7: bottom-right
-				int direction = -1;
-				Engine.Joystick joystick = ((Game)engine.objects ["game"]).joystick;
+				Vector2 direction = new Vector2 ();
+				int joystick = ((Game)engine.objects ["game"]).joystick;
 				var joyStickConfig = ((Game)engine.objects ["game"]).joyStickConfig;
-				if (this.engine.IsKeyDown ((int)OpenTK.Input.Key.A) || (joystick != null && joystick.buttons[joyStickConfig["S"]]))
-					direction = 0;
-				else if (this.engine.IsKeyDown ((int)OpenTK.Input.Key.W) || (joystick != null && joystick.buttons[joyStickConfig["T"]]))
-					direction = 1;
-				else if (this.engine.IsKeyDown ((int)OpenTK.Input.Key.D) || (joystick != null && joystick.buttons[joyStickConfig["C"]]))
-					direction = 2;
-				else if (this.engine.IsKeyDown ((int)OpenTK.Input.Key.S) || (joystick != null && joystick.buttons[joyStickConfig["X"]]))
-					direction = 3;
-				else if (this.engine.IsKeyDown ((int)OpenTK.Input.Key.Q) || (joystick != null && joystick.buttons[joyStickConfig["L2"]]))
-					direction = 4;
-				else if (this.engine.IsKeyDown ((int)OpenTK.Input.Key.E) || (joystick != null && joystick.buttons[joyStickConfig["R2"]]))
-					direction = 5;
-				else if (this.engine.IsKeyDown ((int)OpenTK.Input.Key.Z) || (joystick != null && joystick.buttons[joyStickConfig["L1"]]))
-					direction = 6;
-				else if (this.engine.IsKeyDown ((int)OpenTK.Input.Key.C) || (joystick != null && joystick.buttons[joyStickConfig["R1"]]))
-					direction = 7;
-				if (direction >= 0) {
+				JoystickState joystickState = Joystick.GetState (joystick);
+				if (joystick != -1) {
+					direction = new Vector2 (joystickState.GetAxis(JoystickAxis.Axis2), joystickState.GetAxis(JoystickAxis.Axis3));
+				}
+				if (this.engine.IsKeyDown ((int)OpenTK.Input.Key.A) || (joystick != -1 && joystickState.GetButton(joyStickConfig["S"]) == OpenTK.Input.ButtonState.Pressed))
+					direction = new Vector2 (-1, 0);
+				else if (this.engine.IsKeyDown ((int)OpenTK.Input.Key.W) || (joystick != -1 && joystickState.GetButton(joyStickConfig["T"]) == OpenTK.Input.ButtonState.Pressed))
+					direction = new Vector2 (0, -1);
+				else if (this.engine.IsKeyDown ((int)OpenTK.Input.Key.D) || (joystick != -1 && joystickState.GetButton(joyStickConfig["C"]) == OpenTK.Input.ButtonState.Pressed))
+					direction = new Vector2 (1, 0);
+				else if (this.engine.IsKeyDown ((int)OpenTK.Input.Key.S) || (joystick != -1 && joystickState.GetButton(joyStickConfig["X"]) == OpenTK.Input.ButtonState.Pressed))
+					direction = new Vector2 (0, 1);
+				else if (this.engine.IsKeyDown ((int)OpenTK.Input.Key.Q))
+					direction = new Vector2 (-0.5f, -0.5f);
+				else if (this.engine.IsKeyDown ((int)OpenTK.Input.Key.E))
+					direction = new Vector2 (0.5f, -0.5f);
+				else if (this.engine.IsKeyDown ((int)OpenTK.Input.Key.Z))
+					direction = new Vector2 (-0.5f, 0.5f);
+				else if (this.engine.IsKeyDown ((int)OpenTK.Input.Key.C))
+					direction = new Vector2 (0.5f, 0.5f);
+				if (direction.LengthFast >= 0.5) {
 					Shot (direction);
 					lastShot = level.shotDelay;
 				}
@@ -169,7 +181,12 @@ namespace StupidAivGame
 						lastHit = maxHitsPerTime;
 
 						break;
+					} else if (collision.other.name.EndsWith ("block")) {
+						this.x = (int)lastPosition.X;
+						this.y = (int)lastPosition.Y;
 					} else if (collision.other.name.EndsWith ("door") && lastFloorChange <= 0 && collision.other.enabled) {
+						this.x = (int)lastPosition.X;
+						this.y = (int)lastPosition.Y;
 						Console.WriteLine ("About to change room to: " + collision.other.name);
 						bool changedFloor = false;
 						if (collision.other.name.EndsWith ("top_door"))
