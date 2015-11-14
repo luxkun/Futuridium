@@ -4,11 +4,15 @@ using System.Collections.Generic;
 namespace StupidAivGame
 {
 	class CharactersInfo {
-		Dictionary<Enemy, double> enemies; // character, spawn modifier (1 is base)
-		double rndRange = 0f;
-		string letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-		public CharactersInfo ()
+		private Dictionary<Enemy, double> enemies; // character, spawn modifier (1 is base)
+		private double rndRange = 0f;
+		private string letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+		private Random rnd;
+		public CharactersInfo (Random rnd)
 		{
+			this.rnd = rnd;
+			
 			//Character ogre = new Character ("Ogre", 150, 120, 20, 0, 10, game);
 			//Character troll = new Character ("Troll", 200, 75, 35, 0, 15, game);
 			Enemy bigMonkey = new Enemy ("enemy_bigmonkey", "Big Monkey", "bigmonkey");
@@ -50,8 +54,6 @@ namespace StupidAivGame
 
 		public Enemy randomEnemy (int counter, int level)
 		{
-			Random rnd = new Random((int)DateTime.Now.Ticks);
-
 			// enemy.randomMod: probability to spawn
 			// range = SUM(randomMods) 
 			// sottraendo da un random(0f, range) ogni singolo randomMod

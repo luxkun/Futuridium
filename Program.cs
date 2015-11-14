@@ -18,7 +18,7 @@ namespace StupidAivGame
 			FastEngine engine = new FastEngine ("Futuridium", 1920, 1080, 60);
 			//engine.debugCollisions = true;
 
-			Game game = new Game (engine);
+			Game game = new Game ();
 
 
 			// set the base path for assets

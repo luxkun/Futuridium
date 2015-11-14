@@ -64,9 +64,12 @@
     <Compile Include="Pause.cs" />
     <Compile Include="GameBackground.cs" />
     <Compile Include="Hud.cs" />
+    <Compile Include="RandomSeed.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
     <Folder Include="Assets\" />
+    <Folder Include="Enemies\" />
+    <Folder Include="Enemies\Bosses\" />
   </ItemGroup>
 </Project>

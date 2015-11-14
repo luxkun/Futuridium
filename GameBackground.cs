@@ -16,6 +16,8 @@ namespace StupidAivGame
 			this.name = room.name + "_game_background";
 			this.room = room;
 
+			this.order = 1;
+
 			this.backgroundChosen = backgroundChosen;
 		}
 
@@ -33,7 +35,7 @@ namespace StupidAivGame
 		{
 			base.Start ();
 			// TODO: random (with seed) inside game
-			Random rnd = new Random ((int)DateTime.Now.Ticks);
+			Random rnd = ((Game)engine.objects["game"]).random.GetRandom(this.name);
 			blockAsset = (SpriteAsset)engine.GetAsset ("block");
 			blockW = blockAsset.sprite.Width;//(blockAsset).sprite.Width;
 			blockH = blockAsset.sprite.Height;//(blockAsset).sprite.Height;

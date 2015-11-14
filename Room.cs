@@ -19,6 +19,9 @@ namespace StupidAivGame
 		public GameBackground gameBackground;
 		public Floor floor; 
 
+		// TODO: roomType as class
+		public int roomType = 0; // 0 normal room ; 1 boss room
+
 		public Room (string name, List<Enemy> enemies, Tuple<int, int> roomIndex, Floor floor) 
 		{
 			this.name = name;
@@ -34,13 +37,11 @@ namespace StupidAivGame
 			engine.SpawnObject (gameBackground.name, gameBackground);
 		}
 
-		public static Room RandomRoom (int counter, int minEnemies, int maxEnemies, Floor floor, int level, Tuple<int, int> roomIndex) 
+		public static Room RandomRoom (int counter, int minEnemies, int maxEnemies, Floor floor, int level, Tuple<int, int> roomIndex, Random rnd) 
 		{ // random room
-			//name = Tools.RandomString(5);
-			// TODO: levels
-			string randomName = string.Format("Room_{0}", counter);
-			Random rnd = new Random((int)DateTime.Now.Ticks);
-			CharactersInfo charactersInfo = new CharactersInfo ();
+			string randomName = string.Format("Room_{0}_{0}", floor.floorIndex, counter);
+			//Random rnd = game.random.GetRandom(randomName);
+			CharactersInfo charactersInfo = new CharactersInfo (rnd);
 			int numberOfEnemies = rnd.Next(minEnemies, maxEnemies);
 			List<Enemy> randomEnemies = new List<Enemy>();
 			for (int i = 0; i < numberOfEnemies; i++) {
@@ -67,7 +68,7 @@ namespace StupidAivGame
 		public void SpawnEnemies ()
 		{
 			Game game = (Game)engine.objects ["game"];
-			Random rnd = new Random((int) DateTime.Now.Ticks);;
+			Random rnd = game.random.GetRandom (this.name + "_spawn");
 			int count = 0;
 			foreach (Enemy enemy in enemies) {
 				Console.WriteLine ("Spawning enemy: {0} n.{1}", enemy.name, count);

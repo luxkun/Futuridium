@@ -51,7 +51,7 @@ namespace StupidAivGame
 				//blocks [x, y].currentSprite = (SpriteAsset) engine.GetAsset ("block");
 				blocks [bx, by].x = bx * blockW;
 				blocks [bx, by].y = by * blockH;
-				blocks [bx, by].order = 1;
+				blocks [bx, by].order = this.order;
 				if (blocksWithHitBox)
 					blocks [bx, by].AddHitBox (blockName, 0, 0, blockW, blockH);
 				Console.WriteLine ("Spawned block {0}.{1} at {2}.{3}", bx, by, blocks [bx, by].x, blocks [bx, by].y);

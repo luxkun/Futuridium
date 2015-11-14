@@ -37,6 +37,11 @@ namespace StupidAivGame
 
 	public class MapBorders : Background
 	{
+		public MapBorders () : base ()
+		{
+			this.order = 10;
+		}
+
 		public override void Start ()
 		{
 			name = "map_borders";

@@ -85,12 +85,6 @@ namespace StupidAivGame
 				}
 			}
 		}
-
-		static int Randomize (int min, int max)
-		{
-			Random random = new Random (Environment.TickCount);
-			return random.Next (min, max);
-		}
 	}
 }
 

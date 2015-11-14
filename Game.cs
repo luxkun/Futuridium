@@ -34,19 +34,15 @@ namespace StupidAivGame
 		private int windowChangeDelay = 500;
 		private int gameOverTimer = 0;
 		private int gameOverDelay = 1000;
+
+		public RandomSeed random;
 			
-		public Game (Engine engine)
+		public Game ()
 		{
-			this.engine = engine;
+			this.random = new RandomSeed ("CIA1");
 			spritesAnimations = new Dictionary<string, List<string>> ();
 
 			joyStickConfig = thrustmasterConfig;
-		}
-
-		// fight the boss of this floor
-		public void StartBossFight ()
-		{
-			
 		}
 
 		public void InitializeNewFloor ()
@@ -57,7 +53,7 @@ namespace StupidAivGame
 			floorIndex++;
 			currentFloor = new Floor (floorIndex);
 			engine.SpawnObject (currentFloor.name, currentFloor);
-			currentFloor.RandomizeFloor((int) (6 * ((floorIndex + 1) / 2.0)), (int) (12 * ((floorIndex + 1) / 2.0)));;
+			currentFloor.RandomizeFloor((int)(6 * Math.Max(1, (floorIndex + 1) / 5.0)), (int)(8 * Math.Max(1, (floorIndex + 1) / 4.0)));
 			currentFloor.OpenRoom (currentFloor.firstRoom);
 		}
 

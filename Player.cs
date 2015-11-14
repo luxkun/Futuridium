@@ -55,6 +55,7 @@ namespace StupidAivGame
 			redWindow.x = 0;
 			redWindow.y = 0;
 			redWindow.fill = true;
+			redWindow.order = 9;
 			this.engine.SpawnObject ("redWindow", redWindow);
 
 			base.Start ();
@@ -197,8 +198,7 @@ namespace StupidAivGame
 						if (changedFloor)
 							lastFloorChange = changeFloorDelay;
 					} else if (collision.other.name.StartsWith("escape_floor_")) {
-						//game.initializeNewFloor();
-						game.StartBossFight();
+						game.InitializeNewFloor();
 						collision.other.Destroy ();
 					}
 				}
