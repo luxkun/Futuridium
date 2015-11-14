@@ -53,7 +53,7 @@ namespace StupidAivGame
 			return room;
 		}
 
-		public void removeEnemy (Enemy enemy)
+		public void RemoveEnemy (Enemy enemy)
 		{
 			/*Character[] newEnemies = new Character[enemies.Length - 1];
 			int y = 0;

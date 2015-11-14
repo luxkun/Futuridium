@@ -99,7 +99,7 @@ namespace StupidAivGame
 		{ 
 			if (damageFunc == null)
 				damageFunc = (Character ch0, Character ch1) => {
-				return ch1.level.attack;
+					return ch1.level.attack;
 				};
 
 			enemy.GetDamage (character, damageFunc);
@@ -113,7 +113,7 @@ namespace StupidAivGame
 
 				Enemy enemyObj = enemy as Enemy;
 				if (enemyObj != null) {
-					currentFloor.currentRoom.removeEnemy (enemyObj);
+					currentFloor.currentRoom.RemoveEnemy (enemyObj);
 
 					Console.WriteLine ("Enemies to go in current room: " + currentFloor.currentRoom.enemies.Count);
 					foreach (Enemy en in currentFloor.currentRoom.enemies) {

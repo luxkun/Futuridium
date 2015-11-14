@@ -17,7 +17,7 @@ namespace StupidAivGame
 
 		private int rangeToGo;
 
-		public bool bounceBullet = true;
+		public bool bounceBullet = false;
 
 		private const float fadeAwayRange = 0.2f;
 		private const float fadeAwayMod = 0.8f;

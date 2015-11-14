@@ -13,7 +13,7 @@ namespace StupidAivGame
 		private double _orbStretch = 0.0;
 		private bool orbStretching; // true: decrease ; false: increase
 		public int orbStretchSteps = 50;
-		public double orbStretch = 0.4; // orbRange goes from orbRange * orbStretch to orbRange
+		public double orbStretch = 0.25; // orbRange goes from orbRange * orbStretch to orbRange
 		public double orbSpeed = 0.08;
 
 		private Vector2 virtPos = new Vector2 ();

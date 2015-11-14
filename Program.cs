@@ -24,6 +24,8 @@ namespace StupidAivGame
 			// set the base path for assets
 			Asset.basePath = "../../Assets";
 			// load assets
+			engine.LoadAsset ("levelup_sound", new Asset ("Music/levelup.wav"));
+
 			engine.LoadAsset ("logo", new SpriteAsset ("Futuridium.png"));
 			engine.LoadAsset ("player", new SpriteAsset ("player.png"));
 			engine.LoadAsset ("monkey", new SpriteAsset ("monkey.png"));

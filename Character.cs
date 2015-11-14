@@ -63,7 +63,10 @@ namespace StupidAivGame
 		{
 			if (levelManager == null)
 				levelManager = new LevelManager (this, level0);
-			levelManager.CheckLevelUp ();
+			if (levelManager.CheckLevelUp () && this as Player != null && this.level.level >= 0) {
+				this.engine.PlaySound ("levelup_sound");
+				// TODO: bug?
+			}
 		}
 
 		// not started before update??
@@ -86,7 +89,9 @@ namespace StupidAivGame
 
 			bullet.radius = level.shotRadius;
 			bullet.color = shotColor;
-			this.engine.SpawnObject (string.Format("bullet_{0}_{1}", this.name, bulletCounter), bullet);
+			this.engine.SpawnObject (
+				string.Format("{2}_bullet_{0}_{1}", this.name, bulletCounter, ((Game)engine.objects["game"]).currentFloor.currentRoom.name), bullet
+			);
 			bulletCounter++;
 		}
 
@@ -94,9 +99,13 @@ namespace StupidAivGame
 		{
 			LevelCheck (); // could happen that the player kills the enemy before he fully spawn (before Start "starts")
 			enemy.LevelCheck();
-			level.hp -= damageFunc (this, enemy);//enemy.level.attack;
+			int dmg = damageFunc (this, enemy);
+			level.hp -= dmg;//enemy.level.attack;
 			if (hud != null)
 				hud.UpdateHPBar ();
+			engine.SpawnObject (
+				string.Format("{0}_info_text_{1}_{2}_{3}", this.name, enemy.name, dmg, this.ticks), new FloatingText (this, "-" + dmg, "orange")
+			);
 			return level.hp;
 		}
 

@@ -34,6 +34,7 @@ namespace StupidAivGame
 
 			Vector2 playerV = new Vector2 (player.x, player.y);
 			Vector2 agentV = new Vector2 (this.x, this.y);
+			Vector2 paddingV = new Vector2 (10, 10);
 			//List<Vector> points = new List<Vector> ();
 			int distance = (int) ((playerV - agentV).Length * 2); // sucks
 			double bestDelta = engine.width; // flag?
@@ -56,8 +57,12 @@ namespace StupidAivGame
 			}
 			if (distance > 0) {
 				//Console.WriteLine("{0} {1} {2} {3} {4}", playerV, agentV, nextStep, bestDelta, level.speed);
-				this.virtPos.X = (nextStep.X - this.x) * (this.deltaTicks / 100f);
-				this.virtPos.Y = (nextStep.Y - this.y) * (this.deltaTicks / 100f);
+				float utopiaX = (nextStep.X - this.x);
+				float utopiaY = (nextStep.Y - this.y);
+				//if (utopiaX > (playerV.X - paddingV) && this.x < (playerV.X - paddingV))
+				//	utopiaX = playerV.X - paddingV;
+				this.virtPos.X = utopiaX * (this.deltaTicks / 100f);
+				this.virtPos.Y = utopiaY * (this.deltaTicks / 100f);
 
 				if (Math.Abs (this.virtPos.X) > 1) {
 					this.x += (int)this.virtPos.X;

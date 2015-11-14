@@ -24,6 +24,8 @@ namespace StupidAivGame
 		private Vector2 lastPosition;
 		private Vector2 virtPos = new Vector2();
 
+		public string realName = "Rek";
+
 		//private List<int> pressedJoyButtons;
 		public Player () : base ("player", "Player", "player")
 		{
@@ -38,6 +40,8 @@ namespace StupidAivGame
 			level0.shotRange = 400;
 			level0.shotRadius = 8;
 			isCloseCombat = false;
+
+
 
 			//pressedJoyButtons = new List<int> ();
 

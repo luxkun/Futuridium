@@ -65,11 +65,20 @@
     <Compile Include="GameBackground.cs" />
     <Compile Include="Hud.cs" />
     <Compile Include="RandomSeed.cs" />
+    <Compile Include="FloatingText.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
     <Folder Include="Assets\" />
     <Folder Include="Enemies\" />
     <Folder Include="Enemies\Bosses\" />
+    <Folder Include="Dependencies\" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Dependencies\SDL2.dll" />
+    <None Include="Dependencies\libSDL2.dylib" />
+    <None Include="Dependencies\OpenTK.dll.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 </Project>

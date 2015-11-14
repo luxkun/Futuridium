@@ -17,29 +17,29 @@ namespace StupidAivGame
 			//Character troll = new Character ("Troll", 200, 75, 35, 0, 15, game);
 			Enemy bigMonkey = new Enemy ("enemy_bigmonkey", "Big Monkey", "bigmonkey");
 			bigMonkey.level0.maxHP = 120;
-			bigMonkey.level0.attack = 100;
+			bigMonkey.level0.attack = 80;
 			bigMonkey.level0.xpReward = 12;
 			bigMonkey.level0.speed = 20;
 			//bigMonkey.useAnimations = true;
 
 			Enemy monkey = new Enemy ("enemy_monkey", "Monkey", "monkey");
 			monkey.level0.maxHP = 80;
-			monkey.level0.attack = 60;
+			monkey.level0.attack = 40;
 			monkey.level0.xpReward = 8;
-			monkey.level0.speed = 25;
+			monkey.level0.speed = 20;
 
 			Enemy bear = new Enemy ("enemy_bear", "Bear", "bear");
 			bear.level0.maxHP = 400;
-			bear.level0.attack = 120;
+			bear.level0.attack = 100;
 			bear.level0.xpReward = 25;
-			bear.level0.speed = 15;
+			bear.level0.speed = 12;
 
 			// TODO: boss
 			Enemy megaMonkey = new Enemy ("enemy_megamonkey", "Mega Monkey", "megamonkey");
 			megaMonkey.level0.maxHP = 999;
-			megaMonkey.level0.attack = 180;
+			megaMonkey.level0.attack = 140;
 			megaMonkey.level0.xpReward = 50;
-			megaMonkey.level0.speed = 30;
+			megaMonkey.level0.speed = 25;
 
 
 			enemies = new Dictionary<Enemy, double> ();
