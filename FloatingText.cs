@@ -16,6 +16,8 @@ namespace StupidAivGame
 		public FloatingText (Character owner, string text, string color) : base("Arial", 14, color)
 		{
 			this.owner = owner;
+			this.name = String.Format("{0}_floatingtext_{1}", ((Game)owner.engine.objects["game"]).currentFloor.currentRoom.name, Guid.NewGuid ().ToString ());
+			this.order = owner.order - 1;
 			this.text = text;
 			xPadding = (float)(new Random ((int)DateTime.Now.Ticks).NextDouble ());
 		}

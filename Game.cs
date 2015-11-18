@@ -39,7 +39,7 @@ namespace StupidAivGame
 			
 		public Game ()
 		{
-			this.random = new RandomSeed ("CIA1");
+			this.random = new RandomSeed ("SEED0");
 			spritesAnimations = new Dictionary<string, List<string>> ();
 
 			joyStickConfig = thrustmasterConfig;
@@ -65,6 +65,9 @@ namespace StupidAivGame
 			logoObj.y = engine.height / 2 - logoObj.height / 2;
 			engine.SpawnObject ("logo", logoObj);
 			mainWindow = "logo";
+
+			//test
+			//this.engine.PlaySound ("levelup_sound");
 		}
 
 		private void StartGame ()
@@ -83,8 +86,6 @@ namespace StupidAivGame
 
 			InitializeNewFloor ();
 		}
-
-		// override Start vs constructor?
 
 		// bullet hits enemy
 		public bool Hits (Bullet bullet, Character enemy, Collision collision)
@@ -149,21 +150,6 @@ namespace StupidAivGame
 					break;
 				}
 			}
-			/*
-			if (joystick != -1) {
-				JoystickState joystickState = Joystick.GetState (joystick);
-				Console.WriteLine ("Axis: {0} {1} {2} {3}", joystickState.GetAxis (JoystickAxis.Axis0), joystickState.GetAxis (JoystickAxis.Axis1), joystickState.GetAxis (JoystickAxis.Axis2), joystickState.GetAxis (JoystickAxis.Axis3));
-				Console.Write ("Buttons: ");
-				foreach (string key in joyStickConfig.Keys) {
-					if (joystickState.GetButton(joyStickConfig[key]) == OpenTK.Input.ButtonState.Pressed)
-						Console.Write ("{0}", key);
-				}
-				Console.WriteLine ();
-				/*foreach (OpenTK.Input.JoystickButton button in Enum.GetValues(typeof(OpenTK.Input.JoystickButton))) {
-					if ((OpenTK.Input.ButtonState)gamePadState.Buttons.GetType ().GetProperty (button.ToString()).GetValue(gamePadState) == OpenTK.Input.ButtonState.Pressed)
-						Console.WriteLine ("Pressed joystick button: " + button);
-				}*/
-			//}
 		}
 
 		private void OpenMap ()

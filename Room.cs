@@ -22,9 +22,9 @@ namespace StupidAivGame
 		// TODO: roomType as class
 		public int roomType = 0; // 0 normal room ; 1 boss room
 
-		public Room (string name, List<Enemy> enemies, Tuple<int, int> roomIndex, Floor floor) 
+		public Room (List<Enemy> enemies, Tuple<int, int> roomIndex, Floor floor) 
 		{
-			this.name = name;
+			this.name = String.Format("Room_{0}_{1}.{2}", floor.floorIndex, roomIndex.Item1, roomIndex.Item2);
 			this.enemies = enemies;
 			this.roomIndex = roomIndex;
 			this.floor = floor;
@@ -37,19 +37,20 @@ namespace StupidAivGame
 			engine.SpawnObject (gameBackground.name, gameBackground);
 		}
 
-		public static Room RandomRoom (int counter, int minEnemies, int maxEnemies, Floor floor, int level, Tuple<int, int> roomIndex, Random rnd) 
+		public static Room RandomRoom (int counter, int minEnemies, int maxEnemies, Floor floor, int level, Tuple<int, int> roomIndex, Random rnd, int roomType) 
 		{ // random room
-			string randomName = string.Format("Room_{0}_{0}", floor.floorIndex, counter);
+			//string randomName = string.Format("Room_{0}_{0}", floor.floorIndex, counter);
 			//Random rnd = game.random.GetRandom(randomName);
 			CharactersInfo charactersInfo = new CharactersInfo (rnd);
 			int numberOfEnemies = rnd.Next(minEnemies, maxEnemies);
 			List<Enemy> randomEnemies = new List<Enemy>();
 			for (int i = 0; i < numberOfEnemies; i++) {
-				randomEnemies.Add(charactersInfo.randomEnemy (i + 1, level));
+				randomEnemies.Add(charactersInfo.randomEnemy (i + 1, level, roomType));
 			}
 			//string[] availableBackgroundAssets = new string[] { "background_0", "background_1" };
 			//GameBackground gameBackground = new GameBackground (availableBackgroundAssets[rnd.Next(0, availableBackgroundAssets.Length)]);
-			Room room = new Room (randomName, randomEnemies, roomIndex, floor);
+			Room room = new Room (randomEnemies, roomIndex, floor);
+			room.roomType = roomType;
 			return room;
 		}
 

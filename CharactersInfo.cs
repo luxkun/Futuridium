@@ -3,56 +3,79 @@ using System.Collections.Generic;
 
 namespace StupidAivGame
 {
-	class CharactersInfo {
-		private Dictionary<Enemy, double> enemies; // character, spawn modifier (1 is base)
-		private double rndRange = 0f;
+	class CharactersInfo
+	{
+		private List<Dictionary<Enemy, double>> enemies;
+		// character, spawn modifier (1 is base)
+		private List<double> rndRanges;
 		private string letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
 		private Random rnd;
+
 		public CharactersInfo (Random rnd)
 		{
 			this.rnd = rnd;
-			
-			//Character ogre = new Character ("Ogre", 150, 120, 20, 0, 10, game);
-			//Character troll = new Character ("Troll", 200, 75, 35, 0, 15, game);
+
+			rndRanges = new List<double> (2);
+			enemies = new List<Dictionary<Enemy, double>> (2);
+
+			// ROOM TYPE: 0
 			Enemy bigMonkey = new Enemy ("enemy_bigmonkey", "Big Monkey", "bigmonkey");
 			bigMonkey.level0.maxHP = 120;
-			bigMonkey.level0.attack = 80;
+			bigMonkey.level0.attack = 40;
 			bigMonkey.level0.xpReward = 12;
 			bigMonkey.level0.speed = 20;
 			//bigMonkey.useAnimations = true;
 
 			Enemy monkey = new Enemy ("enemy_monkey", "Monkey", "monkey");
 			monkey.level0.maxHP = 80;
-			monkey.level0.attack = 40;
+			monkey.level0.attack = 20;
 			monkey.level0.xpReward = 8;
 			monkey.level0.speed = 20;
 
 			Enemy bear = new Enemy ("enemy_bear", "Bear", "bear");
 			bear.level0.maxHP = 400;
-			bear.level0.attack = 100;
+			bear.level0.attack = 50;
 			bear.level0.xpReward = 25;
 			bear.level0.speed = 12;
 
-			// TODO: boss
+
+			enemies.Add (new Dictionary<Enemy, double> (3));
+			enemies [0] [bear] = 0.2;
+			enemies [0] [bigMonkey] = 0.6;
+			enemies [0] [monkey] = 1.0;
+
+
+			// ROOM TYPE: 1
+			// TODO: special attacks, charge for mino, bullets for megamonkey
+			Enemy mino = new Enemy ("enemy_mino", "Mino", "mino");
+			mino.level0.maxHP = 1200;
+			mino.level0.attack = 100;
+			mino.level0.xpReward = 100;
+			mino.level0.speed = 20;
+
 			Enemy megaMonkey = new Enemy ("enemy_megamonkey", "Mega Monkey", "megamonkey");
 			megaMonkey.level0.maxHP = 999;
-			megaMonkey.level0.attack = 140;
+			megaMonkey.level0.attack = 70;
 			megaMonkey.level0.xpReward = 50;
 			megaMonkey.level0.speed = 25;
 
+			enemies.Add (new Dictionary<Enemy, double> (2));
+			enemies [1] [mino] = 1;
+			enemies [1] [megaMonkey] = 1;
 
-			enemies = new Dictionary<Enemy, double> ();
-			enemies[megaMonkey] = 0.15;
-			enemies[bear] = 0.2;
-			enemies[bigMonkey] = 0.6;
-			enemies[monkey] = 1.0;
-			foreach (KeyValuePair<Enemy, double> pair in enemies) {
-				rndRange += pair.Value;
+
+			int count = 0;
+			foreach (Dictionary<Enemy, double> enemiesList in enemies) {
+				rndRanges.Add (0);
+				foreach (KeyValuePair<Enemy, double> pair in enemiesList) {
+					rndRanges [count] += pair.Value;
+				}
+				count++;
 			}
 		}
 
-		public Enemy randomEnemy (int counter, int level)
+		public Enemy randomEnemy (int counter, int level, int roomType)
 		{
 			// enemy.randomMod: probability to spawn
 			// range = SUM(randomMods) 
@@ -60,8 +83,8 @@ namespace StupidAivGame
 			//  e smettendo di sottrarre quando si arriva ad un numero negativo (o 0)
 			//  si sceglie un nemico random
 			// graficamente: |----Goblin----|-uGobl-|----Drowner---|F|
-			double range = rnd.NextDouble () * rndRange;
-			Dictionary<Enemy, double>.Enumerator enemiesList = enemies.GetEnumerator ();
+			double range = rnd.NextDouble () * rndRanges [roomType];
+			Dictionary<Enemy, double>.Enumerator enemiesList = enemies [roomType].GetEnumerator ();
 			Enemy enemyInfo = null;
 			enemiesList.MoveNext ();
 			for (int i = 0; range > 0.0 && i < enemies.Count; i++) {
@@ -72,7 +95,7 @@ namespace StupidAivGame
 			}
 
 			//Character enemyInfo = enemies [rnd.Next (0, enemies.Length)];
-			Enemy result = new Enemy(enemyInfo.name + letters[counter - 1 % letters.Length], enemyInfo.formattedName, enemyInfo.characterName);
+			Enemy result = new Enemy (enemyInfo.name + letters [counter - 1 % letters.Length], enemyInfo.formattedName, enemyInfo.characterName);
 			Level level0 = enemyInfo.level0.Clone ();
 			result.useAnimations = enemyInfo.useAnimations;
 			result.level0 = level0;

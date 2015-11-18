@@ -170,7 +170,7 @@ namespace StupidAivGame
 				throw new Exception ("Floor.RandomRooms can be called only once.");
 			}
 			Tuple<int, int> newRoomIndex = Tuple.Create (rooms.GetLength (0) / 2, rooms.GetLength (1) / 2);
-			firstRoom = Room.RandomRoom (roomsList.Count, minEnemies, maxEnemies, this, floorIndex, newRoomIndex, rnd);
+			firstRoom = Room.RandomRoom (roomsList.Count, minEnemies, maxEnemies, this, floorIndex, newRoomIndex, rnd, 0);
 			rooms [newRoomIndex.Item1, newRoomIndex.Item2] = firstRoom;
 			roomsList.Add (firstRoom);
 
@@ -178,26 +178,32 @@ namespace StupidAivGame
 			queue.Enqueue (firstRoom);
 			while (roomsList.Count < maxRooms) {
 				Room currentRoom = queue.Dequeue();
-				int addedRooms = 0;
-				while (addedRooms == 0) { // randomize visit
-					int rndX, rndY;
-					do {
-						rndX = rnd.Next (currentRoom.roomIndex.Item1 > 0 ? -1 : 0, currentRoom.roomIndex.Item1 < (maxRooms - 1) ? 2 : 1);
-						rndY = rnd.Next (currentRoom.roomIndex.Item2 > 0 ? -1 : 0, currentRoom.roomIndex.Item2 < (maxRooms - 1) ? 2 : 1);
-						if (rndX != 0 && rndY != 0) {
-							if (rnd.Next (0, 2) == 1)
-								rndX = 0;
-							else
-								rndY = 0;
-						}
-						newRoomIndex = Tuple.Create (currentRoom.roomIndex.Item1 + rndX, currentRoom.roomIndex.Item2 + rndY);
-					} while ((rndX == 0 && rndY == 0) || rooms [newRoomIndex.Item1, newRoomIndex.Item2] != null);
+				int addedRooms = 0, i = 0;
+				while (addedRooms == 0 && i < 4) { // randomize visit
 					if (rnd.Next (0, 2) == 1) {
-						Room newRoom = Room.RandomRoom (roomsList.Count, minEnemies, maxEnemies, this, floorIndex, newRoomIndex, rnd);
+						int rndX, rndY;
+						do {
+							rndX = rnd.Next (currentRoom.roomIndex.Item1 > 0 ? -1 : 0, currentRoom.roomIndex.Item1 < (maxRooms - 1) ? 2 : 1);
+							rndY = rnd.Next (currentRoom.roomIndex.Item2 > 0 ? -1 : 0, currentRoom.roomIndex.Item2 < (maxRooms - 1) ? 2 : 1);
+							if (rndX != 0 && rndY != 0) {
+								if (rnd.Next (0, 2) == 1)
+									rndX = 0;
+								else
+									rndY = 0;
+							}
+							newRoomIndex = Tuple.Create (currentRoom.roomIndex.Item1 + rndX, currentRoom.roomIndex.Item2 + rndY);
+						} while ((rndX == 0 && rndY == 0) || rooms [newRoomIndex.Item1, newRoomIndex.Item2] != null);
+						int roomType = 0;
+						if (roomsList.Count == maxRooms - 1) {
+							Console.WriteLine ("BOSS ROOM GEN.");
+							roomType = 1;
+						}
+						Room newRoom = Room.RandomRoom (roomsList.Count, minEnemies, maxEnemies, this, floorIndex, newRoomIndex, rnd, roomType);
 						rooms [newRoomIndex.Item1, newRoomIndex.Item2] = newRoom;
 						roomsList.Add (newRoom);
 						queue.Enqueue (newRoom);
-						addedRooms++;
+						addedRooms++; 
+						i++;
 					}
 				}
 			}

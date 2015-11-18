@@ -32,9 +32,9 @@ namespace StupidAivGame
 			this.order = 7;
 
 			level0.maxHP = 200;
-			level0.speed = 15;
+			level0.speed = 25;
 			level0.shotDelay = 1500;
-			level0.attack = 50;
+			level0.attack = 25;
 			level0.neededXP = 100;
 			level0.shotSpeed = 20;
 			level0.shotRange = 400;

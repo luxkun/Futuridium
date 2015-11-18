@@ -30,10 +30,14 @@ namespace StupidAivGame
 			engine.LoadAsset ("player", new SpriteAsset ("player.png"));
 			engine.LoadAsset ("monkey", new SpriteAsset ("monkey.png"));
 			engine.LoadAsset ("bigmonkey", new SpriteAsset ("bigmonkey.png"));
-			engine.LoadAsset ("megamonkey", new SpriteAsset ("megamonkey.png"));
 			engine.LoadAsset ("bear", new SpriteAsset ("pedobear.png"));
+			// bossses
+			engine.LoadAsset ("mino", new SpriteAsset ("minotaur.gif"));
+			engine.LoadAsset ("megamonkey", new SpriteAsset ("megamonkey.png"));
 
-			// not real animation..
+			engine.LoadAsset ("blood", new SpriteAsset ("blood.png"));
+			engine.LoadAsset ("skull", new SpriteAsset ("skull.png"));
+			engine.LoadAsset ("sadskull", new SpriteAsset ("sadskull.png"));
 			game.spritesAnimations ["background_1"] = new List<string> ();
 			for (int y = 0; y < 4; y++) {
 				for (int x = 0; x < 4; x++) {

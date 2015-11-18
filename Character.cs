@@ -63,9 +63,8 @@ namespace StupidAivGame
 		{
 			if (levelManager == null)
 				levelManager = new LevelManager (this, level0);
-			if (levelManager.CheckLevelUp () && this as Player != null && this.level.level >= 0) {
+			if (levelManager.CheckLevelUp () && this as Player != null && this.level.level > 0) {
 				this.engine.PlaySound ("levelup_sound");
-				// TODO: bug?
 			}
 		}
 
@@ -103,8 +102,9 @@ namespace StupidAivGame
 			level.hp -= dmg;//enemy.level.attack;
 			if (hud != null)
 				hud.UpdateHPBar ();
+			FloatingText floatingText = new FloatingText (this, "-" + dmg, "orange");
 			engine.SpawnObject (
-				string.Format("{0}_info_text_{1}_{2}_{3}", this.name, enemy.name, dmg, this.ticks), new FloatingText (this, "-" + dmg, "orange")
+				floatingText.name, floatingText
 			);
 			return level.hp;
 		}
