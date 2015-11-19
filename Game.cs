@@ -70,7 +70,7 @@ namespace StupidAivGame
             mainWindow = "logo";
 
             //test
-            //this.engine.PlaySound ("levelup_sound");
+            this.engine.PlaySound ("levelup_sound");
         }
 
         private void StartGame()
