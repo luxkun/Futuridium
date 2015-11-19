@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -30,16 +30,15 @@
     <PlatformTarget>x86</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="aivengine">
+      <HintPath>..\aivengine\aivengine\bin\Debug\aivengine.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Drawing" />
     <Reference Include="WindowsBase" />
-    <Reference Include="MonoMac, Version=0.0.0.0, Culture=neutral" />
     <Reference Include="aivengine-opentk">
       <HintPath>..\..\aivengine-opentk\aivengine-opentk\bin\Debug\aivengine-opentk.dll</HintPath>
-    </Reference>
-    <Reference Include="aivengine">
-      <HintPath>..\..\aivengine\aivengine\bin\Debug\aivengine.dll</HintPath>
     </Reference>
     <Reference Include="OpenTK">
       <HintPath>..\..\opentk\Binaries\OpenTK\Debug\OpenTK.dll</HintPath>
@@ -70,9 +69,7 @@
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
     <Folder Include="Assets\" />
-    <Folder Include="Enemies\" />
     <Folder Include="Enemies\Bosses\" />
-    <Folder Include="Dependencies\" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Dependencies\SDL2.dll" />
