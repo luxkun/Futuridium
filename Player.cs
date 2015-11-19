@@ -1,250 +1,268 @@
 ﻿using System;
-using Aiv.Engine;
-using System.Windows.Forms;
 using System.Drawing;
-using System.Collections.Generic;
 using System.Threading;
+using Aiv.Engine;
 using OpenTK;
 using OpenTK.Input;
 
 namespace StupidAivGame
 {
-	public class Player : Character
-	{
-		private const int maxHitsPerTime = 1000; // 500ms immunity after gets hit
-		private int lastHit = 0;
-		private int spawnedOrbs = 0;
-		private int lastFloorChange = 0;
-		private int changeFloorDelay = 2000;
+    public class Player : Character
+    {
+        private const int maxHitsPerTime = 1000; // 500ms immunity after gets hit
+        private readonly int changeFloorDelay = 2000;
+        private bool initHUD;
+        private int lastFloorChange;
+        private int lastHit;
+        private Vector2 lastPosition;
+        public string realName = "Rek";
+        protected RectangleObject redWindow;
+        private int spawnedOrbs;
+        private Vector2 virtPos;
+        //private List<int> pressedJoyButtons;
+        public Player() : base("player", "Player", "player")
+        {
+            order = 7;
 
-		private bool initHUD = false;
-
-		protected RectangleObject redWindow;
-
-		private Vector2 lastPosition;
-		private Vector2 virtPos = new Vector2();
-
-		public string realName = "Rek";
-
-		//private List<int> pressedJoyButtons;
-		public Player () : base ("player", "Player", "player")
-		{
-			this.order = 7;
-
-			level0.maxHP = 200;
-			level0.speed = 25;
-			level0.shotDelay = 1500;
-			level0.attack = 25;
-			level0.neededXP = 100;
-			level0.shotSpeed = 20;
-			level0.shotRange = 400;
-			level0.shotRadius = 8;
-			isCloseCombat = false;
+            level0.maxHP = 200;
+            level0.speed = 25;
+            level0.shotDelay = 1500;
+            level0.attack = 25;
+            level0.neededXP = 100;
+            level0.shotSpeed = 20;
+            level0.shotRange = 400;
+            level0.shotRadius = 8;
+            isCloseCombat = false;
 
 
+            //pressedJoyButtons = new List<int> ();
+        }
 
-			//pressedJoyButtons = new List<int> ();
+        public override void Start()
+        {
+            AddHitBox("player", 0, 0, width, height);
 
-		}
+            redWindow = new RectangleObject();
+            redWindow.width = 0;
+            redWindow.height = 0;
+            redWindow.name = "redWindow";
+            redWindow.color = Color.Red;
+            redWindow.x = 0;
+            redWindow.y = 0;
+            redWindow.fill = true;
+            redWindow.order = 9;
+            engine.SpawnObject("redWindow", redWindow);
 
-		public override void Start () 
-		{
-			this.AddHitBox ("player", 0, 0, this.width, this.height);
+            base.Start();
+        }
 
-			redWindow = new RectangleObject ();
-			redWindow.width = 0;
-			redWindow.height = 0;
-			redWindow.name = "redWindow";
-			redWindow.color = Color.Red;
-			redWindow.x = 0;
-			redWindow.y = 0;
-			redWindow.fill = true;
-			redWindow.order = 9;
-			this.engine.SpawnObject ("redWindow", redWindow);
+        private void ManageControls()
+        {
+            // keyboard controls
 
-			base.Start ();
-		}
+            // why need casting?
+            lastPosition = new Vector2(x, y);
+            if (engine.IsKeyDown((int) Key.Right))
+            {
+                virtPos.X += level.speed*(deltaTicks/100f);
+            }
+            if (engine.IsKeyDown((int) Key.Left))
+            {
+                virtPos.X -= level.speed*(deltaTicks/100f);
+            }
+            if (engine.IsKeyDown((int) Key.Up))
+            {
+                virtPos.Y -= level.speed*(deltaTicks/100f);
+            }
+            if (engine.IsKeyDown((int) Key.Down))
+            {
+                virtPos.Y += level.speed*(deltaTicks/100f);
+            }
 
+            // joystick controls
+            if (((Game) engine.objects["game"]).joystick != -1)
+            {
+                var gamePadState = Joystick.GetState(((Game) engine.objects["game"]).joystick);
+                var moveDirection = new Vector2(gamePadState.GetAxis(JoystickAxis.Axis0),
+                    gamePadState.GetAxis(JoystickAxis.Axis1));
+                if (moveDirection.LengthFast > 0.1)
+                {
+                    virtPos.X += level.speed*moveDirection.X*(deltaTicks/100f);
+                    virtPos.Y += level.speed*moveDirection.Y*(deltaTicks/100f);
+                }
+            }
 
-		private void ManageControls ()
-		{
+            if (Math.Abs(virtPos.X) > 1)
+            {
+                x += (int) virtPos.X;
+                virtPos.X -= (int) virtPos.X;
+            }
+            if (Math.Abs(virtPos.Y) > 1)
+            {
+                y += (int) virtPos.Y;
+                virtPos.Y -= (int) virtPos.Y;
+            }
+        }
 
-			// keyboard controls
+        private void ManageShot()
+        {
+            if (lastShot > 0)
+                lastShot -= deltaTicks;
 
-			// why need casting?
-			lastPosition = new Vector2 (this.x, this.y);
-			if (this.engine.IsKeyDown ((int) OpenTK.Input.Key.Right)) {
-				this.virtPos.X += level.speed * (this.deltaTicks / 100f);
-			}
-			if (this.engine.IsKeyDown ((int) OpenTK.Input.Key.Left)) {
-				this.virtPos.X -= level.speed * (this.deltaTicks / 100f);
-			}
-			if (this.engine.IsKeyDown ((int) OpenTK.Input.Key.Up)) {
-				this.virtPos.Y -= level.speed * (this.deltaTicks / 100f);
-			}
-			if (this.engine.IsKeyDown ((int) OpenTK.Input.Key.Down)) {
-				this.virtPos.Y += level.speed * (this.deltaTicks / 100f);
-			}
+            if (lastShot <= 0)
+            {
+                // TODO: use vector instead of int/hardcoded direction
+                // spawn a new bullet in a choosen direction
+                // 0 left; 1 top; 2 right; 3 bottom; 4: top-left; 5: top-right; 6: bottom-left; 7: bottom-right
+                var direction = new Vector2();
+                var joystick = ((Game) engine.objects["game"]).joystick;
+                var joyStickConfig = ((Game) engine.objects["game"]).joyStickConfig;
+                var joystickState = Joystick.GetState(joystick);
+                if (joystick != -1)
+                {
+                    direction = new Vector2(joystickState.GetAxis(JoystickAxis.Axis2),
+                        joystickState.GetAxis(JoystickAxis.Axis3));
+                }
+                if (engine.IsKeyDown((int) Key.A) ||
+                    (joystick != -1 && joystickState.GetButton(joyStickConfig["S"]) == ButtonState.Pressed))
+                    direction = new Vector2(-1, 0);
+                else if (engine.IsKeyDown((int) Key.W) ||
+                         (joystick != -1 && joystickState.GetButton(joyStickConfig["T"]) == ButtonState.Pressed))
+                    direction = new Vector2(0, -1);
+                else if (engine.IsKeyDown((int) Key.D) ||
+                         (joystick != -1 && joystickState.GetButton(joyStickConfig["C"]) == ButtonState.Pressed))
+                    direction = new Vector2(1, 0);
+                else if (engine.IsKeyDown((int) Key.S) ||
+                         (joystick != -1 && joystickState.GetButton(joyStickConfig["X"]) == ButtonState.Pressed))
+                    direction = new Vector2(0, 1);
+                else if (engine.IsKeyDown((int) Key.Q))
+                    direction = new Vector2(-0.5f, -0.5f);
+                else if (engine.IsKeyDown((int) Key.E))
+                    direction = new Vector2(0.5f, -0.5f);
+                else if (engine.IsKeyDown((int) Key.Z))
+                    direction = new Vector2(-0.5f, 0.5f);
+                else if (engine.IsKeyDown((int) Key.C))
+                    direction = new Vector2(0.5f, 0.5f);
+                if (direction.LengthFast >= 0.5)
+                {
+                    Shot(direction);
+                    lastShot = level.shotDelay;
+                }
+            }
+        }
 
-			// joystick controls
-			if (((Game) engine.objects["game"]).joystick != -1) {
-				JoystickState gamePadState = Joystick.GetState (((Game) engine.objects["game"]).joystick);
-				Vector2 moveDirection = new Vector2 (gamePadState.GetAxis(JoystickAxis.Axis0), gamePadState.GetAxis(JoystickAxis.Axis1));
-				if (moveDirection.LengthFast > 0.1) {
-					this.virtPos.X += level.speed * moveDirection.X * (this.deltaTicks / 100f);
-					this.virtPos.Y += level.speed * moveDirection.Y * (this.deltaTicks / 100f);
-				}
-			}
+        private void SpawnOrb()
+        {
+            if (spawnedOrbs == 0)
+            {
+                spawnedOrbs++;
+                Console.WriteLine("Spawning orb.");
+                var orb = new Orb(this);
+                orb.radius = 8;
+                orb.color = Color.Blue;
+                engine.SpawnObject("orb", orb);
+            }
+        }
 
-			if (Math.Abs (this.virtPos.X) > 1) {
-				this.x += (int)this.virtPos.X;
-				this.virtPos.X -= (int)this.virtPos.X;
-			}
-			if (Math.Abs (this.virtPos.Y) > 1) {
-				this.y += (int)this.virtPos.Y;
-				this.virtPos.Y -= (int)this.virtPos.Y;
-			}
-		}
+        private void ManageCollisions()
+        {
+            if (lastHit > 0)
+                lastHit -= deltaTicks;
+            if (lastFloorChange > 0)
+                lastFloorChange -= deltaTicks;
 
-		private void ManageShot ()
-		{
-			if (lastShot > 0)
-				lastShot -= this.deltaTicks;
-			
-			if (lastShot <= 0) {
-				// TODO: use vector instead of int/hardcoded direction
-				// spawn a new bullet in a choosen direction
-				// 0 left; 1 top; 2 right; 3 bottom; 4: top-left; 5: top-right; 6: bottom-left; 7: bottom-right
-				Vector2 direction = new Vector2 ();
-				int joystick = ((Game)engine.objects ["game"]).joystick;
-				var joyStickConfig = ((Game)engine.objects ["game"]).joyStickConfig;
-				JoystickState joystickState = Joystick.GetState (joystick);
-				if (joystick != -1) {
-					direction = new Vector2 (joystickState.GetAxis(JoystickAxis.Axis2), joystickState.GetAxis(JoystickAxis.Axis3));
-				}
-				if (this.engine.IsKeyDown ((int)OpenTK.Input.Key.A) || (joystick != -1 && joystickState.GetButton(joyStickConfig["S"]) == OpenTK.Input.ButtonState.Pressed))
-					direction = new Vector2 (-1, 0);
-				else if (this.engine.IsKeyDown ((int)OpenTK.Input.Key.W) || (joystick != -1 && joystickState.GetButton(joyStickConfig["T"]) == OpenTK.Input.ButtonState.Pressed))
-					direction = new Vector2 (0, -1);
-				else if (this.engine.IsKeyDown ((int)OpenTK.Input.Key.D) || (joystick != -1 && joystickState.GetButton(joyStickConfig["C"]) == OpenTK.Input.ButtonState.Pressed))
-					direction = new Vector2 (1, 0);
-				else if (this.engine.IsKeyDown ((int)OpenTK.Input.Key.S) || (joystick != -1 && joystickState.GetButton(joyStickConfig["X"]) == OpenTK.Input.ButtonState.Pressed))
-					direction = new Vector2 (0, 1);
-				else if (this.engine.IsKeyDown ((int)OpenTK.Input.Key.Q))
-					direction = new Vector2 (-0.5f, -0.5f);
-				else if (this.engine.IsKeyDown ((int)OpenTK.Input.Key.E))
-					direction = new Vector2 (0.5f, -0.5f);
-				else if (this.engine.IsKeyDown ((int)OpenTK.Input.Key.Z))
-					direction = new Vector2 (-0.5f, 0.5f);
-				else if (this.engine.IsKeyDown ((int)OpenTK.Input.Key.C))
-					direction = new Vector2 (0.5f, 0.5f);
-				if (direction.LengthFast >= 0.5) {
-					Shot (direction);
-					lastShot = level.shotDelay;
-				}
-			}
-		}
+            if (lastHit <= 0)
+            {
+                var collisions = CheckCollisions();
+                if (collisions.Count > 0)
+                    Console.WriteLine("Character '{0}' collides with n.{1}", name, collisions.Count);
+                foreach (var collision in collisions)
+                {
+                    Console.WriteLine("Character '{0}' touches '{1}'", name, collision.other.name);
+                    var game = (Game) engine.objects["game"];
+                    if (collision.other.name.StartsWith("enemy"))
+                    {
+                        var enemy = collision.other as Enemy;
+                        game.Hits(enemy, this, collision, null);
 
-		private void SpawnOrb () 
-		{
-			if (spawnedOrbs == 0) {
-				spawnedOrbs++;
-				Console.WriteLine ("Spawning orb.");
-				Orb orb = new Orb (this);
-				orb.radius = 8;
-				orb.color = Color.Blue;
-				this.engine.SpawnObject ("orb", orb);
-			}
-		}
+                        Console.WriteLine("{0}, {1}", level.hp, isAlive);
+                        if (!isAlive)
+                        {
+                            Destroy();
+                        }
 
-		private void ManageCollisions () 
-		{
-			if (lastHit > 0)
-				lastHit -= this.deltaTicks;
-			if (lastFloorChange > 0)
-				lastFloorChange -= this.deltaTicks;
+                        lastHit = maxHitsPerTime;
 
-			if (lastHit <= 0) {
-				List<Collision> collisions = this.CheckCollisions ();
-				if (collisions.Count > 0)
-					Console.WriteLine ("Character '{0}' collides with n.{1}", name, collisions.Count);
-				foreach (Collision collision in collisions) {
-					Console.WriteLine ("Character '{0}' touches '{1}'", name, collision.other.name);
-					Game game = (Game)this.engine.objects ["game"];
-					if (collision.other.name.StartsWith ("enemy")) {
-						Enemy enemy = collision.other as Enemy;
-						game.Hits (enemy, this, collision, null);
+                        break;
+                    }
+                    if (collision.other.name.EndsWith("block"))
+                    {
+                        x = (int) lastPosition.X;
+                        y = (int) lastPosition.Y;
+                    }
+                    else if (collision.other.name.EndsWith("door") && lastFloorChange <= 0 && collision.other.enabled)
+                    {
+                        x = (int) lastPosition.X;
+                        y = (int) lastPosition.Y;
+                        Console.WriteLine("About to change room to: " + collision.other.name);
+                        var changedFloor = false;
+                        if (collision.other.name.EndsWith("top_door"))
+                            changedFloor = game.currentFloor.OpenRoom(game.currentFloor.currentRoom.top);
+                        else if (collision.other.name.EndsWith("left_door"))
+                            changedFloor = game.currentFloor.OpenRoom(game.currentFloor.currentRoom.left);
+                        else if (collision.other.name.EndsWith("bottom_door"))
+                            changedFloor = game.currentFloor.OpenRoom(game.currentFloor.currentRoom.bottom);
+                        else if (collision.other.name.EndsWith("right_door"))
+                            changedFloor = game.currentFloor.OpenRoom(game.currentFloor.currentRoom.right);
+                        if (changedFloor)
+                            lastFloorChange = changeFloorDelay;
+                    }
+                    else if (collision.other.name.StartsWith("escape_floor_"))
+                    {
+                        game.InitializeNewFloor();
+                        collision.other.Destroy();
+                    }
+                }
+            }
+        }
 
-						Console.WriteLine ("{0}, {1}", level.hp, isAlive);
-						if (!isAlive) {
-							this.Destroy ();
-						}
+        public override int GetDamage(Character enemy, Func<Character, Character, int> damageFunc)
+        {
+            redWindow.width = engine.width;
+            redWindow.height = engine.height;
+            Console.WriteLine("Player got damaged.");
+            var thr = new Thread(
+                () =>
+                {
+                    Thread.Sleep(50);
 
-						lastHit = maxHitsPerTime;
+                    redWindow.width = 0;
+                    redWindow.height = 0;
+                }
+                );
+            thr.Start();
 
-						break;
-					} else if (collision.other.name.EndsWith ("block")) {
-						this.x = (int)lastPosition.X;
-						this.y = (int)lastPosition.Y;
-					} else if (collision.other.name.EndsWith ("door") && lastFloorChange <= 0 && collision.other.enabled) {
-						this.x = (int)lastPosition.X;
-						this.y = (int)lastPosition.Y;
-						Console.WriteLine ("About to change room to: " + collision.other.name);
-						bool changedFloor = false;
-						if (collision.other.name.EndsWith ("top_door"))
-							changedFloor = game.currentFloor.OpenRoom (game.currentFloor.currentRoom.top);
-						else if (collision.other.name.EndsWith ("left_door"))
-							changedFloor = game.currentFloor.OpenRoom (game.currentFloor.currentRoom.left);
-						else if (collision.other.name.EndsWith ("bottom_door"))
-							changedFloor = game.currentFloor.OpenRoom (game.currentFloor.currentRoom.bottom);
-						else if (collision.other.name.EndsWith ("right_door"))
-							changedFloor = game.currentFloor.OpenRoom (game.currentFloor.currentRoom.right);
-						if (changedFloor)
-							lastFloorChange = changeFloorDelay;
-					} else if (collision.other.name.StartsWith("escape_floor_")) {
-						game.InitializeNewFloor();
-						collision.other.Destroy ();
-					}
-				}
-			}
-		}
+            return base.GetDamage(enemy, damageFunc);
+        }
 
-		public override int GetDamage (Character enemy, Func<Character, Character, int> damageFunc)
-		{
-			redWindow.width = engine.width;
-			redWindow.height = engine.height;
-			Console.WriteLine ("Player got damaged.");
-			Thread thr = new Thread(
-				() =>
-				{
-					Thread.Sleep(50);
-
-					redWindow.width = 0;
-					redWindow.height = 0;
-				}
-			);
-			thr.Start();
-
-			return base.GetDamage(enemy, damageFunc);
-		}
-
-		public override void Update ()
-		{
-			base.Update ();
-			if (((Game)engine.objects ["game"]).mainWindow == "game") {
-				if (!initHUD) {
-					initHUD = true;
-					hud = ((Hud)engine.objects ["hud"]);
-					hud.UpdateHPBar ();
-					hud.UpdateXPBar ();
-				}
-				ManageControls ();
-				ManageShot ();
-				ManageCollisions ();
-				//if (this.engine.IsKeyDown (Keys.O))
-				SpawnOrb ();
-			}
-		}
-	}
+        public override void Update()
+        {
+            base.Update();
+            if (((Game) engine.objects["game"]).mainWindow == "game")
+            {
+                if (!initHUD)
+                {
+                    initHUD = true;
+                    hud = ((Hud) engine.objects["hud"]);
+                    hud.UpdateHPBar();
+                    hud.UpdateXPBar();
+                }
+                ManageControls();
+                ManageShot();
+                ManageCollisions();
+                //if (this.engine.IsKeyDown (Keys.O))
+                SpawnOrb();
+            }
+        }
+    }
 }
-

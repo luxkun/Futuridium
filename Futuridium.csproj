@@ -33,13 +33,14 @@
     <Reference Include="aivengine">
       <HintPath>..\aivengine\aivengine\bin\Debug\aivengine.dll</HintPath>
     </Reference>
+    <Reference Include="aivengine-opentk, Version=1.0.5795.22725, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\aivengine-opentk\aivengine-opentk\bin\Debug\aivengine-opentk.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Drawing" />
     <Reference Include="WindowsBase" />
-    <Reference Include="aivengine-opentk">
-      <HintPath>..\..\aivengine-opentk\aivengine-opentk\bin\Debug\aivengine-opentk.dll</HintPath>
-    </Reference>
     <Reference Include="OpenTK">
       <HintPath>..\..\opentk\Binaries\OpenTK\Debug\OpenTK.dll</HintPath>
     </Reference>
