@@ -78,8 +78,12 @@
     <Folder Include="Enemies\Bosses\" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Dependencies\SDL2.dll" />
-    <None Include="Dependencies\libSDL2.dylib" />
+    <None Include="Dependencies\SDL2.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Dependencies\libSDL2.dylib">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="Dependencies\OpenTK.dll.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

@@ -141,7 +141,7 @@ namespace StupidAivGame
                     direction = new Vector2(-0.5f, 0.5f);
                 else if (engine.IsKeyDown((int) Key.C))
                     direction = new Vector2(0.5f, 0.5f);
-				if (direction.Length >= 0.9)
+				if (direction.Length >= 0.6)
                 {
                     Shot(direction);
                     lastShot = level.shotDelay;

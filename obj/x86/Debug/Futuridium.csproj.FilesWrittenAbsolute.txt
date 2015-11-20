@@ -11,3 +11,5 @@
 /Users/lucianoferraro/Projects/StupidAivGame/StupidAivGame/bin/Debug/Dependencies/OpenTK.dll.config
 /Users/lucianoferraro/Projects/StupidAivGame/StupidAivGame/bin/Debug/NVorbis.dll
 /Users/lucianoferraro/Projects/StupidAivGame/StupidAivGame/bin/Debug/NVorbis.OpenTKSupport.dll
+/Users/lucianoferraro/Projects/StupidAivGame/StupidAivGame/bin/Debug/Dependencies/SDL2.dll
+/Users/lucianoferraro/Projects/StupidAivGame/StupidAivGame/bin/Debug/Dependencies/libSDL2.dylib

@@ -149,8 +149,8 @@ namespace StupidAivGame
             engine.SpawnObject(escapeFloorName, escapeFloorObj);
         }
 
-        private void ManageJoystick()
-        {
+		private void ManageJoystick()
+		{
 			if (joystick == null || !joystick.IsConnected()) {
 				joystick = null;
 				for (var i = 0; i < 8; i++) {
@@ -172,7 +172,7 @@ namespace StupidAivGame
 				}
 			}*/
 
-        }
+		}
 
         private void OpenMap()
         {	
