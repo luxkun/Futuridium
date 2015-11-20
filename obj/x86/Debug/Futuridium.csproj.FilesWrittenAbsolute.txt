@@ -9,3 +9,5 @@
 /Users/lucianoferraro/Projects/StupidAivGame/StupidAivGame/obj/x86/Debug/StupidAivGame.OpenTK.dll.config
 /Users/lucianoferraro/Projects/StupidAivGame/StupidAivGame/bin/Debug/OpenTK.dll.config
 /Users/lucianoferraro/Projects/StupidAivGame/StupidAivGame/bin/Debug/Dependencies/OpenTK.dll.config
+/Users/lucianoferraro/Projects/StupidAivGame/StupidAivGame/bin/Debug/NVorbis.dll
+/Users/lucianoferraro/Projects/StupidAivGame/StupidAivGame/bin/Debug/NVorbis.OpenTKSupport.dll

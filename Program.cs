@@ -1,8 +1,5 @@
 ﻿using System.Collections.Generic;
 using Aiv.Engine;
-// this is a simple game written for learning that uses AivEngine
-// the game doesn't and won't have any story and game balance since the only purpose of the game itself is to try new algorithm and gaming paradigms 
-
 
 namespace StupidAivGame
 {
@@ -12,6 +9,7 @@ namespace StupidAivGame
         {
             var engine = new FastEngine("Futuridium", 1920, 1080, 60);
             //engine.debugCollisions = true;
+			Aiv.Engine.Input.Initialize(engine);
 
             var game = new Game();
 
@@ -19,7 +17,7 @@ namespace StupidAivGame
             // set the base path for assets
             Asset.basePath = "../../Assets";
             // load assets
-            engine.LoadAsset("levelup_sound", new Asset("Music\\levelup.ogg"));
+            engine.LoadAsset("levelup_sound", new Asset("levelup.ogg"));
 
             engine.LoadAsset("logo", new SpriteAsset("Futuridium.png"));
             engine.LoadAsset("player", new SpriteAsset("player.png"));

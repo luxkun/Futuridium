@@ -80,12 +80,11 @@ namespace StupidAivGame
             }
 
             // joystick controls
-            if (((Game) engine.objects["game"]).joystick != -1)
+			Game game = (Game)engine.objects["game"];
+			if (game.joystick != null)
             {
-                var gamePadState = Joystick.GetState(((Game) engine.objects["game"]).joystick);
-                var moveDirection = new Vector2(gamePadState.GetAxis(JoystickAxis.Axis0),
-                    gamePadState.GetAxis(JoystickAxis.Axis1));
-                if (moveDirection.LengthFast > 0.1)
+				var moveDirection = new Vector2(game.joystick.x / 127f, game.joystick.y / 127f);
+                if (moveDirection.Length > 0.2)
                 {
                     virtPos.X += level.speed*moveDirection.X*(deltaTicks/100f);
                     virtPos.Y += level.speed*moveDirection.Y*(deltaTicks/100f);
@@ -113,27 +112,26 @@ namespace StupidAivGame
             {
                 // TODO: use vector instead of int/hardcoded direction
                 // spawn a new bullet in a choosen direction
-                // 0 left; 1 top; 2 right; 3 bottom; 4: top-left; 5: top-right; 6: bottom-left; 7: bottom-right
+				// 0 left; 1 top; 2 right; 3 bottom; 4: top-left; 5: top-right; 6: bottom-left; 7: bottom-right
+				Game game = (Game)engine.objects["game"];
+
                 var direction = new Vector2();
-                var joystick = ((Game) engine.objects["game"]).joystick;
-                var joyStickConfig = ((Game) engine.objects["game"]).joyStickConfig;
-                var joystickState = Joystick.GetState(joystick);
-                if (joystick != -1)
-                {
-                    direction = new Vector2(joystickState.GetAxis(JoystickAxis.Axis2),
-                        joystickState.GetAxis(JoystickAxis.Axis3));
-                }
+				if (game.joystick != null)
+					direction = new Vector2(game.joystick.z / 127f, game.joystick.w / 127f);
+				
+				var joyStickConfig = game.joyStickConfig;
+
                 if (engine.IsKeyDown((int) Key.A) ||
-                    (joystick != -1 && joystickState.GetButton(joyStickConfig["S"]) == ButtonState.Pressed))
+					(game.joystick != null && game.joystick.GetButton(joyStickConfig["S"])))
                     direction = new Vector2(-1, 0);
-                else if (engine.IsKeyDown((int) Key.W) ||
-                         (joystick != -1 && joystickState.GetButton(joyStickConfig["T"]) == ButtonState.Pressed))
+				else if (engine.IsKeyDown((int) Key.W) ||
+					(game.joystick != null && game.joystick.GetButton(joyStickConfig["T"])))
                     direction = new Vector2(0, -1);
-                else if (engine.IsKeyDown((int) Key.D) ||
-                         (joystick != -1 && joystickState.GetButton(joyStickConfig["C"]) == ButtonState.Pressed))
+				else if (engine.IsKeyDown((int) Key.D) ||
+					(game.joystick != null && game.joystick.GetButton(joyStickConfig["C"])))
                     direction = new Vector2(1, 0);
-                else if (engine.IsKeyDown((int) Key.S) ||
-                         (joystick != -1 && joystickState.GetButton(joyStickConfig["X"]) == ButtonState.Pressed))
+				else if (engine.IsKeyDown((int) Key.S) ||
+					(game.joystick != null && game.joystick.GetButton(joyStickConfig["X"])))
                     direction = new Vector2(0, 1);
                 else if (engine.IsKeyDown((int) Key.Q))
                     direction = new Vector2(-0.5f, -0.5f);
@@ -143,7 +141,7 @@ namespace StupidAivGame
                     direction = new Vector2(-0.5f, 0.5f);
                 else if (engine.IsKeyDown((int) Key.C))
                     direction = new Vector2(0.5f, 0.5f);
-                if (direction.LengthFast >= 0.5)
+				if (direction.Length >= 0.9)
                 {
                     Shot(direction);
                     lastShot = level.shotDelay;
