@@ -83,7 +83,10 @@ namespace StupidAivGame
 			Game game = (Game)engine.objects["game"];
 			if (game.joystick != null)
             {
-				var moveDirection = new Vector2(game.joystick.x / 127f, game.joystick.y / 127f);
+				var moveDirection = new Vector2(
+					game.joystick.GetAxis(game.joyStickConfig["Lx"]) / 127f, 
+					game.joystick.GetAxis(game.joyStickConfig["Ly"]) / 127f
+				);
                 if (moveDirection.Length > 0.2)
                 {
                     virtPos.X += level.speed*moveDirection.X*(deltaTicks/100f);
@@ -117,7 +120,10 @@ namespace StupidAivGame
 
                 var direction = new Vector2();
 				if (game.joystick != null)
-					direction = new Vector2(game.joystick.z / 127f, game.joystick.w / 127f);
+					direction = new Vector2(
+						game.joystick.GetAxis(game.joyStickConfig["Rx"]) / 127f, 
+						game.joystick.GetAxis(game.joyStickConfig["Ry"]) / 127f
+					);
 				
 				var joyStickConfig = game.joyStickConfig;
 

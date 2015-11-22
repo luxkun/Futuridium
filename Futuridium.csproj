@@ -43,11 +43,11 @@
     <Reference Include="NVorbis.OpenTKSupport, Version=1.1.0.0, Culture=neutral, PublicKeyToken=null">
       <HintPath>packages\NVorbis.OpenTKSupport.1.1.0\lib\NVorbis.OpenTKSupport.dll</HintPath>
     </Reference>
-    <Reference Include="OpenTK, Version=1.1.0.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4">
-      <HintPath>packages\OpenTK.1.1.1589.5942\lib\NET40\OpenTK.dll</HintPath>
-    </Reference>
     <Reference Include="aivengine-opentk">
       <HintPath>..\..\aivengine-opentk\aivengine-opentk\bin\Debug\aivengine-opentk.dll</HintPath>
+    </Reference>
+    <Reference Include="OpenTK">
+      <HintPath>..\..\opentk\Binaries\OpenTK\Debug\OpenTK.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -71,6 +71,7 @@
     <Compile Include="Hud.cs" />
     <Compile Include="RandomSeed.cs" />
     <Compile Include="FloatingText.cs" />
+    <Compile Include="Utils.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>

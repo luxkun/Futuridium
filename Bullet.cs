@@ -3,6 +3,7 @@ using Aiv.Engine;
 using System.Collections.Generic;
 using System.Diagnostics;
 using OpenTK;
+using System.Drawing;
 
 namespace StupidAivGame
 {
@@ -48,6 +49,17 @@ namespace StupidAivGame
 			this.rangeToGo = this.range;
 			this.fill = true;
 			this.order = 6;
+
+			this.OnDestroy += new GameObject.DestroyEventHandler (DestroyEvent);
+		}
+
+		private void DestroyEvent (object sender)
+		{
+			string roomName = ((Game)engine.objects ["game"]).currentFloor.currentRoom.name;
+			ParticleSystem particleSystem = new ParticleSystem ($"{roomName}_{name}_psys", "homogeneous", 80, 800, color, radius/2, 20, radius*2) { 
+				order = this.order, x = this.x, y = this.y, fade = 200 };
+			Console.WriteLine (particleSystem.name);
+			engine.SpawnObject(particleSystem.name, particleSystem);
 		}
 
 		public override void Start ()

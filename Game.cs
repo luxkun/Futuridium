@@ -11,8 +11,8 @@ namespace StupidAivGame
 {
     public class Game : GameObject
     {
-        private readonly int gameOverDelay = 1000;
-        private readonly int windowChangeDelay = 500;
+		private static int gameOverDelay = 1000;
+        private static int windowChangeDelay = 500;
         public Floor currentFloor;
         private int floorIndex = -1;
         public bool gameOver;
@@ -29,17 +29,19 @@ namespace StupidAivGame
         // T (triangle) -> int etc.
         // TODO: do.
         //public Dictionary<string, int> ds4Config = new Dictionary<string, int> { {"T", 5}, {"C", 4}, {"S", 2}, {"X", 3}, {"L1", 6}, {"R1", 7}, {"L2", 8}, {"R2", 9}, {"SL", 10}, {"ST", 11}};
-		public Dictionary<string, int> thrustmasterConfig = new Dictionary<string, int>
+		static public Dictionary<string, int> thrustmasterConfig = new Dictionary<string, int>
 		{
-			{"T", 3}, {"C", 2}, {"S", 1}, {"X", 0}, {"SL", 8}, {"ST", 9}
-		};public Dictionary<string, int> ds4Config = new Dictionary<string, int>
-		{
-			{"T", 3}, {"C", 2}, {"S", 0}, {"X", 1}, {"SL", 8}, {"ST", 9}
+			{"T", 3}, {"C", 2}, {"S", 1}, {"X", 0}, {"SL", 8}, {"ST", 9}, {"Lx", 0}, {"Ly", 1}, {"Rx", 2}, {"Ry", 3}
 		};
+		static public Dictionary<string, int> ds4Config = new Dictionary<string, int>
+		{
+			{"T", 3}, {"C", 2}, {"S", 0}, {"X", 1}, {"SL", 8}, {"ST", 9}, {"Lx", 0}, {"Ly", 1}, {"Rx", 2}, {"Ry", 5}
+		};
+		static public string[] joystickButtons = { "T", "C", "S", "X", "SL", "ST" };
 
         public Game()
         {
-            random = new RandomSeed("SEED0");
+			random = new RandomSeed(Utils.RandomString(5));
             spritesAnimations = new Dictionary<string, List<string>>();
 
 			joyStickConfig = ds4Config;
@@ -160,9 +162,12 @@ namespace StupidAivGame
 					}
 				}
 			}
-			/*if (joystick != null) {
+			/*if (joystick != null && false) {
 				JoystickState otkjoy = Joystick.GetState (0);
+				JoystickCapabilities otkcap = Joystick.GetCapabilities (0);
 				Console.WriteLine ("x{0} y{1} z{2} w{3} z+w{4}", joystick.x, joystick.y, joystick.z, joystick.w, new Vector2(joystick.z / 127f, joystick.w / 127f).Length);
+				Console.WriteLine ("x{0} y{1} z{2} w{3} z+w{4}", otkjoy.GetAxis(JoystickAxis.Axis0), otkjoy.GetAxis(JoystickAxis.Axis1), otkjoy.GetAxis(JoystickAxis.Axis2), otkjoy.GetAxis(JoystickAxis.Axis5),
+					new Vector2(otkjoy.GetAxis(JoystickAxis.Axis2) / 127f, otkjoy.GetAxis(JoystickAxis.Axis3) / 127f).Length);
 
 				var joystickState = Joystick.GetState(0);
 				foreach (var key in joyStickConfig.Keys)
@@ -260,9 +265,11 @@ namespace StupidAivGame
 
         public bool AnyJoystickButtonPressed()
         {
-			if (joystick == null)
-				return false;
-			return joystick.anyButton ();
+			foreach (string button in joystickButtons) {
+				if (joystick.GetButton (joyStickConfig [button]))
+					return true;
+			}
+			return false;
         }
 
         // TODO: better way to do this through the engine
