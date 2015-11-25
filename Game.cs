@@ -4,52 +4,70 @@ using System.Drawing;
 using System.Windows.Forms;
 using Aiv.Engine;
 using OpenTK.Input;
-using ButtonState = OpenTK.Input.ButtonState;
-using OpenTK;
 
 namespace StupidAivGame
 {
     public class Game : GameObject
     {
-		private static int gameOverDelay = 1000;
-        private static int windowChangeDelay = 500;
+        private static readonly int gameOverDelay = 1000;
+        private static readonly int windowChangeDelay = 500;
+        // T (triangle) -> int etc.
+        // TODO: do.
+        //public Dictionary<string, int> ds4Config = new Dictionary<string, int> { {"T", 5}, {"C", 4}, {"S", 2}, {"X", 3}, {"L1", 6}, {"R1", 7}, {"L2", 8}, {"R2", 9}, {"SL", 10}, {"ST", 11}};
+        public static Dictionary<string, int> thrustmasterConfig = new Dictionary<string, int>
+        {
+            {"T", 3},
+            {"C", 2},
+            {"S", 1},
+            {"X", 0},
+            {"SL", 8},
+            {"ST", 9},
+            {"Lx", 0},
+            {"Ly", 1},
+            {"Rx", 2},
+            {"Ry", 3}
+        };
+
+        public static Dictionary<string, int> ds4Config = new Dictionary<string, int>
+        {
+            {"T", 3},
+            {"C", 2},
+            {"S", 0},
+            {"X", 1},
+            {"SL", 8},
+            {"ST", 9},
+            {"Lx", 0},
+            {"Ly", 1},
+            {"Rx", 2},
+            {"Ry", 5}
+        };
+
+        public static string[] joystickButtons = {"T", "C", "S", "X", "SL", "ST"};
         public Floor currentFloor;
         private int floorIndex = -1;
         public bool gameOver;
         private int gameOverTimer;
+        //public List<Floor> floors;
+
+        public TKJoystick joystick;
         public Dictionary<string, int> joyStickConfig;
         private int lastWindowChange;
         public string mainWindow; // game, map, ...
         public Player player;
         public RandomSeed random;
-        //public List<Floor> floors;
-
-		public TKJoystick joystick;
         public Dictionary<string, List<string>> spritesAnimations;
-        // T (triangle) -> int etc.
-        // TODO: do.
-        //public Dictionary<string, int> ds4Config = new Dictionary<string, int> { {"T", 5}, {"C", 4}, {"S", 2}, {"X", 3}, {"L1", 6}, {"R1", 7}, {"L2", 8}, {"R2", 9}, {"SL", 10}, {"ST", 11}};
-		static public Dictionary<string, int> thrustmasterConfig = new Dictionary<string, int>
-		{
-			{"T", 3}, {"C", 2}, {"S", 1}, {"X", 0}, {"SL", 8}, {"ST", 9}, {"Lx", 0}, {"Ly", 1}, {"Rx", 2}, {"Ry", 3}
-		};
-		static public Dictionary<string, int> ds4Config = new Dictionary<string, int>
-		{
-			{"T", 3}, {"C", 2}, {"S", 0}, {"X", 1}, {"SL", 8}, {"ST", 9}, {"Lx", 0}, {"Ly", 1}, {"Rx", 2}, {"Ry", 5}
-		};
-		static public string[] joystickButtons = { "T", "C", "S", "X", "SL", "ST" };
 
         public Game()
         {
-			random = new RandomSeed(Utils.RandomString(5));
+            random = new RandomSeed(Utils.RandomString(5));
             spritesAnimations = new Dictionary<string, List<string>>();
 
-			joyStickConfig = ds4Config;
+            joyStickConfig = ds4Config;
         }
 
         public void InitializeNewFloor()
         {
-            if (floorIndex > 0)
+            if (floorIndex >= 0)
             {
                 OnDestroyHelper(currentFloor.currentRoom);
             }
@@ -71,7 +89,7 @@ namespace StupidAivGame
             mainWindow = "logo";
 
             //test
-            this.engine.PlaySound ("levelup_sound");
+            engine.PlaySound("levelup_sound");
         }
 
         private void StartGame()
@@ -151,18 +169,21 @@ namespace StupidAivGame
             engine.SpawnObject(escapeFloorName, escapeFloorObj);
         }
 
-		private void ManageJoystick()
-		{
-			if (joystick == null || !joystick.IsConnected()) {
-				joystick = null;
-				for (var i = 0; i < 8; i++) {
-					if (engine.joysticks [i] != null) {
-						joystick = (TKJoystick)engine.joysticks [i];
-						break;
-					}
-				}
-			}
-			/*if (joystick != null && false) {
+        private void ManageJoystick()
+        {
+            if (joystick == null || !joystick.IsConnected())
+            {
+                joystick = null;
+                for (var i = 0; i < 8; i++)
+                {
+                    if (engine.joysticks[i] != null)
+                    {
+                        joystick = (TKJoystick) engine.joysticks[i];
+                        break;
+                    }
+                }
+            }
+            /*if (joystick != null && false) {
 				JoystickState otkjoy = Joystick.GetState (0);
 				JoystickCapabilities otkcap = Joystick.GetCapabilities (0);
 				Console.WriteLine ("x{0} y{1} z{2} w{3} z+w{4}", joystick.x, joystick.y, joystick.z, joystick.w, new Vector2(joystick.z / 127f, joystick.w / 127f).Length);
@@ -176,11 +197,10 @@ namespace StupidAivGame
 						Console.WriteLine ((JoystickButton) joyStickConfig [key]);
 				}
 			}*/
-
-		}
+        }
 
         private void OpenMap()
-        {	
+        {
             mainWindow = "map";
             var map = new Map();
             engine.SpawnObject("map", map);
@@ -228,22 +248,22 @@ namespace StupidAivGame
                 if (mainWindow == "game")
                 {
                     if (engine.IsKeyDown((int) Key.M) ||
-						(joystick != null && joystick.GetButton(joyStickConfig["SL"])))
+                        (joystick != null && joystick.GetButton(joyStickConfig["SL"])))
                         OpenMap();
                     else if (engine.IsKeyDown((int) Key.Escape) ||
-						(joystick != null && joystick.GetButton(joyStickConfig["ST"])))
+                             (joystick != null && joystick.GetButton(joyStickConfig["ST"])))
                         Pause();
                 }
                 else if (mainWindow == "map")
                 {
                     if (engine.IsKeyDown((int) Key.M) || engine.IsKeyDown((int) Key.Escape) ||
-						(joystick != null && joystick.GetButton(joyStickConfig["SL"])))
+                        (joystick != null && joystick.GetButton(joyStickConfig["SL"])))
                         CloseMap();
                 }
                 else if (mainWindow == "pause")
                 {
                     if (engine.IsKeyDown((int) Key.P) || engine.IsKeyDown((int) Key.Escape) ||
-						(joystick != null && joystick.GetButton(joyStickConfig["ST"])))
+                        (joystick != null && joystick.GetButton(joyStickConfig["ST"])))
                         UnPause();
                 }
                 else if (mainWindow == "logo")
@@ -265,23 +285,24 @@ namespace StupidAivGame
 
         public bool AnyJoystickButtonPressed()
         {
-			foreach (string button in joystickButtons) {
-				if (joystick.GetButton (joyStickConfig [button]))
-					return true;
-			}
-			return false;
+            foreach (var button in joystickButtons)
+            {
+                if (joystick.GetButton(joyStickConfig[button]))
+                    return true;
+            }
+            return false;
         }
 
         // TODO: better way to do this through the engine
         public bool AnyKeyDown()
         {
-			foreach (Key key in Enum.GetValues(typeof (Key)))
-			{
-				if (engine.IsKeyDown((int) key))
-					return true;
-			}
-			return false;
-		}
+            foreach (Key key in Enum.GetValues(typeof (Key)))
+            {
+                if (engine.IsKeyDown((int) key))
+                    return true;
+            }
+            return false;
+        }
 
         public void GameOver()
         {

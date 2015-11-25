@@ -31,24 +31,28 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="aivengine">
-      <HintPath>..\..\aivengine\aivengine\bin\Debug\aivengine.dll</HintPath>
+      <HintPath>..\aivengine-1\aivengine\bin\Debug\aivengine.dll</HintPath>
+    </Reference>
+    <Reference Include="aivengine-opentk, Version=1.0.5804.29568, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\aivengine-opentk\aivengine-opentk\bin\Debug\aivengine-opentk.dll</HintPath>
+    </Reference>
+    <Reference Include="NVorbis, Version=0.8.4.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>bin\Debug\NVorbis.dll</HintPath>
+    </Reference>
+    <Reference Include="NVorbis.OpenTKSupport, Version=1.1.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>bin\Debug\NVorbis.OpenTKSupport.dll</HintPath>
+    </Reference>
+    <Reference Include="OpenTK, Version=1.1.0.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\opentk\Binaries\OpenTK\Debug\OpenTK.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Drawing" />
     <Reference Include="WindowsBase" />
-    <Reference Include="NVorbis, Version=0.8.4.0, Culture=neutral, PublicKeyToken=null">
-      <HintPath>packages\NVorbis.0.8.4.0\lib\NVorbis.dll</HintPath>
-    </Reference>
-    <Reference Include="NVorbis.OpenTKSupport, Version=1.1.0.0, Culture=neutral, PublicKeyToken=null">
-      <HintPath>packages\NVorbis.OpenTKSupport.1.1.0\lib\NVorbis.OpenTKSupport.dll</HintPath>
-    </Reference>
-    <Reference Include="aivengine-opentk">
-      <HintPath>..\..\aivengine-opentk\aivengine-opentk\bin\Debug\aivengine-opentk.dll</HintPath>
-    </Reference>
-    <Reference Include="OpenTK">
-      <HintPath>..\..\opentk\Binaries\OpenTK\Debug\OpenTK.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Program.cs" />

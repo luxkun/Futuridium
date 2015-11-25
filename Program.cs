@@ -9,7 +9,7 @@ namespace StupidAivGame
         {
             var engine = new FastEngine("Futuridium", 1920, 1080, 60);
             //engine.debugCollisions = true;
-			Aiv.Engine.Input.Initialize(engine);
+			Input.Initialize(engine);
 
             var game = new Game();
 
