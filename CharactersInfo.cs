@@ -1,20 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
+using Aiv.Engine;
 
 namespace StupidAivGame
 {
-	class CharactersInfo
+    public class CharactersInfo : GameObject
 	{
 		private List<Dictionary<Enemy, double>> enemies;
 		// character, spawn modifier (1 is base)
 		private List<double> rndRanges;
 		private string letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
-		private Random rnd;
-
-		public CharactersInfo (Random rnd)
+		public CharactersInfo ()
 		{
-			this.rnd = rnd;
+		    name = "charactersInfo";
 
 			rndRanges = new List<double> (2);
 			enemies = new List<Dictionary<Enemy, double>> (2);
@@ -75,7 +74,29 @@ namespace StupidAivGame
 			}
 		}
 
-		public Enemy randomEnemy (int counter, int level, int roomType)
+	    public override void Start()
+	    {
+	        Game game = (Game) engine.objects["game"];
+	        foreach (Dictionary<Enemy, double> enemiesList in enemies)
+            {
+                foreach (KeyValuePair<Enemy, double> pair in enemiesList)
+                {
+                    Enemy enemy = pair.Key;
+                    if (enemy.useAnimations)
+                    {
+                        // TODO: use animations... 
+                        enemy.currentSprite = (SpriteAsset)engine.GetAsset(game.spritesAnimations[enemy.characterName][0]);
+                    }
+                    else
+                    {
+                        // TODO: add all sprites
+                        enemy.currentSprite = (SpriteAsset)engine.GetAsset(enemy.characterName); //enemy.name);
+                    }
+                }
+            }
+	    }
+
+		public Enemy RandomEnemy (int counter, int level, int roomType, Random rnd)
 		{
 			// enemy.randomMod: probability to spawn
 			// range = SUM(randomMods) 
@@ -94,15 +115,12 @@ namespace StupidAivGame
 					enemiesList.MoveNext ();
 			}
 
-			//Character enemyInfo = enemies [rnd.Next (0, enemies.Length)];
-			Enemy result = new Enemy (enemyInfo.name + letters [counter - 1 % letters.Length], enemyInfo.formattedName, enemyInfo.characterName);
-			Level level0 = enemyInfo.level0.Clone ();
-			result.useAnimations = enemyInfo.useAnimations;
-			result.level0 = level0;
-			result.LevelCheck ();
-			result.xp = result.levelManager.levelUpTable [level].neededXP;
-			result.LevelCheck ();
-			return result;
+            //Character enemyInfo = enemies [rnd.Next (0, enemies.Length)];
+            Enemy result = (Enemy)enemyInfo.Clone();
+		    result.name += letters[counter - 1%letters.Length];
+            result.xp = result.levelManager.levelUpTable[level].neededXP;
+            result.LevelCheck();
+            return result;
 		}
 	}
 }

@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using Aiv.Engine;
 using OpenTK;
 
 namespace StupidAivGame
@@ -14,10 +16,6 @@ namespace StupidAivGame
         private Vector2 virtPos;
 
         public Enemy(string name, string formattedName, string characterName) : base(name, formattedName, characterName)
-        {
-        }
-
-        public override void Start()
         {
         }
 
@@ -75,6 +73,33 @@ namespace StupidAivGame
                     virtPos.Y -= (int) virtPos.Y;
                 }
             }
+        }
+
+        public override GameObject Clone()
+        {
+            Enemy go = new Enemy(name, formattedName, characterName);
+            // TODO: use base.Clone() somehow
+            go.currentSprite = currentSprite;
+            go.name = name;
+            go.x = x;
+            go.y =y;
+            /*if (animations != null)
+            {
+                result.animations = new Dictionary<string, Animation>();
+                foreach (string animKey in animations.Keys)
+                {
+                    result.animations[animKey] = animations[animKey].Clone();
+                    result.animations[animKey].owner = result;
+                }
+            }*/
+            //result.currentAnimation = currentAnimation;
+            // ---
+            go.formattedName = formattedName;
+            go.characterName = characterName;
+            go.level0 = level0.Clone();
+            go.useAnimations = useAnimations;
+            go.LevelCheck();
+            return go;
         }
 
         public override void Update()

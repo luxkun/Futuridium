@@ -3,7 +3,7 @@ using Aiv.Engine;
 
 namespace StupidAivGame
 {
-	public class Background : SpriteObject
+	public class Background : GameObject
 	{
 		public GameObject [,] blocks;
 		public int blockW;
@@ -31,8 +31,7 @@ namespace StupidAivGame
 			string blockName = string.Format ("{0}_{1}_{2}_block", name, bx, by);
 			GameObject block;
 			if (blockAsset != null) {
-				SpriteObject blockSprite = new SpriteObject ();
-				blockSprite.currentSprite = blockAsset;
+				SpriteObject blockSprite = (SpriteObject)((SpriteObject)engine.objects[$"cache_{blockAsset.name}"]).Clone();
 				block = blockSprite;
 			} else if (blockObject != null) {
 				block = blockObject();
@@ -44,7 +43,7 @@ namespace StupidAivGame
 
 		public void SpawnBlock (int bx, int by, GameObject spriteObj, string blockName)
 		{
-			Console.WriteLine ("bx: {0}, by: {1}, {2} {3}", bx, by, blocks.GetLength (0), blocks.Length);
+			//Console.WriteLine ("bx: {0}, by: {1}, {2} {3}", bx, by, blocks.GetLength (0), blocks.Length);
 			if (blocks [bx, by] == null) {
 				blocks [bx, by] = spriteObj;
 				blocks [bx, by].name = blockName;
@@ -54,7 +53,7 @@ namespace StupidAivGame
 				blocks [bx, by].order = this.order;
 				if (blocksWithHitBox)
 					blocks [bx, by].AddHitBox (blockName, 0, 0, blockW, blockH);
-				Console.WriteLine ("Spawned block {0}.{1} at {2}.{3}", bx, by, blocks [bx, by].x, blocks [bx, by].y);
+				//Console.WriteLine ("Spawned block {0}.{1} at {2}.{3}", bx, by, blocks [bx, by].x, blocks [bx, by].y);
 				engine.SpawnObject (blockName, blocks [bx, by]);
 			}
 		}

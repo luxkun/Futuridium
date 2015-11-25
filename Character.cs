@@ -57,9 +57,9 @@ namespace StupidAivGame
 			this.name = name;
 			this.formattedName = formattedName;
 			this.characterName = characterName;
-		}
+        }
 
-		public void LevelCheck ()
+        public void LevelCheck ()
 		{
 			if (levelManager == null)
 				levelManager = new LevelManager (this, level0);

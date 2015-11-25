@@ -81,6 +81,10 @@ namespace StupidAivGame
 
         public override void Start()
         {
+            GameBackground.Initialize(engine);
+
+            engine.SpawnObject(new CharactersInfo());
+
             var logoObj = new SpriteObject();
             logoObj.currentSprite = (SpriteAsset) engine.GetAsset("logo");
             logoObj.x = engine.width/2 - logoObj.width/2;

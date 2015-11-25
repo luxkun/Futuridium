@@ -175,8 +175,10 @@ namespace StupidAivGame
             {
                 throw new Exception("Floor.RandomRooms can be called only once.");
             }
+            CharactersInfo charactersInfo = (CharactersInfo)engine.objects["charactersInfo"];
             var newRoomIndex = Tuple.Create(rooms.GetLength(0)/2, rooms.GetLength(1)/2);
-            firstRoom = Room.RandomRoom(roomsList.Count, minEnemies, maxEnemies, this, floorIndex, newRoomIndex, rnd, 0);
+            firstRoom = new Room(null, newRoomIndex, this) { roomType = 0 };
+            firstRoom.RandomizeRoom(minEnemies, maxEnemies, floorIndex, rnd, charactersInfo);
             rooms[newRoomIndex.Item1, newRoomIndex.Item2] = firstRoom;
             roomsList.Add(firstRoom);
 
@@ -214,8 +216,8 @@ namespace StupidAivGame
                             Console.WriteLine("BOSS ROOM GEN.");
                             roomType = 1;
                         }
-                        var newRoom = Room.RandomRoom(roomsList.Count, minEnemies, maxEnemies, this, floorIndex,
-                            newRoomIndex, rnd, roomType);
+                        var newRoom = new Room(null, newRoomIndex, this) { roomType = roomType };
+                        newRoom.RandomizeRoom(minEnemies, maxEnemies, floorIndex, rnd, charactersInfo);
                         rooms[newRoomIndex.Item1, newRoomIndex.Item2] = newRoom;
                         roomsList.Add(newRoom);
                         queue.Enqueue(newRoom);
