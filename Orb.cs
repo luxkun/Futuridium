@@ -1,90 +1,98 @@
 ﻿using System;
+using System.Diagnostics;
 using Aiv.Engine;
-using System.Collections.Generic;
 using OpenTK;
 
 namespace StupidAivGame
 {
-	public class Orb : CircleObject
-	{
-		private Character owner;
+    public class Orb : CircleObject
+    {
+        private double _orbStretch;
 
-		public int orbRange = 150;
-		private double _orbStretch = 0.0;
-		private bool orbStretching; // true: decrease ; false: increase
-		public int orbStretchSteps = 50;
-		public double orbStretch = 0.25; // orbRange goes from orbRange * orbStretch to orbRange
-		public double orbSpeed = 0.08;
+        private double angleTick;
 
-		private Vector2 virtPos = new Vector2 ();
+        public int orbRange = 150;
+        public double orbSpeed = 0.08;
+        public double orbStretch = 0.25; // orbRange goes from orbRange * orbStretch to orbRange
+        private bool orbStretching; // true: decrease ; false: increase
+        public int orbStretchSteps = 50;
+        private readonly Character owner;
 
-		private double angleTick = 0;
+        private Vector2 virtPos;
 
-		public Orb (Character owner)
-		{
-			this.order = 5;
-			this.owner = owner;
-			this.fill = true;
-		}
+        public Orb(Character owner)
+        {
+            order = 5;
+            this.owner = owner;
+            fill = true;
+        }
 
-		public override void Start ()
-		{
-			this.x = owner.x + orbRange;
-			this.y = owner.y;
-			this.AddHitBox ("mass", 0, 0, this.radius * 2, this.radius * 2);
-		}
+        public override void Start()
+        {
+            x = owner.x + orbRange;
+            y = owner.y;
+            AddHitBox("mass", 0, 0, radius*2, radius*2);
+        }
 
-		public Vector2 GetNextStep (double angle)
-		{
-			return new Vector2 ((int)(Math.Cos(angle) * orbRange * (1 - _orbStretch)), (int)(Math.Sin(angle) * orbRange * (1 - _orbStretch)));
-		}
+        public Vector2 GetNextStep(double angle)
+        {
+            return new Vector2((int) (Math.Cos(angle)*orbRange*(1 - _orbStretch)),
+                (int) (Math.Sin(angle)*orbRange*(1 - _orbStretch)));
+        }
 
-		private void ManageStretch () 
-		{
-			if (_orbStretch <= 0.0) {
-				orbStretching = true;
-			} else if (_orbStretch >= orbStretch) {
-				orbStretching = false;
-			}
-			_orbStretch += orbStretch / orbStretchSteps * (orbStretching ? 1 : -1);
-		}
+        private void ManageStretch()
+        {
+            if (_orbStretch <= 0.0)
+            {
+                orbStretching = true;
+            }
+            else if (_orbStretch >= orbStretch)
+            {
+                orbStretching = false;
+            }
+            _orbStretch += orbStretch/orbStretchSteps*(orbStretching ? 1 : -1);
+        }
 
-		public override void Update ()
-		{
-			if (((Game)engine.objects ["game"]).mainWindow == "game") {
-				ManageStretch ();
-				// rotate
-				this.x = owner.x;
-				this.y = owner.y;
-				angleTick += orbSpeed * (this.deltaTicks / 100.0);
-				Vector2 points = GetNextStep (angleTick);
+        public override void Update()
+        {
+            if (((Game) engine.objects["game"]).mainWindow == "game")
+            {
+                ManageStretch();
+                // rotate
+                x = owner.x;
+                y = owner.y;
+                angleTick += orbSpeed*(deltaTicks/100.0);
+                var points = GetNextStep(angleTick);
 
-				this.virtPos.X += (int)(points.X);
-				this.virtPos.Y += (int)(points.Y);
-				if (Math.Abs(this.virtPos.X) > 1) {
-					this.x += (int)this.virtPos.X;
-					this.virtPos.X -= (int)this.virtPos.X;
-				}
-				if (Math.Abs(this.virtPos.Y) > 1) {
-					this.y += (int)this.virtPos.Y;
-					this.virtPos.Y -= (int)this.virtPos.Y;
-				}
+                virtPos.X += (int) points.X;
+                virtPos.Y += (int) points.Y;
+                if (Math.Abs(virtPos.X) > 1)
+                {
+                    x += (int) virtPos.X;
+                    virtPos.X -= (int) virtPos.X;
+                }
+                if (Math.Abs(virtPos.Y) > 1)
+                {
+                    y += (int) virtPos.Y;
+                    virtPos.Y -= (int) virtPos.Y;
+                }
 
-				List<Collision> collisions = this.CheckCollisions ();
-				foreach (Collision collision in collisions) {
-					if (collision.other.name.StartsWith ("enemy")) {
-						Console.WriteLine ("Orb hits enemy: " + collision.other.name);
-						Game game = (Game)this.engine.objects ["game"];
+                var collisions = CheckCollisions();
+                foreach (var collision in collisions)
+                {
+                    if (collision.other.name.StartsWith("enemy"))
+                    {
+                        Debug.WriteLine("Orb hits enemy: " + collision.other.name);
+                        var game = (Game) engine.objects["game"];
 
-						Enemy enemy = collision.other as Enemy;
-						// broken, deliberately
-						game.Hits (owner, enemy, collision, null);
+                        var enemy = collision.other as Enemy;
+                        // broken, deliberately
+                        game.Hits(owner, enemy, collision, null);
 
-						break;
-					}
-				}
-			}
-		}
-	}
+                        break;
+                    }
+                }
+            }
+        }
+    }
 }
-

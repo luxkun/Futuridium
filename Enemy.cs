@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using Aiv.Engine;
 using OpenTK;
 
@@ -54,9 +53,9 @@ namespace StupidAivGame
             }
             if (distance > 0)
             {
-                //Console.WriteLine("{0} {1} {2} {3} {4}", playerV, agentV, nextStep, bestDelta, level.speed);
-                var utopiaX = (nextStep.X - x);
-                var utopiaY = (nextStep.Y - y);
+                //Debug.WriteLine("{0} {1} {2} {3} {4}", playerV, agentV, nextStep, bestDelta, level.speed);
+                var utopiaX = nextStep.X - x;
+                var utopiaY = nextStep.Y - y;
                 //if (utopiaX > (playerV.X - paddingV) && this.x < (playerV.X - paddingV))
                 //	utopiaX = playerV.X - paddingV;
                 virtPos.X = utopiaX*(deltaTicks/100f);
@@ -77,12 +76,12 @@ namespace StupidAivGame
 
         public override GameObject Clone()
         {
-            Enemy go = new Enemy(name, formattedName, characterName);
+            var go = new Enemy(name, formattedName, characterName);
             // TODO: use base.Clone() somehow
             go.currentSprite = currentSprite;
             go.name = name;
             go.x = x;
-            go.y =y;
+            go.y = y;
             /*if (animations != null)
             {
                 result.animations = new Dictionary<string, Animation>();

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using Aiv.Engine;
 
 namespace StupidAivGame
@@ -56,7 +57,7 @@ namespace StupidAivGame
             var count = 0;
             foreach (var enemy in enemies)
             {
-                Console.WriteLine("Spawning enemy: {0} n.{1}", enemy.name, count);
+                Debug.WriteLine("Spawning enemy: {0} n.{1}", enemy.name, count);
                 /*if (enemy.useAnimations)
                 {
                     // TODO: use animations... 

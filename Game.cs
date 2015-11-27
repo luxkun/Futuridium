@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Windows.Forms;
 using Aiv.Engine;
@@ -12,8 +13,6 @@ namespace StupidAivGame
         private static readonly int gameOverDelay = 1000;
         private static readonly int windowChangeDelay = 500;
         // T (triangle) -> int etc.
-        // TODO: do.
-        //public Dictionary<string, int> ds4Config = new Dictionary<string, int> { {"T", 5}, {"C", 4}, {"S", 2}, {"X", 3}, {"L1", 6}, {"R1", 7}, {"L2", 8}, {"R2", 9}, {"SL", 10}, {"ST", 11}};
         public static Dictionary<string, int> thrustmasterConfig = new Dictionary<string, int>
         {
             {"T", 3},
@@ -30,6 +29,7 @@ namespace StupidAivGame
 
         public static Dictionary<string, int> ds4Config = new Dictionary<string, int>
         {
+            // tutti buggati tranne Lxy e Rxy
             {"T", 3},
             {"C", 2},
             {"S", 0},
@@ -38,8 +38,8 @@ namespace StupidAivGame
             {"ST", 9},
             {"Lx", 0},
             {"Ly", 1},
-            {"Rx", 2},
-            {"Ry", 5}
+            {"Rx", 3},
+            {"Ry", 4}
         };
 
         public static string[] joystickButtons = {"T", "C", "S", "X", "SL", "ST"};
@@ -51,11 +51,13 @@ namespace StupidAivGame
 
         public TKJoystick joystick;
         public Dictionary<string, int> joyStickConfig;
+        private string lastWindow;
         private int lastWindowChange;
         public string mainWindow; // game, map, ...
         public Player player;
         public RandomSeed random;
         public Dictionary<string, List<string>> spritesAnimations;
+        internal bool usingOpenTK;
 
         public Game()
         {
@@ -65,8 +67,23 @@ namespace StupidAivGame
             joyStickConfig = ds4Config;
         }
 
+        public void StartLoading()
+        {
+            if (mainWindow != "loading")
+            {
+                lastWindow = mainWindow;
+                mainWindow = "loading";
+            }
+        }
+
+        public void StopLoading()
+        {
+            mainWindow = lastWindow;
+        }
+
         public void InitializeNewFloor()
         {
+            StartLoading();
             if (floorIndex >= 0)
             {
                 OnDestroyHelper(currentFloor.currentRoom);
@@ -77,6 +94,7 @@ namespace StupidAivGame
             currentFloor.RandomizeFloor((int) (6*Math.Max(1, (floorIndex + 1)/5.0)),
                 (int) (8*Math.Max(1, (floorIndex + 1)/4.0)));
             currentFloor.OpenRoom(currentFloor.firstRoom);
+            StopLoading();
         }
 
         public override void Start()
@@ -91,9 +109,6 @@ namespace StupidAivGame
             logoObj.y = engine.height/2 - logoObj.height/2;
             engine.SpawnObject("logo", logoObj);
             mainWindow = "logo";
-
-            //test
-            engine.PlaySound("levelup_sound");
         }
 
         private void StartGame()
@@ -146,10 +161,10 @@ namespace StupidAivGame
                 {
                     currentFloor.currentRoom.RemoveEnemy(enemyObj);
 
-                    Console.WriteLine("Enemies to go in current room: " + currentFloor.currentRoom.enemies.Count);
+                    Debug.WriteLine("Enemies to go in current room: " + currentFloor.currentRoom.enemies.Count);
                     foreach (var en in currentFloor.currentRoom.enemies)
                     {
-                        Console.Write("{0} - ", en.name);
+                        Debug.Write("{0} - ", en.name);
                     }
                 }
             }
@@ -190,15 +205,15 @@ namespace StupidAivGame
             /*if (joystick != null && false) {
 				JoystickState otkjoy = Joystick.GetState (0);
 				JoystickCapabilities otkcap = Joystick.GetCapabilities (0);
-				Console.WriteLine ("x{0} y{1} z{2} w{3} z+w{4}", joystick.x, joystick.y, joystick.z, joystick.w, new Vector2(joystick.z / 127f, joystick.w / 127f).Length);
-				Console.WriteLine ("x{0} y{1} z{2} w{3} z+w{4}", otkjoy.GetAxis(JoystickAxis.Axis0), otkjoy.GetAxis(JoystickAxis.Axis1), otkjoy.GetAxis(JoystickAxis.Axis2), otkjoy.GetAxis(JoystickAxis.Axis5),
+				Debug.WriteLine ("x{0} y{1} z{2} w{3} z+w{4}", joystick.x, joystick.y, joystick.z, joystick.w, new Vector2(joystick.z / 127f, joystick.w / 127f).Length);
+				Debug.WriteLine ("x{0} y{1} z{2} w{3} z+w{4}", otkjoy.GetAxis(JoystickAxis.Axis0), otkjoy.GetAxis(JoystickAxis.Axis1), otkjoy.GetAxis(JoystickAxis.Axis2), otkjoy.GetAxis(JoystickAxis.Axis5),
 					new Vector2(otkjoy.GetAxis(JoystickAxis.Axis2) / 127f, otkjoy.GetAxis(JoystickAxis.Axis3) / 127f).Length);
 
 				var joystickState = Joystick.GetState(0);
 				foreach (var key in joyStickConfig.Keys)
 				{
 					if (joystickState.GetButton ((JoystickButton) joyStickConfig [key]) == ButtonState.Pressed)
-						Console.WriteLine ((JoystickButton) joyStickConfig [key]);
+						Debug.WriteLine ((JoystickButton) joyStickConfig [key]);
 				}
 			}*/
         }
@@ -344,12 +359,6 @@ namespace StupidAivGame
 
                 ManageFloor();
             }
-        }
-
-        public static void NormalizeTicks(ref int outerDeltaTicks)
-        {
-            if (outerDeltaTicks > 500) // super lag/debug or bug? bug!
-                outerDeltaTicks = 0;
         }
     }
 }

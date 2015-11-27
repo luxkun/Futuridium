@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Aiv.Engine;
 
 namespace StupidAivGame
@@ -8,12 +7,20 @@ namespace StupidAivGame
     {
         public static void Main(string[] args)
         {
-            var engine = new FastEngine("Futuridium", 1920, 1080, 60);
-            //engine.debugCollisions = true;
-			Input.Initialize(engine);
+            var usingOpenTK = true;
+            Engine engine;
+            if (usingOpenTK)
+                engine = new FastEngine("Futuridium", 1280, 768, 60);
+            else
+                engine = new Engine("Futuridium", 1280, 768, 60);
+#if DEBUG
+            engine.debugCollisions = true;
+#else
+            engine.FullScreen();
+#endif
+            Input.Initialize(engine);
 
-            var game = new Game();
-
+            var game = new Game {usingOpenTK = usingOpenTK};
 
             // set the base path for assets
             Asset.basePath = "../../Assets";

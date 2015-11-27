@@ -80,7 +80,7 @@
                 CheckLevelUp();
                 return true;
             }
-            if (character.level.level == (levelUpTable.Length - 1))
+            if (character.level.level == levelUpTable.Length - 1)
                 return false;
             var nextLevel = levelUpTable[character.level.level + 1];
             if (character.xp >= nextLevel.neededXP)

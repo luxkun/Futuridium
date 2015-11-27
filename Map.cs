@@ -1,4 +1,4 @@
-﻿using System;
+﻿using System.Diagnostics;
 using System.Drawing;
 using Aiv.Engine;
 
@@ -17,7 +17,7 @@ namespace StupidAivGame
         public override void Start()
         {
             var floor = ((Game) engine.objects["game"]).currentFloor;
-            Console.WriteLine("Map size: {0}.{1}", floor.mapWidth, floor.mapHeight);
+            Debug.WriteLine("Map size: {0}.{1}", floor.mapWidth, floor.mapHeight);
 
             /*RectangleObject background = new RectangleObject ();
 			background.width = engine.width;
@@ -67,8 +67,8 @@ namespace StupidAivGame
             SpawnBorders();
 
             var game = (Game) engine.objects["game"];
-            var roomWidth = ((engine.width - blockW*2)/(game.currentFloor.mapWidth));
-            var roomHeight = ((engine.height - blockH*2)/(game.currentFloor.mapHeight));
+            var roomWidth = (engine.width - blockW*2)/game.currentFloor.mapWidth;
+            var roomHeight = (engine.height - blockH*2)/game.currentFloor.mapHeight;
             if (game.currentFloor.mapWidth >= game.currentFloor.mapHeight)
             {
                 roomHeight = (int) (roomWidth/1.77);
@@ -98,7 +98,7 @@ namespace StupidAivGame
                         mapObj.width = roomWidth - roomWidth/5;
                         mapObj.height = roomHeight - roomHeight/5;
                         mapObj.order = 10;
-                        Console.WriteLine("Spawning map block at: {0}.{1}", mapObj.x, mapObj.y);
+                        Debug.WriteLine("Spawning map block at: {0}.{1}", mapObj.x, mapObj.y);
                         engine.SpawnObject(string.Format("map_border_{0}_{1}", bx, by), mapObj);
                     }
                 }

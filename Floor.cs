@@ -92,7 +92,7 @@ namespace StupidAivGame
             var minEnemies = (int) (2*((floorIndex + 1)/2.0));
             var maxEnemies = (int) (5*((floorIndex + 1)/2.0));
 
-            Console.WriteLine("Randomizing floor, number of rooms: {0} ; background type: {1}", numberOfRooms,
+            Debug.WriteLine("Randomizing floor, number of rooms: {0} ; background type: {1}", numberOfRooms,
                 floorBackgroundType);
             rooms = new Room[numberOfRooms, numberOfRooms]; // worst-case linear floor
 
@@ -113,13 +113,13 @@ namespace StupidAivGame
                 room.left = rooms[roomIndex.Item1 - 1, roomIndex.Item2];
             }
             // right
-            if ((roomIndex.Item1 + 1) < rooms.GetLength(0) && rooms[roomIndex.Item1 + 1, roomIndex.Item2] != null)
+            if (roomIndex.Item1 + 1 < rooms.GetLength(0) && rooms[roomIndex.Item1 + 1, roomIndex.Item2] != null)
             {
                 rooms[roomIndex.Item1 + 1, roomIndex.Item2].left = room;
                 room.right = rooms[roomIndex.Item1 + 1, roomIndex.Item2];
             }
             // bottom
-            if ((roomIndex.Item2 + 1) < rooms.GetLength(1) && rooms[roomIndex.Item1, roomIndex.Item2 + 1] != null)
+            if (roomIndex.Item2 + 1 < rooms.GetLength(1) && rooms[roomIndex.Item1, roomIndex.Item2 + 1] != null)
             {
                 rooms[roomIndex.Item1, roomIndex.Item2 + 1].top = room;
                 room.bottom = rooms[roomIndex.Item1, roomIndex.Item2 + 1];
@@ -175,9 +175,9 @@ namespace StupidAivGame
             {
                 throw new Exception("Floor.RandomRooms can be called only once.");
             }
-            CharactersInfo charactersInfo = (CharactersInfo)engine.objects["charactersInfo"];
+            var charactersInfo = (CharactersInfo) engine.objects["charactersInfo"];
             var newRoomIndex = Tuple.Create(rooms.GetLength(0)/2, rooms.GetLength(1)/2);
-            firstRoom = new Room(null, newRoomIndex, this) { roomType = 0 };
+            firstRoom = new Room(null, newRoomIndex, this) {roomType = 0};
             firstRoom.RandomizeRoom(minEnemies, maxEnemies, floorIndex, rnd, charactersInfo);
             rooms[newRoomIndex.Item1, newRoomIndex.Item2] = firstRoom;
             roomsList.Add(firstRoom);
@@ -197,9 +197,9 @@ namespace StupidAivGame
                         do
                         {
                             rndX = rnd.Next(currentRoom.roomIndex.Item1 > 0 ? -1 : 0,
-                                currentRoom.roomIndex.Item1 < (maxRooms - 1) ? 2 : 1);
+                                currentRoom.roomIndex.Item1 < maxRooms - 1 ? 2 : 1);
                             rndY = rnd.Next(currentRoom.roomIndex.Item2 > 0 ? -1 : 0,
-                                currentRoom.roomIndex.Item2 < (maxRooms - 1) ? 2 : 1);
+                                currentRoom.roomIndex.Item2 < maxRooms - 1 ? 2 : 1);
                             if (rndX != 0 && rndY != 0)
                             {
                                 if (rnd.Next(0, 2) == 1)
@@ -213,10 +213,10 @@ namespace StupidAivGame
                         var roomType = 0;
                         if (roomsList.Count == maxRooms - 1)
                         {
-                            Console.WriteLine("BOSS ROOM GEN.");
+                            Debug.WriteLine("BOSS ROOM GEN.");
                             roomType = 1;
                         }
-                        var newRoom = new Room(null, newRoomIndex, this) { roomType = roomType };
+                        var newRoom = new Room(null, newRoomIndex, this) {roomType = roomType};
                         newRoom.RandomizeRoom(minEnemies, maxEnemies, floorIndex, rnd, charactersInfo);
                         rooms[newRoomIndex.Item1, newRoomIndex.Item2] = newRoom;
                         roomsList.Add(newRoom);
@@ -233,11 +233,11 @@ namespace StupidAivGame
         {
             if (room != null && (currentRoom == null || currentRoom.enemies.Count == 0))
             {
+                var game = (Game) engine.objects["game"];
                 Debug.Assert(roomsList.Contains(room) &&
                              (currentRoom == null || currentRoom.left == room || currentRoom.right == room ||
                               currentRoom.top == room || currentRoom.bottom == room));
-
-                var game = (Game) engine.objects["game"];
+                game.StartLoading();
                 if (currentRoom != null)
                 {
                     if (currentRoom.left == room)
@@ -272,6 +272,8 @@ namespace StupidAivGame
                 engine.SpawnObject(currentRoom.name, currentRoom);
                 currentRoom.SpawnEnemies();
                 currentRoom.gameBackground.SetupDoorsForRoom(room);
+
+                game.StopLoading();
 
                 return true;
             }

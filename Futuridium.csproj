@@ -30,7 +30,8 @@
     <PlatformTarget>x86</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="aivengine">
+    <Reference Include="aivengine, Version=1.0.5809.18607, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\aivengine-1\aivengine\bin\Debug\aivengine.dll</HintPath>
     </Reference>
     <Reference Include="aivengine-opentk, Version=1.0.5804.29568, Culture=neutral, processorArchitecture=MSIL">

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Aiv.Engine;
 
 namespace StupidAivGame
@@ -39,6 +38,7 @@ namespace StupidAivGame
             base.Start();
             // TODO: random (with seed) inside game
             var rnd = ((Game) engine.objects["game"]).random.GetRandom(name);
+
             blockAsset = (SpriteAsset) engine.GetAsset("block");
             blockAsset.name = "block";
             blockW = blockAsset.sprite.Width; //(blockAsset).sprite.Width;
@@ -62,11 +62,15 @@ namespace StupidAivGame
             {
                 var backgroundParts =
                     ((Game) engine.objects["game"]).spritesAnimations["background_" + backgroundChosen];
-                SpriteAsset backgroundSprite = ((SpriteObject)engine.objects[$"cache_background_{backgroundChosen}_0"]).currentSprite;
-                for (var x = 0; x < gameWidth/ backgroundSprite.sprite.Width; x++)
-                    for (var y = 0; y < gameHeight/ backgroundSprite.sprite.Height; y++)
+                var backgroundSprite =
+                    ((SpriteObject) engine.objects[$"cache_background_{backgroundChosen}_0"]).currentSprite;
+                for (var x = 0; x < gameWidth/backgroundSprite.sprite.Width; x++)
+                    for (var y = 0; y < gameHeight/backgroundSprite.sprite.Height; y++)
                     {
-                        background = (SpriteObject)engine.objects[$"cache_background_{backgroundChosen}_{rnd.Next(0, backgroundParts.Count)}"];
+                        background =
+                            (SpriteObject)
+                                engine.objects[
+                                    $"cache_background_{backgroundChosen}_{rnd.Next(0, backgroundParts.Count)}"];
                         SpawnBackgroundPart(x, y, background);
                     }
             }
@@ -100,37 +104,52 @@ namespace StupidAivGame
             SpawnBorders();
         }
 
+        /*public new void SpawnBorders()
+        {
+            blockObject = () =>
+            {
+                var rectangleBlock = new RectangleObject();
+                rectangleBlock.color = Color.SandyBrown;
+                rectangleBlock.width = blockW;
+                rectangleBlock.height = blockH;
+                rectangleBlock.fill = true;
+                rectangleBlock.order = 10;
+                return rectangleBlock;
+            };
+            base.SpawnBorders();
+        }*/
+
         internal static void Initialize(Engine engine)
         {
             // 0 = sprite, 1 = "animation"
-            Dictionary<string, int> toGo = new Dictionary<string, int>
+            var toGo = new Dictionary<string, int>
             {
-                { "background_0", 0 },
-                { "background_1", 1 },
-                { "background_2", 1 },
-                { "blood", 0 },
-                { "skull", 0 },
-                { "sadskull", 0 },
-                { "block", 0 }
+                {"background_0", 0},
+                {"background_1", 1},
+                {"background_2", 1},
+                {"blood", 0},
+                {"skull", 0},
+                {"sadskull", 0},
+                {"block", 0}
             };
-            Game game = (Game) engine.objects["game"];
-            foreach (KeyValuePair<string, int> pair in toGo)
+            var game = (Game) engine.objects["game"];
+            foreach (var pair in toGo)
             {
                 if (pair.Value == 0)
                 {
-                    SpriteObject obj = new SpriteObject
+                    var obj = new SpriteObject
                     {
                         currentSprite = (SpriteAsset) engine.GetAsset(pair.Key),
-                        x = -999, 
+                        x = -999,
                         name = "cache_" + pair.Key
                     };
                     engine.SpawnObject(obj);
                 }
                 else
                 {
-                    foreach (string assetName in game.spritesAnimations[pair.Key])
+                    foreach (var assetName in game.spritesAnimations[pair.Key])
                     {
-                        SpriteObject obj = new SpriteObject
+                        var obj = new SpriteObject
                         {
                             currentSprite = (SpriteAsset) engine.GetAsset(assetName),
                             x = -999,
@@ -144,22 +163,22 @@ namespace StupidAivGame
 
         public void SetupDoorsForRoom(Room room)
         {
-            ((SpriteObject) engine.objects[name + "_left_door"]).currentSprite = (room.left != null)
-                ? doorAsset
-                : blockAsset;
-            //((SpriteObject)engine.objects ["left_door"]).enabled = room.left != null;
-            ((SpriteObject) engine.objects[name + "_top_door"]).currentSprite = (room.top != null)
-                ? doorAsset
-                : blockAsset;
-            //((SpriteObject)engine.objects ["top_door"]).enabled = room.top != null;
-            ((SpriteObject) engine.objects[name + "_right_door"]).currentSprite = (room.right != null)
-                ? doorAsset
-                : blockAsset;
-            //((SpriteObject)engine.objects ["right_door"]).enabled = room.right != null;
-            ((SpriteObject) engine.objects[name + "_bottom_door"]).currentSprite = (room.bottom != null)
-                ? doorAsset
-                : blockAsset;
-            //((SpriteObject)engine.objects ["bottom_door"]).enabled = room.bottom != null;
+            if (room.left != null)
+                ((SpriteObject) engine.objects[name + "_left_door"]).currentSprite = doorAsset;
+            else
+                ((SpriteObject) engine.objects[name + "_left_door"]).enabled = false;
+            if (room.top != null)
+                ((SpriteObject) engine.objects[name + "_top_door"]).currentSprite = doorAsset;
+            else
+                ((SpriteObject) engine.objects[name + "_top_door"]).enabled = false;
+            if (room.right != null)
+                ((SpriteObject) engine.objects[name + "_right_door"]).currentSprite = doorAsset;
+            else
+                ((SpriteObject) engine.objects[name + "_right_door"]).enabled = false;
+            if (room.bottom != null)
+                ((SpriteObject) engine.objects[name + "_bottom_door"]).currentSprite = doorAsset;
+            else
+                ((SpriteObject) engine.objects[name + "_bottom_door"]).enabled = false;
         }
     }
 }

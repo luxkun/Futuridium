@@ -18,20 +18,19 @@ namespace StupidAivGame
                 ((Game) owner.engine.objects["game"]).currentFloor.currentRoom.name, Guid.NewGuid());
             order = owner.order - 1;
             this.text = text;
-            xPadding = (float) (new Random((int) DateTime.Now.Ticks).NextDouble());
+            xPadding = (float) new Random((int) DateTime.Now.Ticks).NextDouble();
         }
 
         public override void Update()
         {
-            Game.NormalizeTicks(ref deltaTicks);
             lifeSpawn -= deltaTicks;
             if (lifeSpawn < 0)
                 Destroy();
             // cos(x) => [0, 1] / 4 => [0, 0.25] + 0.25 => [0.25, 0.5]
             x = owner.x + (int) (owner.width*(0.25 + Math.Cos(xPadding)/4));
             y = owner.y - (int) padding;
-            padding += (deltaTicks/100f)*paddingStep;
-            xPadding = (xPadding + (deltaTicks/100f)*0.4f);
+            padding += deltaTicks/100f*paddingStep;
+            xPadding = xPadding + deltaTicks/100f*0.4f;
         }
     }
 }

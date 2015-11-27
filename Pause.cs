@@ -1,4 +1,4 @@
-﻿using System;
+﻿using System.Diagnostics;
 using System.Drawing;
 using System.Windows.Forms;
 using Aiv.Engine;
@@ -14,7 +14,7 @@ namespace StupidAivGame
 
         public override void Start()
         {
-            Console.WriteLine("Paused");
+            Debug.WriteLine("Paused");
 
             var background = new RectangleObject();
             background.color = Color.Black;
