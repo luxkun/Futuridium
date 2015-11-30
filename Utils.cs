@@ -12,5 +12,11 @@ namespace StupidAivGame
             return new string(Enumerable.Repeat(chars, length)
                 .Select(s => s[random.Next(s.Length)]).ToArray());
         }
+
+        // lame workaround, why???
+        public static int FixBoxValue(int value)
+        {
+            return (int) (value*1.33);
+        }
     }
 }

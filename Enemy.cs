@@ -58,8 +58,8 @@ namespace StupidAivGame
                 var utopiaY = nextStep.Y - y;
                 //if (utopiaX > (playerV.X - paddingV) && this.x < (playerV.X - paddingV))
                 //	utopiaX = playerV.X - paddingV;
-                virtPos.X = utopiaX*(deltaTicks/100f);
-                virtPos.Y = utopiaY*(deltaTicks/100f);
+                virtPos.X = utopiaX*(deltaTicks / 1000f);
+                virtPos.Y = utopiaY*(deltaTicks / 1000f);
 
                 if (Math.Abs(virtPos.X) > 1)
                 {

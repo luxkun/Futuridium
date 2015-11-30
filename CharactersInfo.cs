@@ -23,20 +23,20 @@ namespace StupidAivGame
             bigMonkey.level0.maxHP = 120;
             bigMonkey.level0.attack = 40;
             bigMonkey.level0.xpReward = 12;
-            bigMonkey.level0.speed = 20;
+            bigMonkey.level0.speed = 200;
             //bigMonkey.useAnimations = true;
 
             var monkey = new Enemy("enemy_monkey", "Monkey", "monkey");
             monkey.level0.maxHP = 80;
             monkey.level0.attack = 20;
             monkey.level0.xpReward = 8;
-            monkey.level0.speed = 20;
+            monkey.level0.speed = 200;
 
             var bear = new Enemy("enemy_bear", "Bear", "bear");
             bear.level0.maxHP = 400;
             bear.level0.attack = 50;
             bear.level0.xpReward = 25;
-            bear.level0.speed = 12;
+            bear.level0.speed = 120;
 
 
             enemies.Add(new Dictionary<Enemy, double>(3));
@@ -51,13 +51,13 @@ namespace StupidAivGame
             mino.level0.maxHP = 1200;
             mino.level0.attack = 100;
             mino.level0.xpReward = 100;
-            mino.level0.speed = 20;
+            mino.level0.speed = 200;
 
             var megaMonkey = new Enemy("enemy_megamonkey", "Mega Monkey", "megamonkey");
             megaMonkey.level0.maxHP = 999;
             megaMonkey.level0.attack = 70;
             megaMonkey.level0.xpReward = 50;
-            megaMonkey.level0.speed = 25;
+            megaMonkey.level0.speed = 250;
 
             enemies.Add(new Dictionary<Enemy, double>(2));
             enemies[1][mino] = 1;

@@ -29,8 +29,8 @@ namespace StupidAivGame
             // cos(x) => [0, 1] / 4 => [0, 0.25] + 0.25 => [0.25, 0.5]
             x = owner.x + (int) (owner.width*(0.25 + Math.Cos(xPadding)/4));
             y = owner.y - (int) padding;
-            padding += deltaTicks/100f*paddingStep;
-            xPadding = xPadding + deltaTicks/100f*0.4f;
+            padding += (deltaTicks / 1000f) * paddingStep;
+            xPadding = xPadding + (deltaTicks / 1000f ) * 0.4f;
         }
     }
 }

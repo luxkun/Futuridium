@@ -25,12 +25,12 @@ namespace StupidAivGame
         {
             order = 7;
 
-            level0.maxHP = 200;
-            level0.speed = 25;
+            level0.maxHP = 300;
+            level0.speed = 150;
             level0.shotDelay = 1500;
             level0.attack = 25;
             level0.neededXP = 100;
-            level0.shotSpeed = 20;
+            level0.shotSpeed = 200;
             level0.shotRange = 400;
             level0.shotRadius = 8;
             isCloseCombat = false;
@@ -41,7 +41,9 @@ namespace StupidAivGame
 
         public override void Start()
         {
-            AddHitBox("player", 0, 0, currentSprite.sprite.Width, currentSprite.sprite.Height);
+            int fwidth = Utils.FixBoxValue(width);
+            int fheight = Utils.FixBoxValue(height);
+            AddHitBox("player", 0, fheight / 3, fwidth, (int) (fheight * 2f/3));
 
             redWindow = new RectangleObject();
             redWindow.width = 0;
@@ -67,19 +69,19 @@ namespace StupidAivGame
             // should switch to Keys when game.usingOpenTK is false
             if (engine.IsKeyDown((int) Key.Right))
             {
-                virtPos.X += level.speed*(deltaTicks/100f);
+                virtPos.X += level.speed*(deltaTicks /1000f);
             }
             if (engine.IsKeyDown((int) Key.Left))
             {
-                virtPos.X -= level.speed*(deltaTicks/100f);
+                virtPos.X -= level.speed*(deltaTicks / 1000f);
             }
             if (engine.IsKeyDown((int) Key.Up))
             {
-                virtPos.Y -= level.speed*(deltaTicks/100f);
+                virtPos.Y -= level.speed*(deltaTicks / 1000f);
             }
             if (engine.IsKeyDown((int) Key.Down))
             {
-                virtPos.Y += level.speed*(deltaTicks/100f);
+                virtPos.Y += level.speed*(deltaTicks / 1000f);
             }
 
             // joystick controls
@@ -92,8 +94,8 @@ namespace StupidAivGame
                     );
                 if (moveDirection.Length > 0.2)
                 {
-                    virtPos.X += level.speed*moveDirection.X*(deltaTicks/100f);
-                    virtPos.Y += level.speed*moveDirection.Y*(deltaTicks/100f);
+                    virtPos.X += level.speed*moveDirection.X*(deltaTicks / 1000f);
+                    virtPos.Y += level.speed*moveDirection.Y*(deltaTicks / 1000f);
                 }
             }
 
@@ -203,7 +205,7 @@ namespace StupidAivGame
 
                         lastHit = maxHitsPerTime;
                     }
-                    else if (collision.other.name.EndsWith("block"))
+                    else if (collision.otherHitBox.StartsWith("wall"))
                     {
                         x = (int) lastPosition.X;
                         y = (int) lastPosition.Y;
@@ -259,8 +261,8 @@ namespace StupidAivGame
                 ManageControls();
                 ManageShot();
                 ManageCollisions();
-                //if (this.engine.IsKeyDown (Keys.O))
-                SpawnOrb();
+                if (engine.IsKeyDown ((int) Key.O))
+                    SpawnOrb();
 
                 if (redWindow.width != 0 && ticks >= disableRedTimer)
                 {

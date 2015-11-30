@@ -86,11 +86,11 @@ namespace StupidAivGame
         {
             var rnd = ((Game) engine.objects["game"]).random.GetRandom("randomizeFloor_" + floorIndex);
 
-            floorBackgroundType = rnd.Next(0, 3);
+            floorBackgroundType = rnd.Next(0, GameBackground.availableBackgrounds);
 
             var numberOfRooms = rnd.Next(minRoom, maxRoom);
-            var minEnemies = (int) (2*((floorIndex + 1)/2.0));
-            var maxEnemies = (int) (5*((floorIndex + 1)/2.0));
+            var minEnemies = (int) (1*((floorIndex + 2)/2.0));
+            var maxEnemies = (int) (5*((floorIndex + 2)/2.0));
 
             Debug.WriteLine("Randomizing floor, number of rooms: {0} ; background type: {1}", numberOfRooms,
                 floorBackgroundType);
@@ -168,17 +168,16 @@ namespace StupidAivGame
 		}
 		*/
         // breadth
-        // TODO: boss room
-        private int RandomRooms(int maxRooms, int minEnemies, int maxEnemies, Random rnd)
+        private void RandomRooms(int maxRooms, int minEnemies, int maxEnemies, Random rnd)
         {
             if (firstRoom != null)
             {
-                throw new Exception("Floor.RandomRooms can be called only once.");
+                throw new Exception("Floor.RandomRooms can be called only once per floor.");
             }
             var charactersInfo = (CharactersInfo) engine.objects["charactersInfo"];
             var newRoomIndex = Tuple.Create(rooms.GetLength(0)/2, rooms.GetLength(1)/2);
             firstRoom = new Room(null, newRoomIndex, this) {roomType = 0};
-            firstRoom.RandomizeRoom(minEnemies, maxEnemies, floorIndex, rnd, charactersInfo);
+            firstRoom.RandomizeRoom(0, 0, floorIndex, rnd, charactersInfo);
             rooms[newRoomIndex.Item1, newRoomIndex.Item2] = firstRoom;
             roomsList.Add(firstRoom);
 
@@ -226,7 +225,6 @@ namespace StupidAivGame
                     }
                 }
             }
-            return 0;
         }
 
         public bool OpenRoom(Room room)
@@ -240,25 +238,31 @@ namespace StupidAivGame
                 game.StartLoading();
                 if (currentRoom != null)
                 {
+                    int playerWidth = Utils.FixBoxValue(game.player.width);
+                    int playerHeight = Utils.FixBoxValue(game.player.height);
                     if (currentRoom.left == room)
                     {
-                        game.player.x = game.engine.width - 32 - game.player.width;
+                        game.player.x = game.engine.width - playerWidth - Utils.FixBoxValue(currentRoom.gameBackground.rightDoorAsset.sprite.Width)
+                            - currentRoom.gameBackground.spawnOnDoorPadding;
                         game.player.y = game.engine.height/2;
                     }
                     else if (currentRoom.right == room)
                     {
-                        game.player.x = 32;
+                        game.player.x = Utils.FixBoxValue(currentRoom.gameBackground.leftDoorAsset.sprite.Width)
+                            + currentRoom.gameBackground.spawnOnDoorPadding;
                         game.player.y = game.engine.height/2;
                     }
                     else if (currentRoom.top == room)
                     {
                         game.player.x = game.engine.width/2;
-                        game.player.y = game.engine.height - 32 - game.player.height;
+                        game.player.y = game.engine.height - playerHeight - Utils.FixBoxValue(currentRoom.gameBackground.bottomDoorAsset.sprite.Height) 
+                            - currentRoom.gameBackground.spawnOnDoorPadding;
                     }
                     else if (currentRoom.bottom == room)
                     {
                         game.player.x = game.engine.width/2;
-                        game.player.y = 32;
+                        game.player.y = Utils.FixBoxValue(currentRoom.gameBackground.topDoorAsset.sprite.Height)
+                            + currentRoom.gameBackground.spawnOnDoorPadding;
                     }
                     else
                     {
@@ -271,7 +275,11 @@ namespace StupidAivGame
                 currentRoom = room;
                 engine.SpawnObject(currentRoom.name, currentRoom);
                 currentRoom.SpawnEnemies();
-                currentRoom.gameBackground.SetupDoorsForRoom(room);
+                // empty room
+                if (currentRoom.enemies.Count == 0)
+                {
+                    currentRoom.gameBackground.OpenDoors();
+                }
 
                 game.StopLoading();
 

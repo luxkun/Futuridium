@@ -12,7 +12,7 @@ namespace StupidAivGame
         private double angleTick;
 
         public int orbRange = 150;
-        public double orbSpeed = 0.08;
+        public double orbSpeed = 0.8;
         public double orbStretch = 0.25; // orbRange goes from orbRange * orbStretch to orbRange
         private bool orbStretching; // true: decrease ; false: increase
         public int orbStretchSteps = 50;
@@ -61,7 +61,7 @@ namespace StupidAivGame
                 // rotate
                 x = owner.x;
                 y = owner.y;
-                angleTick += orbSpeed*(deltaTicks/100.0);
+                angleTick += orbSpeed*(deltaTicks / 1000f);
                 var points = GetNextStep(angleTick);
 
                 virtPos.X += (int) points.X;

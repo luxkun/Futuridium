@@ -7,11 +7,10 @@ namespace StupidAivGame
 {
     public class Bullet : CircleObject
     {
-        private const int MINSPEED = 2;
+        private const int minSpeed = 2;
 
         private const float fadeAwayRange = 0.2f;
         private const float fadeAwayMod = 0.8f;
-        private const int minRadius = 1;
 
         private const int maxLifeSpan = 5000; // dies after 5s
         private readonly int bounceDelay = 250;
@@ -29,7 +28,7 @@ namespace StupidAivGame
 
         private int rangeToGo;
         public int speed;
-        public int startingSpeed = 25;
+        public int startingSpeed = 250;
         private Vector2 virtPos;
         private double virtRadius;
 
@@ -55,8 +54,7 @@ namespace StupidAivGame
         private void DestroyEvent(object sender)
         {
             var roomName = ((Game) engine.objects["game"]).currentFloor.currentRoom.name;
-            var particleSystem = new ParticleSystem($"{roomName}_{name}_psys", "homogeneous", 80, 800, color, radius/2,
-                20, radius*2)
+            var particleSystem = new ParticleSystem($"{roomName}_{name}_psys", "homogeneous", 30, radius / 3, color, 400, speed, radius*2)
             {
                 order = order,
                 x = x,
@@ -130,8 +128,6 @@ namespace StupidAivGame
         {
             if (bounceBullet)
             {
-                var collisionDirection = -1;
-                var hitBox = hitBoxes[collision.hitBox];
                 var otherHitBox = collision.other.hitBoxes[collision.otherHitBox];
                 if (lastBounce > 0)
                     return false;
@@ -141,9 +137,7 @@ namespace StupidAivGame
                 }
                 else
                 {
-                    collisionDirection = SimulateCollision(collision);
-
-                    return BounceOrDie(collisionDirection, otherHitBox);
+                    return BounceOrDie(SimulateCollision(collision), otherHitBox);
                     /*this.x = (int)lastPoint.X;
 					this.y = (int)lastPoint.Y;*/
                 }
@@ -179,8 +173,8 @@ namespace StupidAivGame
                     direction.Y *= -1;
                 }
                 speed = (int) (speed*bounceMod);
-                if (speed <= MINSPEED)
-                    speed = MINSPEED;
+                if (speed <= minSpeed)
+                    speed = minSpeed;
                 else
                     rangeToGo = (int) (rangeToGo*bounceMod);
                 lastBounce = bounceDelay;
@@ -198,8 +192,8 @@ namespace StupidAivGame
             {
                 Destroy();
             }
-            virtPos.X += (int) (speed*direction.X*(deltaTicks/100.0));
-            virtPos.Y += (int) (speed*direction.Y*(deltaTicks/100.0));
+            virtPos.X += (int) (speed*direction.X*(deltaTicks / 1000f));
+            virtPos.Y += (int) (speed*direction.Y*(deltaTicks / 1000f));
             if (Math.Abs(virtPos.X) > 1)
             {
                 x += (int) virtPos.X;
@@ -210,7 +204,7 @@ namespace StupidAivGame
                 y += (int) virtPos.Y;
                 virtPos.Y -= (int) virtPos.Y;
             }
-            rangeToGo -= (int) (speed*(deltaTicks/100.0));
+            rangeToGo -= (int) (speed*(deltaTicks / 1000f));
         }
 
         public override void Update()
@@ -225,7 +219,7 @@ namespace StupidAivGame
                     lastBounce -= deltaTicks;
                 if (rangeToGo <= fadeAwayRange*range)
                 {
-                    var deltaRadius = (radius - radius*fadeAwayMod)*(deltaTicks/100.0);
+                    var deltaRadius = (radius - radius*fadeAwayMod)*(deltaTicks / 1000f);
                     if (deltaRadius > 0)
                     {
                         virtRadius += deltaRadius;

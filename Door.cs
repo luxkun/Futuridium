@@ -4,9 +4,10 @@ namespace StupidAivGame
 {
     public class Door : SpriteObject
     {
-        public override void Start()
+
+        public Door(string name)
         {
-            AddHitBox(name, -5, -5, 42, 42);
+            this.name = name;
         }
     }
 }

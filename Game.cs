@@ -117,8 +117,8 @@ namespace StupidAivGame
             mainWindow = "game";
 
             player = new Player();
-            player.x = 40;
-            player.y = 40;
+            player.x = engine.width / 2;
+            player.y = engine.height / 2;
             player.currentSprite = (SpriteAsset) engine.GetAsset("player");
             engine.SpawnObject("player", player);
 
@@ -165,6 +165,11 @@ namespace StupidAivGame
                     foreach (var en in currentFloor.currentRoom.enemies)
                     {
                         Debug.Write("{0} - ", en.name);
+                    }
+
+                    if (currentFloor.currentRoom.enemies.Count == 0)
+                    {
+                        currentFloor.currentRoom.gameBackground.OpenDoors();
                     }
                 }
             }
