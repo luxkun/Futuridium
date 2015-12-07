@@ -30,9 +30,6 @@ namespace Futuridium.Spells
         {
             base.Update();
 
-            // this.x and this.y are relative to Owner.x and Owner.y
-            NextMove();
-
             if (resetPointsTimer < 0)
             {
                 resetPointsTimer = resetPointsDelay;

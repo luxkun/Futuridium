@@ -7,31 +7,37 @@ namespace Futuridium
 {
     public class Room : GameObject
     {
-        public Room bottom;
-        public List<Enemy> enemies;
-        public Floor floor;
-        public Game game;
-        public GameBackground gameBackground;
-        public Room left;
-        public Room right;
-        public Tuple<int, int> roomIndex;
-        // TODO: roomType as class
-        public int roomType; // 0 normal room ; 1 boss room
-        public Room top;
-
         public Room(List<Enemy> enemies, Tuple<int, int> roomIndex, Floor floor)
         {
             name = $"Room_{floor.FloorIndex}_{roomIndex.Item1}.{roomIndex.Item2}";
-            this.enemies = enemies;
-            this.roomIndex = roomIndex;
-            this.floor = floor;
+            Enemies = enemies;
+            RoomIndex = roomIndex;
+            Floor = floor;
         }
+
+        public Room Bottom { get; set; }
+
+        public Room Left { get; set; }
+
+        public Room Right { get; set; }
+
+        public Room Top { get; set; }
+
+        public GameBackground GameBackground { get; private set; }
+
+        public Tuple<int, int> RoomIndex { get; private set; }
+
+        public int RoomType { get; set; }
+
+        public Floor Floor { get; }
+
+        public List<Enemy> Enemies { get; private set; }
 
         public override void Start()
         {
             //engine.SpawnObject(string.Format("room_{0}", name), background);
-            gameBackground = new GameBackground(floor.FloorBackgroundType, this);
-            engine.SpawnObject(gameBackground.name, gameBackground);
+            GameBackground = new GameBackground(Floor.FloorBackgroundType, this);
+            engine.SpawnObject(GameBackground.name, GameBackground);
         }
 
         public void RandomizeRoom(int minEnemies, int maxEnemies, int level, Random rnd, CharactersInfo charactersInfo)
@@ -40,16 +46,16 @@ namespace Futuridium
             var randomEnemies = new List<Enemy>();
             for (var i = 0; i < numberOfEnemies; i++)
             {
-                Enemy enemy = charactersInfo.RandomEnemy(i + 1, level, roomType, rnd);
-                enemy.OnDestroy += (Object sender) => ((Game)engine.objects["game"]).CharacterDied((Character) sender);
+                var enemy = charactersInfo.RandomEnemy(i + 1, level, RoomType, rnd);
+                enemy.OnDestroy += (object sender) => ((Game) engine.objects["game"]).CharacterDied((Character) sender);
                 randomEnemies.Add(enemy);
             }
-            enemies = randomEnemies;
+            Enemies = randomEnemies;
         }
 
         public void RemoveEnemy(Enemy enemy)
         {
-            enemies.Remove(enemy);
+            Enemies.Remove(enemy);
         }
 
         public void SpawnEnemies()
@@ -57,7 +63,7 @@ namespace Futuridium
             var game = (Game) engine.objects["game"];
             var rnd = game.Random.GetRandom(name + "_spawn");
             var count = 0;
-            foreach (var enemy in enemies)
+            foreach (var enemy in Enemies)
             {
                 Debug.WriteLine("Spawning enemy: {0} n.{1}", enemy.name, count);
                 /*if (enemy.useAnimations)

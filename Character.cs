@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.Linq;
 using Aiv.Engine;
 using Futuridium.Spells;
 using OpenTK;
@@ -16,30 +17,19 @@ namespace Futuridium
 
         public delegate void XPChangedEventHandler(object sender);
 
-        public enum ShotStatus
-        {
-            BULLET,
-            DRIVEX
-        }
-
-        private readonly Color bulletColor = Color.GhostWhite;
-
-        private readonly Dictionary<ShotStatus, Type> shotMap = new Dictionary<ShotStatus, Type>
-        {
-            {ShotStatus.DRIVEX, typeof (DriveX)}
-        };
-
-        public Dictionary<Type, Spell> activeSpells;
-        private int bulletCounter;
-
         private readonly List<Force> forces;
 
-        protected bool isCloseCombat = true;
-        protected float lastShotTimer = 0;
+        public Dictionary<Type, List<Spell>> activeSpells;
+        private int forceCount;
 
-        protected ShotStatus shotStatus = ShotStatus.BULLET;
+        protected bool isCloseCombat = true;
+
         private int spellCounter;
+
+        private float vx;
+        private float vy;
         private long xp;
+        private int chosenSpellIndex = -1;
 
         public Character(string name, string formattedName, string characterName)
         {
@@ -50,6 +40,35 @@ namespace Futuridium
             this.name = name;
             FormattedName = formattedName;
             CharacterName = characterName;
+        }
+
+        public float Vx
+        {
+            get { return vx; }
+            set
+            {
+                if (Math.Abs(value) > 1)
+                {
+                    x += (int) value;
+                    value -= (int) value;
+                }
+                vx = value;
+            }
+        }
+
+
+        public float Vy
+        {
+            get { return vy; }
+            set
+            {
+                if (Math.Abs(value) > 1)
+                {
+                    y += (int) value;
+                    value -= (int) value;
+                }
+                vy = value;
+            }
         }
 
         public long Xp
@@ -79,86 +98,118 @@ namespace Futuridium
 
         public bool UseAnimations { get; set; } = false;
 
+        protected int ChosenSpellIndex
+        {
+            get { return chosenSpellIndex; }
+            set
+            {
+                chosenSpellIndex = value % Level.spellList.Count;
+                ChosenSpell = Level.spellList[chosenSpellIndex];
+            }
+        }
+
+        public Type ChosenSpell { get; private set; }
+
         public event HPChangedEventHandler OnHpChanged;
         public event EnergyChangedEventHandler OnEnergyChanged;
 
-        internal void EnergyChanged()
+        public void EnergyChanged()
         {
             OnEnergyChanged?.Invoke(this);
         }
 
         public event XPChangedEventHandler OnXpChanged;
 
-        internal void XpChanged()
+        public void XpChanged()
         {
             OnXpChanged?.Invoke(this);
+        }
+
+        protected bool SpellOnCd(Type spellType)
+        {
+            foreach (var spell in activeSpells[spellType])
+            {
+                if (spell.OnCd)
+                    return true;
+
+            }
+            return false;
         }
 
         public void LevelCheck()
         {
             if (LevelManager == null)
                 LevelManager = new LevelManager(this, Level0);
-            if (LevelManager.CheckLevelUp() && this is Player && Level.level > 0)
+            if (LevelManager.CheckLevelUp())
             {
-                //engine.PlaySound("levelup_sound");
+                foreach (var pair in Level.spellList)
+                {
+                    if (!activeSpells.ContainsKey(pair))
+                        activeSpells[pair] = new List<Spell>();
+                }
+                if (this is Player && Level.level > 0)
+                {
+                    //engine.PlaySound("levelup_sound");
+                }
             }
         }
 
-        // not started before update??
         public override void Start()
         {
-            activeSpells = new Dictionary<Type, Spell>();
+            activeSpells = new Dictionary<Type, List<Spell>>();
             LevelCheck();
+            SwapSpell();
         }
-
 
         protected void Shot(Vector2 direction)
         {
+            if (SpellOnCd(ChosenSpell))
+                return;
             direction.Normalize();
             Debug.WriteLine("{0} is shotting to Direction: {1}", name, direction);
-            if (shotStatus == ShotStatus.BULLET)
+            var spell = ActivateSpell(ChosenSpell);
+            spell.Direction = direction;
+
+            var bullet = spell as Bullet;
+            if (bullet != null)
             {
                 var xMod = direction.X + 0.5f;
                 var yMod = direction.Y + 0.5f;
-                var bullet = new Bullet(this, direction)
-                {
-                    x = x + (int) (width*xMod),
-                    y = y + (int) (height*yMod),
-                    radius = Level.shotRadius,
-                    color = bulletColor
-                };
-                engine.SpawnObject(
-                    string.Format("{2}_bullet_{0}_{1}", name, bulletCounter,
-                        ((Game) engine.objects["game"]).CurrentFloor.CurrentRoom.name), bullet
-                    );
-                bulletCounter++;
+                bullet.X = x + (int) (width*xMod);
+                bullet.Y = y + (int) (height*yMod);
+                bullet.Radius = Level.shotRadius;
+                bullet.Color = Color.WhiteSmoke;
+                bullet.CdTimer = Level.shotDelay;
             }
-            else if (!activeSpells.ContainsKey(shotMap[shotStatus]))
-            {
-                ActivateSpell(shotMap[shotStatus]);
-            }
+            engine.SpawnObject(spell);
         }
 
-        protected Spell ActivateSpell(Type spellType)
+        protected void SwapSpell()
         {
-            if (activeSpells.ContainsKey(shotMap[shotStatus]))
-                throw new Exception("Spell '$(spellType)' has already been casted.");
+            if (Level.spellList.Count == 0)
+                return;
+            ChosenSpellIndex++;
+        }
+
+        private Spell ActivateSpell(Type spellType)
+        {
+            //if (SpellOnCd(spellType))
+            //    throw new Exception("Spell '$(spellType)' is on cold down.");
             var spell = (Spell) Activator.CreateInstance(spellType);
-            activeSpells[spellType] = spell;
+            if (Level.energy < spell.EnergyUsage)
+                return null;
+            activeSpells[spellType].Add(spell);
             spell.Owner = this;
             spell.name = name + "_spell" + spellCounter++;
-            if (spell.EnergyUsage <= Level.energy) // cast cost
-                Level.energy -= spell.EnergyUsage;
-            engine.SpawnObject(spell);
             return spell;
         }
 
-        public void DisactivateSpell(Type spellType)
+        public void DisactivateSpell(Spell spell)
         {
-            if (!activeSpells.ContainsKey(shotMap[shotStatus]))
+            if (!activeSpells[spell.GetType()].Contains(spell))
                 throw new Exception("Spell '$(spellType)' hasn't already been casted.");
-            activeSpells[spellType].Destroy();
-            activeSpells.Remove(spellType);
+            activeSpells[spell.GetType()].Remove(spell);
+            spell.Destroy();
             throw new Exception("Spell '$(spellType)' hasn't already been casted.");
         }
 
@@ -170,15 +221,15 @@ namespace Futuridium
                 Destroy();
         }
 
-        // bullet hits enemy
-        public virtual bool DoDamage(Bullet bullet, Character enemy, Collision collision)
+        // spell hits enemy
+        public virtual bool DoDamage(Spell spell, Character enemy, Collision collision)
         {
-            var damage = new Damage(bullet.Owner, enemy)
+            var damage = new Damage(spell.Owner, enemy)
             {
-                Direction = bullet.Direction
+                Direction = spell.Direction
             };
             damage.DamageFunc =
-                (Character ch0, Character ch1) => (int) (ch0.Level.attack*((double) bullet.Speed/bullet.StartingSpeed));
+                (Character ch0, Character ch1) => (int) (ch0.Level.attack*((double) spell.Speed/spell.StartingSpeed));
             return DoDamage(enemy, damage);
         }
 
@@ -210,22 +261,23 @@ namespace Futuridium
 
             // bounce back only if the damage is from a ranged enemy
             if (!damage.IsCloseCombat)
-                BounceBack(damage.InverseDirection);
+                BounceBack(damage.Direction);
             return Level.hp;
         }
 
         private void BounceBack(Vector2 inverseDirection)
         {
-            const float destroyTimer = 0.2f;
-            const float step = 50/destroyTimer;
-            forces.Add(new Force
+            const float destroyTimer = 0.1f;
+            const float step = 20/destroyTimer;
+            var force = new Force
             {
                 Owner = this,
                 Direction = inverseDirection,
-                BreakChain = true,
                 Step = step,
                 DestroyTimer = destroyTimer
-            });
+            };
+            forces.Add(force);
+            engine.SpawnObject($"{name}_bouncebackforce_{forceCount++}", force);
         }
     }
 }

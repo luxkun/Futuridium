@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using Aiv.Engine;
+using Futuridium.Spells;
 using OpenTK;
 using OpenTK.Input;
 
@@ -9,17 +11,19 @@ namespace Futuridium
 {
     public class Player : Character
     {
-        private const float maxHitsPerTime = 1f; // 500ms immunity after gets hit
-        private const float changeFloorDelay = 2f;
+        private const float MaxHitsPerTime = 1f; // 500ms immunity after gets hit
+        private const float ChangeFloorDelay = 2f;
         private float disableRedTimer;
-        private bool initHUD;
+        private bool initHud;
         private float lastFloorChangeTimer;
         private float lastHitTimer;
         private Vector2 lastPosition;
         public string realName = "Rek";
-        protected RectangleObject redWindow;
+        private RectangleObject redWindow;
         private int spawnedOrbs;
-        private Vector2 virtPos;
+
+        private List<Type> defaultSpells = new List<Type>
+        { typeof (Bullet), typeof (DriveX)};
 
         //private List<int> pressedJoyButtons;
         public Player() : base("player", "Player", "player")
@@ -35,6 +39,7 @@ namespace Futuridium
             Level0.shotSpeed = 200f;
             Level0.shotRange = 400;
             Level0.shotRadius = 8;
+            Level0.spellList = defaultSpells;
             isCloseCombat = false;
 
 
@@ -43,9 +48,9 @@ namespace Futuridium
 
         public override void Start()
         {
-            int fwidth = Utils.FixBoxValue(width);
-            int fheight = Utils.FixBoxValue(height);
-            AddHitBox("player", 0, fheight / 3, fwidth, (int) (fheight * 2f/3));
+            var fwidth = Utils.FixBoxValue(width);
+            var fheight = Utils.FixBoxValue(height);
+            AddHitBox("player", 0, fheight/3, fwidth, (int) (fheight*2f/3));
 
             redWindow = new RectangleObject
             {
@@ -73,23 +78,23 @@ namespace Futuridium
             // should switch to Keys when game.usingOpenTK is false
             if (engine.IsKeyDown((int) Key.Right))
             {
-                virtPos.X += Level.speed*deltaTime;
+                Vx += Level.speed*deltaTime;
             }
             if (engine.IsKeyDown((int) Key.Left))
             {
-                virtPos.X -= Level.speed*deltaTime;
+                Vx -= Level.speed*deltaTime;
             }
             if (engine.IsKeyDown((int) Key.Up))
             {
-                virtPos.Y -= Level.speed*deltaTime;
+                Vy -= Level.speed*deltaTime;
             }
             if (engine.IsKeyDown((int) Key.Down))
             {
-                virtPos.Y += Level.speed*deltaTime;
+                Vy += Level.speed*deltaTime;
             }
             // setup shot type
-            if (engine.IsKeyDown((int)Key.F))
-                shotStatus = shotStatus == ShotStatus.DRIVEX ? ShotStatus.BULLET : ShotStatus.DRIVEX;
+            if (engine.IsKeyDown((int) Key.F))
+                SwapSpell();
 
             // joystick controls
             var game = (Game) engine.objects["game"];
@@ -101,75 +106,59 @@ namespace Futuridium
                     );
                 if (moveDirection.Length > 0.2)
                 {
-                    virtPos.X += Level.speed*moveDirection.X*deltaTime;
-                    virtPos.Y += Level.speed*moveDirection.Y*deltaTime;
+                    Vx += Level.speed*moveDirection.X*deltaTime;
+                    Vy += Level.speed*moveDirection.Y*deltaTime;
                 }
-                if (game.Joystick.GetButton(game.JoyStickConfig["RT"])) 
-                    shotStatus = shotStatus == ShotStatus.DRIVEX ? ShotStatus.BULLET : ShotStatus.DRIVEX;
-            }
-
-            if (Math.Abs(virtPos.X) > 1)
-            {
-                x += (int) virtPos.X;
-                virtPos.X -= (int) virtPos.X;
-            }
-            if (Math.Abs(virtPos.Y) > 1)
-            {
-                y += (int) virtPos.Y;
-                virtPos.Y -= (int) virtPos.Y;
+                if (game.Joystick.GetButton(game.JoyStickConfig["RT"]))
+                    SwapSpell();
             }
         }
 
         private void ManageShot()
         {
-            if (lastShotTimer > 0)
-                lastShotTimer -= deltaTime;
+            var game = (Game) engine.objects["game"];
 
-            // if is shotting bullet check lastShot
-            if (shotStatus != ShotStatus.BULLET || lastShotTimer <= 0)
+            var direction = new Vector2();
+            if (game.Joystick != null)
             {
-                var game = (Game) engine.objects["game"];
-
-                var direction = new Vector2();
-                if (game.Joystick != null)
+                direction = new Vector2(
+                    game.Joystick.GetAxis(game.JoyStickConfig["Rx"])/127f,
+                    game.Joystick.GetAxis(game.JoyStickConfig["Ry"])/127f
+                    );
+                if (direction.X > 0 || direction.Y > 0)
                 {
                     Debug.Write("Shotting axis on joystick: ");
-                    for (var x = 0; x < 6; x++)
-                        Debug.Write($"{x}: {game.Joystick.GetAxis(x)} ; ");
+                    for (var axisIndex = 0; axisIndex < 6; axisIndex++)
+                        Debug.Write($"{axisIndex}: {game.Joystick.GetAxis(axisIndex)} ; ");
                     Debug.WriteLine("");
-                    direction = new Vector2(
-                        game.Joystick.GetAxis(game.JoyStickConfig["Rx"])/127f,
-                        game.Joystick.GetAxis(game.JoyStickConfig["Ry"])/127f
-                        );
                 }
+            }
 
-                var joyStickConfig = game.JoyStickConfig;
+            var joyStickConfig = game.JoyStickConfig;
 
-                if (engine.IsKeyDown((int) Key.A) ||
-                    (game.Joystick != null && game.Joystick.GetButton(joyStickConfig["S"])))
-                    direction = new Vector2(-1, 0);
-                else if (engine.IsKeyDown((int) Key.W) ||
-                         (game.Joystick != null && game.Joystick.GetButton(joyStickConfig["T"])))
-                    direction = new Vector2(0, -1);
-                else if (engine.IsKeyDown((int) Key.D) ||
-                         (game.Joystick != null && game.Joystick.GetButton(joyStickConfig["C"])))
-                    direction = new Vector2(1, 0);
-                else if (engine.IsKeyDown((int) Key.S) ||
-                         (game.Joystick != null && game.Joystick.GetButton(joyStickConfig["X"])))
-                    direction = new Vector2(0, 1);
-                else if (engine.IsKeyDown((int) Key.Q))
-                    direction = new Vector2(-0.5f, -0.5f);
-                else if (engine.IsKeyDown((int) Key.E))
-                    direction = new Vector2(0.5f, -0.5f);
-                else if (engine.IsKeyDown((int) Key.Z))
-                    direction = new Vector2(-0.5f, 0.5f);
-                else if (engine.IsKeyDown((int) Key.C))
-                    direction = new Vector2(0.5f, 0.5f);
-                if (direction.Length >= 0.6)
-                {
-                    Shot(direction);
-                    lastShotTimer = Level.shotDelay;
-                }
+            if (engine.IsKeyDown((int) Key.A) ||
+                (game.Joystick != null && game.Joystick.GetButton(joyStickConfig["S"])))
+                direction = new Vector2(-1, 0);
+            else if (engine.IsKeyDown((int) Key.W) ||
+                        (game.Joystick != null && game.Joystick.GetButton(joyStickConfig["T"])))
+                direction = new Vector2(0, -1);
+            else if (engine.IsKeyDown((int) Key.D) ||
+                        (game.Joystick != null && game.Joystick.GetButton(joyStickConfig["C"])))
+                direction = new Vector2(1, 0);
+            else if (engine.IsKeyDown((int) Key.S) ||
+                        (game.Joystick != null && game.Joystick.GetButton(joyStickConfig["X"])))
+                direction = new Vector2(0, 1);
+            else if (engine.IsKeyDown((int) Key.Q))
+                direction = new Vector2(-0.5f, -0.5f);
+            else if (engine.IsKeyDown((int) Key.E))
+                direction = new Vector2(0.5f, -0.5f);
+            else if (engine.IsKeyDown((int) Key.Z))
+                direction = new Vector2(-0.5f, 0.5f);
+            else if (engine.IsKeyDown((int) Key.C))
+                direction = new Vector2(0.5f, 0.5f);
+            if (direction.Length >= 0.6)
+            {
+                Shot(direction);
             }
         }
 
@@ -179,9 +168,11 @@ namespace Futuridium
             {
                 spawnedOrbs++;
                 Debug.WriteLine("Spawning orb.");
-                var orb = new Orb(this);
-                orb.radius = 8;
-                orb.color = Color.Blue;
+                var orb = new Orb(this)
+                {
+                    radius = 8,
+                    color = Color.Blue
+                };
                 engine.SpawnObject("orb", orb);
             }
         }
@@ -192,7 +183,7 @@ namespace Futuridium
                 lastHitTimer -= deltaTime;
             if (lastFloorChangeTimer > 0)
                 lastFloorChangeTimer -= deltaTime;
-        
+
             if (lastHitTimer <= 0)
             {
                 var collisions = CheckCollisions();
@@ -202,33 +193,35 @@ namespace Futuridium
                 {
                     Debug.WriteLine("Character '{0}' touches '{1}'", name, collision.other.name);
                     var game = (Game) engine.objects["game"];
-                    if (collision.other as Enemy != null)
+                    var enemy = collision.other as Enemy;
+                    if (enemy != null)
                     {
-                        ((Enemy) collision.other).DoDamage(this);
+                        enemy.DoDamage(this);
 
-                        lastHitTimer = maxHitsPerTime;
+                        lastHitTimer = MaxHitsPerTime;
                     }
                     else if (collision.otherHitBox.StartsWith("wall"))
                     {
                         x = (int) lastPosition.X;
                         y = (int) lastPosition.Y;
                     }
-                    else if (collision.other.name.EndsWith("door") && lastFloorChangeTimer <= 0 && collision.other.enabled)
+                    else if (collision.other.name.EndsWith("door") && lastFloorChangeTimer <= 0 &&
+                             collision.other.enabled)
                     {
                         x = (int) lastPosition.X;
                         y = (int) lastPosition.Y;
                         Debug.WriteLine("About to change room to: " + collision.other.name);
                         var changedFloor = false;
                         if (collision.other.name.EndsWith("top_door"))
-                            changedFloor = game.CurrentFloor.OpenRoom(game.CurrentFloor.CurrentRoom.top);
+                            changedFloor = game.CurrentFloor.OpenRoom(game.CurrentFloor.CurrentRoom.Top);
                         else if (collision.other.name.EndsWith("left_door"))
-                            changedFloor = game.CurrentFloor.OpenRoom(game.CurrentFloor.CurrentRoom.left);
+                            changedFloor = game.CurrentFloor.OpenRoom(game.CurrentFloor.CurrentRoom.Left);
                         else if (collision.other.name.EndsWith("bottom_door"))
-                            changedFloor = game.CurrentFloor.OpenRoom(game.CurrentFloor.CurrentRoom.bottom);
+                            changedFloor = game.CurrentFloor.OpenRoom(game.CurrentFloor.CurrentRoom.Bottom);
                         else if (collision.other.name.EndsWith("right_door"))
-                            changedFloor = game.CurrentFloor.OpenRoom(game.CurrentFloor.CurrentRoom.right);
+                            changedFloor = game.CurrentFloor.OpenRoom(game.CurrentFloor.CurrentRoom.Right);
                         if (changedFloor)
-                            lastFloorChangeTimer = changeFloorDelay;
+                            lastFloorChangeTimer = ChangeFloorDelay;
                     }
                     else if (collision.other.name.StartsWith("escape_floor_"))
                     {
@@ -252,35 +245,33 @@ namespace Futuridium
         public override void Update()
         {
             base.Update();
-            if (((Game) engine.objects["game"]).MainWindow == "game")
+            if (((Game) engine.objects["game"]).MainWindow != "game") return;
+            if (!initHud)
             {
-                if (!initHUD)
-                {
-                    initHUD = true;
-                    Hud = (Hud) engine.objects["hud"];
-                    Hud.UpdateHPBar();
-                    Hud.UpdateXPBar();
-                    Hud.UpdateEnergyBar();
-                    OnHpChanged += (Object sender) => { Hud.UpdateHPBar(); };
-                    OnEnergyChanged += (Object sender) => { Hud.UpdateEnergyBar(); };
-                    OnXpChanged += (Object sender) => { Hud.UpdateXPBar(); };
-                }
-                ManageControls();
-                ManageShot();
-                ManageCollisions();
-                if (engine.IsKeyDown ((int) Key.O))
-                    SpawnOrb();
+                initHud = true;
+                Hud = (Hud) engine.objects["hud"];
+                Hud.UpdateHPBar();
+                Hud.UpdateXPBar();
+                Hud.UpdateEnergyBar();
+                OnHpChanged += sender => { Hud.UpdateHPBar(); };
+                OnEnergyChanged += sender => { Hud.UpdateEnergyBar(); };
+                OnXpChanged += sender => { Hud.UpdateXPBar(); };
+            }
+            ManageControls();
+            ManageShot();
+            ManageCollisions();
+            if (engine.IsKeyDown((int) Key.O))
+                SpawnOrb();
 
-                if (redWindow.width != 0)
+            if (redWindow.width != 0)
+            {
+                if (disableRedTimer < 0)
                 {
-                    if (disableRedTimer < 0)
-                    {
-                        redWindow.width = 0;
-                        redWindow.height = 0;
-                    }
-                    else
-                        disableRedTimer -= deltaTime;
+                    redWindow.width = 0;
+                    redWindow.height = 0;
                 }
+                else
+                    disableRedTimer -= deltaTime;
             }
         }
     }

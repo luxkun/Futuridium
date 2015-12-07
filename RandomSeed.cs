@@ -4,16 +4,16 @@ namespace Futuridium
 {
     public class RandomSeed
     {
-        public int seed;
-
         public RandomSeed(string seed)
         {
-            this.seed = seed.GetHashCode();
+            Seed = seed.GetHashCode();
         }
+
+        public int Seed { get; private set; }
 
         public Random GetRandom(string name)
         {
-            return new Random(seed + name.GetHashCode());
+            return new Random(Seed + name.GetHashCode());
         }
     }
 }

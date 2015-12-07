@@ -9,17 +9,16 @@ namespace Futuridium
     {
         private const float DelayBeforeActivation = 0.5f;
         private const float Minbestdelta = 0.01f;
-        private bool activated;
-        private float lastMove;
         private readonly int maxPointDistance = 400;
         private readonly int minDistance = 10; // calculate this somehow
-        private Vector2 nextStep;
         // virtual circular radar
         private readonly int radarRadius = 150;
+        private bool activated;
+        private float lastMove;
+        private Vector2 nextStep;
 
         private Vector2 rndPoint = new Vector2(-1, -1);
         private float timeBeforeActivation;
-        private Vector2 virtPos;
 
         public Enemy(string name, string formattedName, string characterName) : base(name, formattedName, characterName)
         {
@@ -89,19 +88,8 @@ namespace Futuridium
                 nextStep = objectiveV - agentV;
                 nextStep.Normalize();
                 //Debug.WriteLine("{0} {1} {2} {3} {4}", playerV, agentV, nextStep, bestDelta, level.speed);
-                virtPos.X += nextStep.X*deltaTime*speed;
-                virtPos.Y += nextStep.Y*deltaTime*speed;
-
-                if (Math.Abs(virtPos.X) > 1)
-                {
-                    x += (int) virtPos.X;
-                    virtPos.X -= (int) virtPos.X;
-                }
-                if (Math.Abs(virtPos.Y) > 1)
-                {
-                    y += (int) virtPos.Y;
-                    virtPos.Y -= (int) virtPos.Y;
-                }
+                Vx += nextStep.X*deltaTime*speed;
+                Vy += nextStep.Y*deltaTime*speed;
             }
         }
 
@@ -152,7 +140,9 @@ namespace Futuridium
                         AddHitBox("enemy_" + name, 0, 0, width, height);
                     }
                 }
-            } else {
+            }
+            else
+            {
                 if (lastMove > 0)
                     lastMove -= deltaTime;
                 if (lastMove <= 0)

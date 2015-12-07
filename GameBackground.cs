@@ -88,7 +88,7 @@ namespace Futuridium
                 for (var partX = 0; partX < maxStepX; partX++)
                     for (var partY = 0; partY < maxStepY; partY++)
                     {
-                        var chosen = rnd.Next(0, 50*(Room.roomType == 0 ? 5 : 1));
+                        var chosen = rnd.Next(0, 50*(Room.RoomType == 0 ? 5 : 1));
                         var paddingx = rnd.Next(0, 16) + WallWidth;
                         var paddingy = rnd.Next(0, 16) + WallHeight;
                         var spawned = true;
@@ -119,7 +119,7 @@ namespace Futuridium
                 rectangleBlock.color = Color.SandyBrown;
                 rectangleBlock.width = blockW;
                 rectangleBlock.height = blockH;
-                rectangleBlock.fill = true;
+                rectangleBlock.Fill = true;
                 rectangleBlock.partOrder = 10;
                 return rectangleBlock;
             };
@@ -170,7 +170,7 @@ namespace Futuridium
         public void InitDoors()
         {
             // other rooms blocks
-            if (Room.top != null)
+            if (Room.Top != null)
             {
                 var topDoor = new Door(name + "_top_door") {order = order};
                 engine.SpawnObject(topDoor);
@@ -180,7 +180,7 @@ namespace Futuridium
                 topDoor.x = engine.width/2 - topDoorWidth/2;
                 topDoor.y = PaddingFromEnd;
             }
-            if (Room.left != null)
+            if (Room.Left != null)
             {
                 var leftDoor = new Door(name + "_left_door") {order = order};
                 engine.SpawnObject(leftDoor);
@@ -190,7 +190,7 @@ namespace Futuridium
                 leftDoor.x = PaddingFromEnd;
                 leftDoor.y = engine.height/2 - leftDoorHeight/2;
             }
-            if (Room.bottom != null)
+            if (Room.Bottom != null)
             {
                 var bottomDoor = new Door(name + "_bottom_door") {order = order};
                 engine.SpawnObject(bottomDoor);
@@ -200,7 +200,7 @@ namespace Futuridium
                 bottomDoor.x = engine.width/2 - bottomDoorWidth/2;
                 bottomDoor.y = engine.height - bottomDoorHeight - PaddingFromEnd;
             }
-            if (Room.right != null)
+            if (Room.Right != null)
             {
                 var rightDoor = new Door(name + "_right_door") {order = order};
                 engine.SpawnObject(rightDoor);
@@ -214,25 +214,25 @@ namespace Futuridium
 
         public void OpenDoors()
         {
-            if (Room.left != null)
+            if (Room.Left != null)
             {
                 var leftDoor = (Door) engine.objects[name + "_left_door"];
                 leftDoor.AddHitBox(leftDoor.name, 0, 0, Utils.FixBoxValue(leftDoor.width) + ExtraHitBoxSize,
                     Utils.FixBoxValue(leftDoor.height));
             }
-            if (Room.top != null)
+            if (Room.Top != null)
             {
                 var topDoor = (Door) engine.objects[name + "_top_door"];
                 topDoor.AddHitBox(topDoor.name, 0, 0, Utils.FixBoxValue(topDoor.width),
                     Utils.FixBoxValue(topDoor.height) + ExtraHitBoxSize);
             }
-            if (Room.right != null)
+            if (Room.Right != null)
             {
                 var rightDoor = (Door) engine.objects[name + "_right_door"];
                 rightDoor.AddHitBox(rightDoor.name, -1*ExtraHitBoxSize, 0,
                     Utils.FixBoxValue(rightDoor.width) + ExtraHitBoxSize, Utils.FixBoxValue(rightDoor.height));
             }
-            if (Room.bottom == null) return;
+            if (Room.Bottom == null) return;
             var bottomDoor = (Door) engine.objects[name + "_bottom_door"];
             bottomDoor.AddHitBox(bottomDoor.name, 0, -1*ExtraHitBoxSize,
                 Utils.FixBoxValue(bottomDoor.width), Utils.FixBoxValue(bottomDoor.height) + ExtraHitBoxSize);

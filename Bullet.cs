@@ -1,84 +1,139 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Drawing;
 using Aiv.Engine;
+using Futuridium.Spells;
 using OpenTK;
 
 namespace Futuridium
 {
-    public class Bullet : CircleObject
+    public class Bullet : Spell
     {
-        private const int minSpeed = 2;
-
-        private const float fadeAwayRange = 0.2f;
-        private const float fadeAwayMod = 0.8f;
-
-        private const float maxLifeSpan = 5; // dies after 5s
+        private const int MinSpeed = 2;
+        
+        private readonly bool bounceBullet = false;
         private readonly float bounceDelay = 2.5f;
         private readonly double bounceMod = 0.8; // speed = bounceMod * speed
-        private readonly int range = 500;
 
-        private readonly bool bounceBullet = false;
+        private CircleObject body;
         private Vector2 direction;
+
+        private float fadeAwayStep;
 
         private float lastBounce;
 
         private Vector2 lastPoint;
-        private float lifeSpan;
 
-        private int rangeToGo;
-        private Vector2 virtPos;
-        private double virtRadius;
+        private float virtRadius;
 
-        public Bullet(Character owner, Vector2 direction)
+        private float vx;
+        private float vy;
+
+        public Bullet()
         {
-            Owner = owner;
-            var ownerCharacter = owner;
-            if (owner != null)
-            {
-                StartingSpeed = ownerCharacter.Level.shotSpeed;
-                range = ownerCharacter.Level.shotRange;
-            }
-            Speed = StartingSpeed;
-            Direction = direction;
-
-            rangeToGo = range;
-            fill = true;
             order = 6;
+            SpellName = "Energy Bullet";
+
+            body = new CircleObject();
 
             OnDestroy += DestroyEvent;
+            OnStart += StartEvent;
+            OnUpdate += UpdateEvent;
         }
 
-        public Vector2 Direction
+        public int Radius
         {
-            get { return direction; }
-            set { direction = value; }
+            get { return body.radius; }
+            set { body.radius = value; }
         }
 
-        public Character Owner { get; set; }
+        private float VirtRadius
+        {
+            get { return virtRadius; }
 
-        public float Speed { get; set; }
+            set
+            {
+                if (value >= 1f && Radius >= 1 + (int) value)
+                {
+                    var deltaPos = value/2;
+                    X += (int) deltaPos;
+                    Y += (int) deltaPos;
+                    Radius -= (int) value;
+                    value -= (int) value;
+                    hitBoxes["mass"].height = Radius*2;
+                    hitBoxes["mass"].width = Radius*2;
+                    if (Radius <= 1)
+                        Console.WriteLine(Radius);
+                }
+                virtRadius = value;
+            }
+        }
 
-        public float StartingSpeed { get; set; } = 250f;
+        public float FadeAwayRange { get; set; } = 0.33f;
+
+        public bool Fill
+        {
+            get { return body.fill; }
+            set { body.fill = value; }
+        }
+
+        public override int X
+        {
+            get { return x; }
+            set
+            {
+                x = value;
+                body.x = value;
+            }
+        }
+
+        public override int Y
+        {
+            get { return y; }
+            set
+            {
+                y = value;
+                body.y = value;
+            }
+        }
+
+        public Color Color
+        {
+            get { return body.color; }
+
+            set { body.color = value; }
+        }
 
         private void DestroyEvent(object sender)
         {
             var roomName = ((Game) engine.objects["game"]).CurrentFloor.CurrentRoom.name;
-            var particleSystem = new ParticleSystem($"{roomName}_{name}_psys", "homogeneous", 30, radius/3, color, 400,
-                (int) Speed, radius*2)
+            var particleRadius = Radius/2;
+            if (particleRadius < 1)
+                particleRadius = 1;
+            var particleSystem = new ParticleSystem($"{roomName}_{name}_psys", "homogeneous", 30, particleRadius, Color,
+                400,
+                (int) Speed, Radius)
             {
                 order = order,
-                x = x,
-                y = y,
+                x = X,
+                y = Y,
                 fade = 200
             };
             Debug.WriteLine(particleSystem.name);
             engine.SpawnObject(particleSystem.name, particleSystem);
+
+            body.Destroy();
         }
 
-        public override void Start()
+        private void StartEvent(Object sender)
         {
-            AddHitBox("mass", 0, 0, radius*2, radius*2);
-            lastPoint = new Vector2(x, y);
+            base.Start();
+            AddHitBox("mass", 0, 0, Radius*2, Radius*2);
+            lastPoint = new Vector2(X, Y);
+            Fill = true;
+
+            body.name = this.name + "_body";
+            engine.SpawnObject(body);
         }
 
         // simulate collision between two GameObject rectangles
@@ -96,8 +151,8 @@ namespace Futuridium
             var h1 = hitBox1.height;
 
             // should have same abs value
-            var diffX = x - (int) lastPoint.X;
-            var diffY = y - (int) lastPoint.Y;
+            var diffX = X - (int) lastPoint.X;
+            var diffY = Y - (int) lastPoint.Y;
             Debug.Assert(Math.Abs(diffX) == Math.Abs(diffY));
             // ignores first Step
             // could optimize by starting near second hitbox
@@ -106,8 +161,8 @@ namespace Futuridium
             var steps = Math.Max(Math.Abs(diffX), Math.Abs(diffY));
             for (var step = steps; step >= 0; step--)
             {
-                var x1 = hitBox1.x + x - Math.Sign(diffX)*step;
-                var y1 = hitBox1.y + y - Math.Sign(diffY)*step;
+                var x1 = hitBox1.x + X - Math.Sign(diffX)*step;
+                var y1 = hitBox1.y + Y - Math.Sign(diffY)*step;
 
                 var tempxCollisions = Math.Min(x2 + w2, x1 + w1) - Math.Max(x2, x1);
                 if (y1 != y2 && y1 + h1 != y2 + h2 && y1 != y2 + h2 && y1 + h1 != y2)
@@ -166,86 +221,43 @@ namespace Futuridium
                 if (collisionDirection == 0)
                 {
                     direction.X *= -1;
-                    virtPos.X = 0;
+                    Vx = 0;
                 }
                 else if (collisionDirection == 1)
                 {
                     direction.Y *= -1;
-                    virtPos.Y = 0;
+                    Vy = 0;
                 }
                 else
                 {
                     // if the collission simulation failed (ex. reason: multiple moving stuff?)
                     //  then bounce back
-                    virtPos.X = 0;
-                    virtPos.Y = 0;
+                    Vx = 0;
+                    Vy = 0;
                     direction.X *= -1;
                     direction.Y *= -1;
                 }
                 Speed = (int) (Speed*bounceMod);
-                if (Speed <= minSpeed)
-                    Speed = minSpeed;
+                if (Speed <= MinSpeed)
+                    Speed = MinSpeed;
                 else
-                    rangeToGo = (int) (rangeToGo*bounceMod);
+                    RangeToGo = (int) (RangeToGo*bounceMod);
                 lastBounce = bounceDelay;
-                x = (int) lastPoint.X;
-                y = (int) lastPoint.Y;
+                X = (int) lastPoint.X;
+                Y = (int) lastPoint.Y;
                 return true;
             }
             Destroy();
             return false;
         }
 
-        private void NextMove()
+        private void UpdateEvent(Object sender)
         {
-            if (rangeToGo <= 0)
-            {
-                Destroy();
-            }
-            virtPos.X += (int) (Speed*Direction.X*deltaTime);
-            virtPos.Y += (int) (Speed*Direction.Y*deltaTime);
-            if (Math.Abs(virtPos.X) > 1)
-            {
-                x += (int) virtPos.X;
-                virtPos.X -= (int) virtPos.X;
-            }
-            if (Math.Abs(virtPos.Y) > 1)
-            {
-                y += (int) virtPos.Y;
-                virtPos.Y -= (int) virtPos.Y;
-            }
-            rangeToGo -= (int) (Speed*deltaTime);
-        }
-
-        public override void Update()
-        {
-            // the opposite of the usual solution
-            lifeSpan += deltaTime;
-            if (lifeSpan > maxLifeSpan)
-                Destroy();
             if (((Game) engine.objects["game"]).MainWindow == "game")
             {
                 if (lastBounce > 0)
                     lastBounce -= deltaTime;
-                if (rangeToGo <= fadeAwayRange*range)
-                {
-                    var deltaRadius = (radius - radius*fadeAwayMod)*deltaTime;
-                    if (deltaRadius > 0)
-                    {
-                        virtRadius += deltaRadius;
-                        if (virtRadius > 1.0)
-                        {
-                            x += (int) virtRadius/2;
-                            y += (int) virtRadius/2;
-                            radius -= (int) virtRadius;
-                            virtRadius -= (int) virtRadius;
-                            hitBoxes["mass"].height = radius*2;
-                            hitBoxes["mass"].width = radius*2;
-                        }
-                    }
-                }
-                // 0 left; 1 top; 2 right; 3 bottom; 4: top-left; 5: top-right; 6: bottom-left; 7: bottom-right
-                NextMove();
+                ManageFade();
 
                 var collisions = CheckCollisions();
                 if (collisions.Count > 0)
@@ -268,7 +280,21 @@ namespace Futuridium
                 }
                 if (bounced)
                     NextMove();
-                lastPoint = new Vector2(x, y);
+                lastPoint = new Vector2(X, Y);
+            }
+        }
+
+        private void ManageFade()
+        {
+            if (RangeToGo > FadeAwayRange*Range) return;
+            if (fadeAwayStep == 0)
+            {
+                fadeAwayStep = (Radius - 1)/LifeSpan;
+            }
+            var deltaRadius = fadeAwayStep*deltaTime;
+            if (deltaRadius > 0)
+            {
+                VirtRadius += deltaRadius;
             }
         }
     }

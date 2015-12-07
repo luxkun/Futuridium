@@ -26,7 +26,7 @@ namespace Futuridium
                     maxHP = 60,
                     attack = 40,
                     xpReward = 12,
-                    speed = 200f
+                    speed = 100f
                 }
             };
             //bigMonkey.useAnimations = true;
@@ -38,7 +38,7 @@ namespace Futuridium
                     maxHP = 40,
                     attack = 20,
                     xpReward = 8,
-                    speed = 200f
+                    speed = 120f
                 }
             };
 
@@ -49,7 +49,7 @@ namespace Futuridium
                     maxHP = 200,
                     attack = 50,
                     xpReward = 25,
-                    speed = 120f
+                    speed = 70f
                 }
             };
 
@@ -69,7 +69,7 @@ namespace Futuridium
                     maxHP = 600,
                     attack = 100,
                     xpReward = 100,
-                    speed = 200f
+                    speed = 100f
                 }
             };
 
@@ -80,7 +80,7 @@ namespace Futuridium
                     maxHP = 500,
                     attack = 70,
                     xpReward = 50,
-                    speed = 250f
+                    speed = 150
                 }
             };
 

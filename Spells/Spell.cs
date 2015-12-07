@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using Aiv.Engine;
 using OpenTK;
 
@@ -19,42 +20,138 @@ namespace Futuridium.Spells
 
         public int EnergyUsagePerSecond { get; set; }
 
-        public float VX { get; set; }
+        private float vx;
+        private float vy;
 
-        public float VY { get; set; }
+        protected float Vx
+        {
+            get { return vx; }
+            set
+            {
+                if (Math.Abs(value) > 1)
+                {
+                    X += (int)value;
+                    value -= (int)value;
+                }
+                vx = value;
+            }
+        }
+
+        protected float Vy
+        {
+            get { return vy; }
+            set
+            {
+                if (Math.Abs(value) > 1)
+                {
+                    Y += (int)value;
+                    value -= (int)value;
+                }
+                vy = value;
+            }
+        }
+
+        private int rangeToGo;
+        private int range = 500;
+
+        public virtual int X { get; set; }
+        public virtual int Y { get; set; }
 
         public Vector2 Direction { get; set; }
 
-        public int Speed { get; set; }
+        public float Speed { get; protected set; }
 
-        public Character Owner { get; set; }
+        public float StartingSpeed { get; set; } = 250f;
+
+        public Character Owner
+        {
+            get { return owner; }
+            set
+            {
+                owner = value;
+
+                StartingSpeed = owner.Level.shotSpeed;
+                Range = owner.Level.shotRange;
+            }
+        }
+
+        public float CdTimer { get; set; }
+
+        public bool OnCd => CdTimer > 0;
+
+        public float LifeSpan
+        {
+            get { return lifeSpan; }
+            private set
+            {
+                lifeSpan = value;
+                if (value <= 0)
+                    Destroy();
+            }
+        }
+
+        protected int RangeToGo
+        {
+            get { return rangeToGo; }
+
+            set
+            {
+                if (value <= 0)
+                    Destroy();
+                rangeToGo = value;
+            }
+        }
+
+        protected int Range
+        {
+            get { return range; }
+
+            set
+            {
+                range = value;
+                RangeToGo = range;
+            }
+        }
+
+        public string SpellName;
+        private Character owner;
+        private float lifeSpan;
 
         public override void Start()
         {
             OnAfterUpdate += AfterUpdate;
+            Owner.Level.energy -= EnergyUsage;
+            LifeSpan = RangeToGo/Speed; // used in case the spell's speed is decreased
+            Speed = StartingSpeed;
         }
 
-        public void AfterUpdate(Object sender)
+        private void AfterUpdate(Object sender)
         {
-            if (Math.Abs(VX) > 1)
-            {
-                x += (int)VX;
-                VX -= (int)VX;
-            }
-            if (Math.Abs(VY) > 1)
-            {
-                y += (int)VY;
-                VY -= (int)VY;
-            }
             Owner.Level.energy -= (int) (EnergyUsagePerSecond * deltaTime);
         }
 
-        // to use for moving spells (ex. Bullet)
-        public void NextMove()
+        public override void Update()
         {
-            Vector2 nextStep = Direction.Normalized() * (Speed * deltaTime);
-            VX += nextStep.X;
-            VY += nextStep.Y;
+            base.Update();
+
+            LifeSpan -= deltaTime;
+
+            if (OnCd) { 
+                CdTimer -= deltaTime;
+                Debug.WriteLine(CdTimer);
+            }
+
+            NextMove();
+        }
+
+        // to use for moving spells (ex. Bullet)
+        protected void NextMove()
+        {
+            Vector2 nextStep = Direction * (Speed * deltaTime);
+            Vx += nextStep.X;
+            Vy += nextStep.Y;
+
+            RangeToGo -= (int)(Speed * deltaTime);
         }
     }
 }

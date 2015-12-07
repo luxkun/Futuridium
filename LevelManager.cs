@@ -1,4 +1,8 @@
-﻿namespace Futuridium
+﻿using System;
+using System.Collections.Generic;
+using Futuridium.Spells;
+
+namespace Futuridium
 {
     public class Level
     {
@@ -51,6 +55,9 @@
         public LevelManager levelManager;
 
         public bool activated;
+        
+
+        public List<Type> spellList;
 
         // only level0 should be initialized like this
         public Level()
@@ -64,6 +71,8 @@
 
         public void Init(Level oldLevel)
         {
+            if (spellList == null)
+                spellList = new List<Type>();
             activated = true;
             if (oldLevel != null)
             {
@@ -120,7 +129,8 @@
                     shotDelay = (float) (level0.shotDelay*(1 - level/100f)),
                     shotSpeed = (float) (level0.shotSpeed*(1 + level/6f)),
                     shotRange = (int) (level0.shotRange*(1 + level/10f)),
-                    neededXP = level0.neededXP*level*level*level
+                    neededXP = level0.neededXP*level*level*level,
+                    spellList = level0.spellList
                 };
                 lvl.hp = lvl.maxHP;
                 lvl.energy = lvl.maxEnergy;

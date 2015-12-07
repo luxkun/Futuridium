@@ -82,7 +82,7 @@ namespace Futuridium
         {
             Debug.WriteLine("Spawning borders.");
             var by = 0;
-            var bx = 0;
+            int bx;
             for (bx = 0; bx < engine.width/BlockW; bx++)
             {
                 SpawnBlock(bx, by);

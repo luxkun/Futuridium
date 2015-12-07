@@ -23,7 +23,7 @@ namespace Futuridium
 			background.width = engine.width;
 			background.height = engine.height;
 			background.color = Color.Black;
-			background.fill = true;
+			background.Fill = true;
 			background.order = order;
 			engine.SpawnObject ("map_background", background);*/
 
@@ -91,7 +91,7 @@ namespace Futuridium
                         var mapObj = new RectangleObject();
                         mapObj.color = game.CurrentFloor.Rooms[bx, by] == game.CurrentFloor.CurrentRoom
                             ? Color.Green
-                            : (game.CurrentFloor.Rooms[bx, by].enemies.Count > 0 ? Color.SaddleBrown : Color.Wheat);
+                            : (game.CurrentFloor.Rooms[bx, by].Enemies.Count > 0 ? Color.SaddleBrown : Color.Wheat);
                         mapObj.fill = true;
                         mapObj.x = paddingX + roomWidth*bx + roomHeight/10;
                         mapObj.y = paddingY + roomHeight*by + roomWidth/10;

@@ -7,13 +7,26 @@ namespace Futuridium
 {
     public class Floor : GameObject
     {
+        public Floor(int floorIndex)
+        {
+            name = "floor" + floorIndex;
+            FloorIndex = floorIndex;
+
+            RoomsList = new List<Room>();
+        }
+
+        public Floor(Room[,] rooms, int floorIndex) : this(floorIndex)
+        {
+            Rooms = rooms;
+        }
+
         public Room CurrentRoom { get; private set; }
 
         public Room FirstRoom { get; private set; }
 
         public int FloorBackgroundType { get; set; }
 
-        public int FloorIndex { get; private set; }
+        public int FloorIndex { get; }
 
         public int MapHeight { get; private set; }
 
@@ -21,20 +34,7 @@ namespace Futuridium
 
         public Room[,] Rooms { get; private set; }
 
-        public List<Room> RoomsList { get; private set; }
-
-        public Floor(int floorIndex)
-        {
-            name = "floor" + floorIndex;
-            this.FloorIndex = floorIndex;
-
-            RoomsList = new List<Room>();
-        }
-
-        public Floor(Room[,] rooms, int floorIndex) : this(floorIndex)
-        {
-            this.Rooms = rooms;
-        }
+        public List<Room> RoomsList { get; }
 
         private void CalcolateMapSize()
         {
@@ -101,7 +101,7 @@ namespace Futuridium
 
             RandomRooms(numberOfRooms, minEnemies, maxEnemies, rnd);
             foreach (var room in RoomsList)
-                CheckRoomParents(room.roomIndex);
+                CheckRoomParents(room.RoomIndex);
 
             CalcolateMapSize();
         }
@@ -112,26 +112,26 @@ namespace Futuridium
             // left
             if (roomIndex.Item1 > 0 && Rooms[roomIndex.Item1 - 1, roomIndex.Item2] != null)
             {
-                Rooms[roomIndex.Item1 - 1, roomIndex.Item2].right = room;
-                room.left = Rooms[roomIndex.Item1 - 1, roomIndex.Item2];
+                Rooms[roomIndex.Item1 - 1, roomIndex.Item2].Right = room;
+                room.Left = Rooms[roomIndex.Item1 - 1, roomIndex.Item2];
             }
             // right
             if (roomIndex.Item1 + 1 < Rooms.GetLength(0) && Rooms[roomIndex.Item1 + 1, roomIndex.Item2] != null)
             {
-                Rooms[roomIndex.Item1 + 1, roomIndex.Item2].left = room;
-                room.right = Rooms[roomIndex.Item1 + 1, roomIndex.Item2];
+                Rooms[roomIndex.Item1 + 1, roomIndex.Item2].Left = room;
+                room.Right = Rooms[roomIndex.Item1 + 1, roomIndex.Item2];
             }
             // bottom
             if (roomIndex.Item2 + 1 < Rooms.GetLength(1) && Rooms[roomIndex.Item1, roomIndex.Item2 + 1] != null)
             {
-                Rooms[roomIndex.Item1, roomIndex.Item2 + 1].top = room;
-                room.bottom = Rooms[roomIndex.Item1, roomIndex.Item2 + 1];
+                Rooms[roomIndex.Item1, roomIndex.Item2 + 1].Top = room;
+                room.Bottom = Rooms[roomIndex.Item1, roomIndex.Item2 + 1];
             }
             // top
             if (roomIndex.Item2 > 0 && Rooms[roomIndex.Item1, roomIndex.Item2 - 1] != null)
             {
-                Rooms[roomIndex.Item1, roomIndex.Item2 - 1].bottom = room;
-                room.top = Rooms[roomIndex.Item1, roomIndex.Item2 - 1];
+                Rooms[roomIndex.Item1, roomIndex.Item2 - 1].Bottom = room;
+                room.Top = Rooms[roomIndex.Item1, roomIndex.Item2 - 1];
             }
         }
 
@@ -144,7 +144,7 @@ namespace Futuridium
             }
             var charactersInfo = (CharactersInfo) engine.objects["charactersInfo"];
             var newRoomIndex = Tuple.Create(Rooms.GetLength(0)/2, Rooms.GetLength(1)/2);
-            FirstRoom = new Room(null, newRoomIndex, this) {roomType = 0};
+            FirstRoom = new Room(null, newRoomIndex, this) {RoomType = 0};
             FirstRoom.RandomizeRoom(0, 0, FloorIndex, rnd, charactersInfo);
             Rooms[newRoomIndex.Item1, newRoomIndex.Item2] = FirstRoom;
             RoomsList.Add(FirstRoom);
@@ -163,10 +163,10 @@ namespace Futuridium
                         int rndX, rndY;
                         do
                         {
-                            rndX = rnd.Next(currentRoom.roomIndex.Item1 > 0 ? -1 : 0,
-                                currentRoom.roomIndex.Item1 < maxRooms - 1 ? 2 : 1);
-                            rndY = rnd.Next(currentRoom.roomIndex.Item2 > 0 ? -1 : 0,
-                                currentRoom.roomIndex.Item2 < maxRooms - 1 ? 2 : 1);
+                            rndX = rnd.Next(currentRoom.RoomIndex.Item1 > 0 ? -1 : 0,
+                                currentRoom.RoomIndex.Item1 < maxRooms - 1 ? 2 : 1);
+                            rndY = rnd.Next(currentRoom.RoomIndex.Item2 > 0 ? -1 : 0,
+                                currentRoom.RoomIndex.Item2 < maxRooms - 1 ? 2 : 1);
                             if (rndX != 0 && rndY != 0)
                             {
                                 if (rnd.Next(0, 2) == 1)
@@ -174,8 +174,8 @@ namespace Futuridium
                                 else
                                     rndY = 0;
                             }
-                            newRoomIndex = Tuple.Create(currentRoom.roomIndex.Item1 + rndX,
-                                currentRoom.roomIndex.Item2 + rndY);
+                            newRoomIndex = Tuple.Create(currentRoom.RoomIndex.Item1 + rndX,
+                                currentRoom.RoomIndex.Item2 + rndY);
                         } while ((rndX == 0 && rndY == 0) || Rooms[newRoomIndex.Item1, newRoomIndex.Item2] != null);
                         var roomType = 0;
                         if (RoomsList.Count == maxRooms - 1)
@@ -183,8 +183,9 @@ namespace Futuridium
                             Debug.WriteLine("BOSS ROOM GEN.");
                             roomType = 1;
                         }
-                        var newRoom = new Room(null, newRoomIndex, this) {roomType = roomType};
-                        newRoom.RandomizeRoom(minEnemies, maxEnemies, FloorIndex, rnd, charactersInfo);
+                        var newRoom = new Room(null, newRoomIndex, this) {RoomType = roomType};
+                        newRoom.RandomizeRoom(roomType == 1 ? 1 : minEnemies, roomType == 1 ? 1 : maxEnemies, FloorIndex,
+                            rnd, charactersInfo);
                         Rooms[newRoomIndex.Item1, newRoomIndex.Item2] = newRoom;
                         RoomsList.Add(newRoom);
                         queue.Enqueue(newRoom);
@@ -197,42 +198,42 @@ namespace Futuridium
 
         public bool OpenRoom(Room room)
         {
-            if (room != null && (CurrentRoom == null || CurrentRoom.enemies.Count == 0))
+            if (room != null && (CurrentRoom == null || CurrentRoom.Enemies.Count == 0))
             {
                 var game = (Game) engine.objects["game"];
                 game.StartLoading();
                 Debug.Assert(RoomsList.Contains(room) &&
-                             (CurrentRoom == null || CurrentRoom.left == room || CurrentRoom.right == room ||
-                              CurrentRoom.top == room || CurrentRoom.bottom == room));
+                             (CurrentRoom == null || CurrentRoom.Left == room || CurrentRoom.Right == room ||
+                              CurrentRoom.Top == room || CurrentRoom.Bottom == room));
                 if (CurrentRoom != null)
                 {
                     var playerWidth = Utils.FixBoxValue(game.Player.width);
                     var playerHeight = Utils.FixBoxValue(game.Player.height);
-                    if (CurrentRoom.left == room)
+                    if (CurrentRoom.Left == room)
                     {
                         game.Player.x = game.engine.width - playerWidth -
-                                        Utils.FixBoxValue(CurrentRoom.gameBackground.RightDoorAsset.sprite.Width)
-                                        - CurrentRoom.gameBackground.SpawnOnDoorPadding;
+                                        Utils.FixBoxValue(CurrentRoom.GameBackground.RightDoorAsset.sprite.Width)
+                                        - CurrentRoom.GameBackground.SpawnOnDoorPadding;
                         game.Player.y = game.engine.height/2;
                     }
-                    else if (CurrentRoom.right == room)
+                    else if (CurrentRoom.Right == room)
                     {
-                        game.Player.x = Utils.FixBoxValue(CurrentRoom.gameBackground.LeftDoorAsset.sprite.Width)
-                                        + CurrentRoom.gameBackground.SpawnOnDoorPadding;
+                        game.Player.x = Utils.FixBoxValue(CurrentRoom.GameBackground.LeftDoorAsset.sprite.Width)
+                                        + CurrentRoom.GameBackground.SpawnOnDoorPadding;
                         game.Player.y = game.engine.height/2;
                     }
-                    else if (CurrentRoom.top == room)
+                    else if (CurrentRoom.Top == room)
                     {
                         game.Player.x = game.engine.width/2;
                         game.Player.y = game.engine.height - playerHeight -
-                                        Utils.FixBoxValue(CurrentRoom.gameBackground.BottomDoorAsset.sprite.Height)
-                                        - CurrentRoom.gameBackground.SpawnOnDoorPadding;
+                                        Utils.FixBoxValue(CurrentRoom.GameBackground.BottomDoorAsset.sprite.Height)
+                                        - CurrentRoom.GameBackground.SpawnOnDoorPadding;
                     }
-                    else if (CurrentRoom.bottom == room)
+                    else if (CurrentRoom.Bottom == room)
                     {
                         game.Player.x = game.engine.width/2;
-                        game.Player.y = Utils.FixBoxValue(CurrentRoom.gameBackground.TopDoorAsset.sprite.Height)
-                                        + CurrentRoom.gameBackground.SpawnOnDoorPadding;
+                        game.Player.y = Utils.FixBoxValue(CurrentRoom.GameBackground.TopDoorAsset.sprite.Height)
+                                        + CurrentRoom.GameBackground.SpawnOnDoorPadding;
                     }
                     else
                     {
@@ -246,9 +247,9 @@ namespace Futuridium
                 engine.SpawnObject(CurrentRoom.name, CurrentRoom);
                 CurrentRoom.SpawnEnemies();
                 // empty room
-                if (CurrentRoom.enemies.Count == 0)
+                if (CurrentRoom.Enemies.Count == 0)
                 {
-                    CurrentRoom.gameBackground.OpenDoors();
+                    CurrentRoom.GameBackground.OpenDoors();
                 }
 
                 game.StopLoading();

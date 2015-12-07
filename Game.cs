@@ -154,22 +154,22 @@ namespace Futuridium
             {
                 CurrentFloor.CurrentRoom.RemoveEnemy(enemyObj);
 
-                Debug.WriteLine("Enemies to go in current room: " + CurrentFloor.CurrentRoom.enemies.Count);
-                foreach (var en in CurrentFloor.CurrentRoom.enemies)
+                Debug.WriteLine("Enemies to go in current room: " + CurrentFloor.CurrentRoom.Enemies.Count);
+                foreach (var en in CurrentFloor.CurrentRoom.Enemies)
                 {
                     Debug.Write("{0} - ", en.name);
                 }
 
-                if (CurrentFloor.CurrentRoom.enemies.Count == 0)
+                if (CurrentFloor.CurrentRoom.Enemies.Count == 0)
                 {
-                    CurrentFloor.CurrentRoom.gameBackground.OpenDoors();
+                    CurrentFloor.CurrentRoom.GameBackground.OpenDoors();
                 }
             }
         }
 
         private void ManageFloor()
         {
-            if (CurrentFloor.RoomsList.Any(room => room.enemies.Count > 0))
+            if (CurrentFloor.RoomsList.Any(room => room.Enemies.Count > 0))
             {
                 return;
             }
@@ -250,44 +250,42 @@ namespace Futuridium
         {
             if (lastWindowChange > 0)
                 lastWindowChange -= deltaTime;
-            if (lastWindowChange <= 0)
-            {
-                var startingWindow = MainWindow;
+            if (!(lastWindowChange <= 0)) return;
+            var startingWindow = MainWindow;
 
-                switch (MainWindow)
-                {
-                    case "game":
-                        if (engine.IsKeyDown((int) Key.M) ||
-                            (Joystick != null && Joystick.GetButton(JoyStickConfig["SL"])))
-                            OpenMap();
-                        else if (engine.IsKeyDown((int) Key.Escape) ||
-                                 (Joystick != null && Joystick.GetButton(JoyStickConfig["ST"])))
-                            Pause();
-                        break;
-                    case "map":
-                        if (engine.IsKeyDown((int) Key.M) || engine.IsKeyDown((int) Key.Escape) ||
-                            (Joystick != null && Joystick.GetButton(JoyStickConfig["SL"])))
-                            CloseMap();
-                        break;
-                    case "pause":
-                        if (engine.IsKeyDown((int) Key.P) || engine.IsKeyDown((int) Key.Escape) ||
-                            (Joystick != null && Joystick.GetButton(JoyStickConfig["ST"])))
-                            UnPause();
-                        break;
-                    case "logo":
-                        if (AnyKeyDown() || (Joystick != null && AnyJoystickButtonPressed()))
-                            StartGame();
-                        break;
-                    case "gameover":
-                        if (gameOverTimer > 0)
-                            gameOverTimer -= deltaTime;
-                        if (gameOverTimer <= 0 && (AnyKeyDown() || (Joystick != null && AnyJoystickButtonPressed())))
-                            engine.isGameRunning = false;
-                        break;
-                }
-                if (startingWindow != MainWindow)
-                    lastWindowChange = WindowChangeDelay;
+            switch (MainWindow)
+            {
+                case "game":
+                    if (engine.IsKeyDown((int) Key.M) ||
+                        (Joystick != null && Joystick.GetButton(JoyStickConfig["SL"])))
+                        OpenMap();
+                    else if (engine.IsKeyDown((int) Key.Escape) ||
+                             (Joystick != null && Joystick.GetButton(JoyStickConfig["ST"])))
+                        Pause();
+                    break;
+                case "map":
+                    if (engine.IsKeyDown((int) Key.M) || engine.IsKeyDown((int) Key.Escape) ||
+                        (Joystick != null && Joystick.GetButton(JoyStickConfig["SL"])))
+                        CloseMap();
+                    break;
+                case "pause":
+                    if (engine.IsKeyDown((int) Key.P) || engine.IsKeyDown((int) Key.Escape) ||
+                        (Joystick != null && Joystick.GetButton(JoyStickConfig["ST"])))
+                        UnPause();
+                    break;
+                case "logo":
+                    if (AnyKeyDown() || (Joystick != null && AnyJoystickButtonPressed()))
+                        StartGame();
+                    break;
+                case "gameover":
+                    if (gameOverTimer > 0)
+                        gameOverTimer -= deltaTime;
+                    if (gameOverTimer <= 0 && (AnyKeyDown() || (Joystick != null && AnyJoystickButtonPressed())))
+                        engine.isGameRunning = false;
+                    break;
             }
+            if (startingWindow != MainWindow)
+                lastWindowChange = WindowChangeDelay;
         }
 
         public bool AnyJoystickButtonPressed()
