@@ -1,17 +1,24 @@
 ﻿using System;
+using System.Linq;
 using Aiv.Engine;
 using OpenTK;
 
-namespace StupidAivGame
+namespace Futuridium
 {
     public class Enemy : Character
     {
-        private const int delayBeforeActivation = 500;
-        private const double MINBESTDELTA = 0.01;
+        private const float DelayBeforeActivation = 0.5f;
+        private const float Minbestdelta = 0.01f;
         private bool activated;
-        private double lastMove;
+        private float lastMove;
+        private readonly int maxPointDistance = 400;
+        private readonly int minDistance = 10; // calculate this somehow
         private Vector2 nextStep;
-        private int timeBeforeActivation;
+        // virtual circular radar
+        private readonly int radarRadius = 150;
+
+        private Vector2 rndPoint = new Vector2(-1, -1);
+        private float timeBeforeActivation;
         private Vector2 virtPos;
 
         public Enemy(string name, string formattedName, string characterName) : base(name, formattedName, characterName)
@@ -21,45 +28,69 @@ namespace StupidAivGame
         // TEMP
         // TODO: A* algorithm if there will ever be obstacles 
         // TODO: (futuro) algoritmo intelligente che mette in conto dove sta andando il player
-        private void Follow(Player player)
+        private void RandomizeNextObjective()
         {
-            // regga tangente per due punti (x - player.x) / (this.x - player.x) = (y - player.y) / (this.y - player.y)
-
-            var playerV = new Vector2(player.x, player.y);
             var agentV = new Vector2(x, y);
-            var paddingV = new Vector2(10, 10);
-            //List<Vector> points = new List<Vector> ();
-            var distance = (int) ((playerV - agentV).Length*2); // sucks
-            double bestDelta = engine.width; // flag?
-            nextStep = new Vector2();
-            for (var i = 0; i <= distance; i++)
+            if (rndPoint.X != -1 && (rndPoint - agentV).Length > minDistance)
             {
-                var newPoint = (playerV - agentV)*((float) i/distance) + agentV;
-                //newPoint.X = (int)newPoint.X;
-                //newPoint.Y = (int)newPoint.Y;
-                //if (!points.Contains(newPoint)) // sucks
-                //	points.Add (newPoint);
-                double pointDelta = Math.Abs(level.speed - (newPoint - agentV).Length);
-                // tries to get point closer to character's speed, usually is perfect or close to
-                if (bestDelta > pointDelta)
-                {
-                    bestDelta = pointDelta;
-                    nextStep = newPoint;
-                    if (bestDelta <= MINBESTDELTA)
-                    {
-                        break;
-                    }
-                }
+                return;
             }
-            if (distance > 0)
+            var rnd = new Random(new Guid().GetHashCode());
+            int distance;
+            do
             {
+                // fix
+                var deltaX = rnd.Next(-1*maxPointDistance, maxPointDistance);
+                var deltaY = rnd.Next(-1*maxPointDistance, maxPointDistance);
+                rndPoint = new Vector2(
+                    x + deltaX + 100*Math.Sign(deltaX),
+                    y + deltaY + 100*Math.Sign(deltaX));
+                distance = Math.Abs(deltaX) + Math.Abs(deltaY);
+            } while (rndPoint.X < GameBackground.WallWidth || rndPoint.Y < GameBackground.WallHeight ||
+                     rndPoint.X + width > engine.width - GameBackground.WallWidth ||
+                     rndPoint.Y + height > engine.height - GameBackground.WallHeight || distance < minDistance);
+        }
+
+        private void RandomMove()
+        {
+            RandomizeNextObjective();
+            MoveTo(rndPoint, (int) (Level.speed*0.5));
+        }
+
+        // TODO: make sure enemy can't enter inside the player
+        private void Move(Player player)
+        {
+            var objectiveV = new Vector2(player.x, player.y);
+            var agentV = new Vector2(x, y);
+            //var paddingV = new Vector2(10, 10);
+            var distance = (int) (objectiveV - agentV).Length;
+            if (distance > radarRadius*2)
+            {
+                RandomMove();
+                return;
+            }
+            if (rndPoint.X != -1)
+                rndPoint = new Vector2(-1, -1);
+            MoveTo(objectiveV, Level.speed);
+        }
+
+        // FIX: stop when near objective
+        private void MoveTo(Vector2 objectiveV, float speed)
+        {
+            nextStep = new Vector2();
+            var agentV = new Vector2(x, y);
+            var player = (Player) engine.objects["player"];
+            //var distance = Math.Abs(agentV.X - objectiveV.X) + Math.Abs(agentV.Y + objectiveV.Y);
+            // just touching the objective is enough
+            if ((Math.Abs(agentV.X - objectiveV.X) > width || Math.Abs(agentV.Y + objectiveV.Y) > height) &&
+                !hitBoxes.FirstOrDefault().Value.CollideWith(player.hitBoxes.FirstOrDefault().Value))
+                // first or value dependant key?
+            {
+                nextStep = objectiveV - agentV;
+                nextStep.Normalize();
                 //Debug.WriteLine("{0} {1} {2} {3} {4}", playerV, agentV, nextStep, bestDelta, level.speed);
-                var utopiaX = nextStep.X - x;
-                var utopiaY = nextStep.Y - y;
-                //if (utopiaX > (playerV.X - paddingV) && this.x < (playerV.X - paddingV))
-                //	utopiaX = playerV.X - paddingV;
-                virtPos.X = utopiaX*(deltaTicks / 1000f);
-                virtPos.Y = utopiaY*(deltaTicks / 1000f);
+                virtPos.X += nextStep.X*deltaTime*speed;
+                virtPos.Y += nextStep.Y*deltaTime*speed;
 
                 if (Math.Abs(virtPos.X) > 1)
                 {
@@ -76,27 +107,29 @@ namespace StupidAivGame
 
         public override GameObject Clone()
         {
-            var go = new Enemy(name, formattedName, characterName);
+            var go = new Enemy(name, FormattedName, CharacterName)
+            {
+                currentSprite = currentSprite,
+                name = name,
+                x = x,
+                y = y,
+                FormattedName = FormattedName,
+                CharacterName = CharacterName,
+                Level0 = Level0.Clone(),
+                UseAnimations = UseAnimations
+            };
             // TODO: use base.Clone() somehow
-            go.currentSprite = currentSprite;
-            go.name = name;
-            go.x = x;
-            go.y = y;
             /*if (animations != null)
             {
                 result.animations = new Dictionary<string, Animation>();
                 foreach (string animKey in animations.Keys)
                 {
                     result.animations[animKey] = animations[animKey].Clone();
-                    result.animations[animKey].owner = result;
+                    result.animations[animKey].Owner = result;
                 }
             }*/
             //result.currentAnimation = currentAnimation;
             // ---
-            go.formattedName = formattedName;
-            go.characterName = characterName;
-            go.level0 = level0.Clone();
-            go.useAnimations = useAnimations;
             go.LevelCheck();
             return go;
         }
@@ -104,34 +137,28 @@ namespace StupidAivGame
         public override void Update()
         {
             base.Update();
-            if (((Game) engine.objects["game"]).mainWindow == "game")
+            if (((Game) engine.objects["game"]).MainWindow != "game") return;
+            if (!activated)
             {
-                if (!activated)
+                if (timeBeforeActivation == 0)
+                    timeBeforeActivation = DelayBeforeActivation;
+                else
                 {
-                    if (timeBeforeActivation == 0)
-                        timeBeforeActivation = delayBeforeActivation;
-                    else
+                    if (timeBeforeActivation > 0)
+                        timeBeforeActivation -= deltaTime;
+                    if (timeBeforeActivation < 0)
                     {
-                        if (timeBeforeActivation > 0)
-                            timeBeforeActivation -= deltaTicks;
-                        if (timeBeforeActivation < 0)
-                        {
-                            activated = true;
-                            AddHitBox("enemy_" + name, 0, 0, width, height);
-                        }
+                        activated = true;
+                        AddHitBox("enemy_" + name, 0, 0, width, height);
                     }
                 }
-                if (activated)
+            } else {
+                if (lastMove > 0)
+                    lastMove -= deltaTime;
+                if (lastMove <= 0)
                 {
-                    //Shot(0);
-                    if (lastMove > 0)
-                        lastMove -= deltaTicks;
-                    if (lastMove <= 0)
-                    {
-                        Follow(((Game) engine.objects["game"]).player);
-                        lastMove = 5; // move every 5ms
-                    }
-                    //Shot (1);
+                    Move(((Game) engine.objects["game"]).Player);
+                    lastMove = 0.005f; // move every 5ms
                 }
             }
         }
