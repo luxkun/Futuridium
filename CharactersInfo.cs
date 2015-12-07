@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using Aiv.Engine;
 
-namespace StupidAivGame
+namespace Futuridium
 {
     public class CharactersInfo : GameObject
     {
@@ -19,24 +19,39 @@ namespace StupidAivGame
             enemies = new List<Dictionary<Enemy, double>>(2);
 
             // ROOM TYPE: 0
-            var bigMonkey = new Enemy("enemy_bigmonkey", "Big Monkey", "bigmonkey");
-            bigMonkey.level0.maxHP = 120;
-            bigMonkey.level0.attack = 40;
-            bigMonkey.level0.xpReward = 12;
-            bigMonkey.level0.speed = 200;
+            var bigMonkey = new Enemy("enemy_bigmonkey", "Big Monkey", "bigmonkey")
+            {
+                Level0 =
+                {
+                    maxHP = 60,
+                    attack = 40,
+                    xpReward = 12,
+                    speed = 200f
+                }
+            };
             //bigMonkey.useAnimations = true;
 
-            var monkey = new Enemy("enemy_monkey", "Monkey", "monkey");
-            monkey.level0.maxHP = 80;
-            monkey.level0.attack = 20;
-            monkey.level0.xpReward = 8;
-            monkey.level0.speed = 200;
+            var monkey = new Enemy("enemy_monkey", "Monkey", "monkey")
+            {
+                Level0 =
+                {
+                    maxHP = 40,
+                    attack = 20,
+                    xpReward = 8,
+                    speed = 200f
+                }
+            };
 
-            var bear = new Enemy("enemy_bear", "Bear", "bear");
-            bear.level0.maxHP = 400;
-            bear.level0.attack = 50;
-            bear.level0.xpReward = 25;
-            bear.level0.speed = 120;
+            var bear = new Enemy("enemy_bear", "Bear", "bear")
+            {
+                Level0 =
+                {
+                    maxHP = 200,
+                    attack = 50,
+                    xpReward = 25,
+                    speed = 120f
+                }
+            };
 
 
             enemies.Add(new Dictionary<Enemy, double>(3));
@@ -47,17 +62,27 @@ namespace StupidAivGame
 
             // ROOM TYPE: 1
             // TODO: special attacks, charge for mino, bullets for megamonkey
-            var mino = new Enemy("enemy_mino", "Mino", "mino");
-            mino.level0.maxHP = 1200;
-            mino.level0.attack = 100;
-            mino.level0.xpReward = 100;
-            mino.level0.speed = 200;
+            var mino = new Enemy("enemy_mino", "Mino", "mino")
+            {
+                Level0 =
+                {
+                    maxHP = 600,
+                    attack = 100,
+                    xpReward = 100,
+                    speed = 200f
+                }
+            };
 
-            var megaMonkey = new Enemy("enemy_megamonkey", "Mega Monkey", "megamonkey");
-            megaMonkey.level0.maxHP = 999;
-            megaMonkey.level0.attack = 70;
-            megaMonkey.level0.xpReward = 50;
-            megaMonkey.level0.speed = 250;
+            var megaMonkey = new Enemy("enemy_megamonkey", "Mega Monkey", "megamonkey")
+            {
+                Level0 =
+                {
+                    maxHP = 500,
+                    attack = 70,
+                    xpReward = 50,
+                    speed = 250f
+                }
+            };
 
             enemies.Add(new Dictionary<Enemy, double>(2));
             enemies[1][mino] = 1;
@@ -84,16 +109,16 @@ namespace StupidAivGame
                 foreach (var pair in enemiesList)
                 {
                     var enemy = pair.Key;
-                    if (enemy.useAnimations)
+                    if (enemy.UseAnimations)
                     {
                         // TODO: use animations... 
                         enemy.currentSprite =
-                            (SpriteAsset) engine.GetAsset(game.spritesAnimations[enemy.characterName][0]);
+                            (SpriteAsset) engine.GetAsset(game.SpritesAnimations[enemy.CharacterName][0]);
                     }
                     else
                     {
                         // TODO: add all sprites
-                        enemy.currentSprite = (SpriteAsset) engine.GetAsset(enemy.characterName); //enemy.name);
+                        enemy.currentSprite = (SpriteAsset) engine.GetAsset(enemy.CharacterName); //enemy.name);
                     }
                 }
             }
@@ -122,7 +147,7 @@ namespace StupidAivGame
             //Character enemyInfo = enemies [rnd.Next (0, enemies.Length)];
             var result = (Enemy) enemyInfo.Clone();
             result.name += letters[counter - 1%letters.Length];
-            result.xp = result.levelManager.levelUpTable[level].neededXP;
+            result.Xp = result.LevelManager.levelUpTable[level].neededXP;
             result.LevelCheck();
             return result;
         }

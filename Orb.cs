@@ -3,22 +3,26 @@ using System.Diagnostics;
 using Aiv.Engine;
 using OpenTK;
 
-namespace StupidAivGame
+namespace Futuridium
 {
     public class Orb : CircleObject
     {
-        private double _orbStretch;
+        private readonly Character owner;
+        private double orbStretchStep;
 
         private double angleTick;
 
-        public int orbRange = 150;
-        public double orbSpeed = 0.8;
-        public double orbStretch = 0.25; // orbRange goes from orbRange * orbStretch to orbRange
         private bool orbStretching; // true: decrease ; false: increase
-        public int orbStretchSteps = 50;
-        private readonly Character owner;
 
         private Vector2 virtPos;
+
+        public int OrbRange { get; set; } = 150;
+
+        public double OrbSpeed { get; set; } = 0.8;
+
+        public double OrbStretch { get; set; } = 0.25;
+
+        public int OrbStretchSteps { get; set; } = 20;
 
         public Orb(Character owner)
         {
@@ -29,39 +33,39 @@ namespace StupidAivGame
 
         public override void Start()
         {
-            x = owner.x + orbRange;
+            x = owner.x + OrbRange;
             y = owner.y;
             AddHitBox("mass", 0, 0, radius*2, radius*2);
         }
 
         public Vector2 GetNextStep(double angle)
         {
-            return new Vector2((int) (Math.Cos(angle)*orbRange*(1 - _orbStretch)),
-                (int) (Math.Sin(angle)*orbRange*(1 - _orbStretch)));
+            return new Vector2((int) (Math.Cos(angle)*OrbRange*(1 - orbStretchStep)),
+                (int) (Math.Sin(angle)*OrbRange*(1 - orbStretchStep)));
         }
 
         private void ManageStretch()
         {
-            if (_orbStretch <= 0.0)
+            if (orbStretchStep <= 0.0)
             {
                 orbStretching = true;
             }
-            else if (_orbStretch >= orbStretch)
+            else if (orbStretchStep >= OrbStretch)
             {
                 orbStretching = false;
             }
-            _orbStretch += orbStretch/orbStretchSteps*(orbStretching ? 1 : -1);
+            orbStretchStep += OrbStretch/OrbStretchSteps*(orbStretching ? 1 : -1);
         }
 
         public override void Update()
         {
-            if (((Game) engine.objects["game"]).mainWindow == "game")
+            if (((Game) engine.objects["game"]).MainWindow == "game")
             {
                 ManageStretch();
                 // rotate
                 x = owner.x;
                 y = owner.y;
-                angleTick += orbSpeed*(deltaTicks / 1000f);
+                angleTick += OrbSpeed*deltaTime;
                 var points = GetNextStep(angleTick);
 
                 virtPos.X += (int) points.X;
@@ -80,14 +84,12 @@ namespace StupidAivGame
                 var collisions = CheckCollisions();
                 foreach (var collision in collisions)
                 {
-                    if (collision.other.name.StartsWith("enemy"))
+                    var other = collision.other as Character;
+                    if (other != null)
                     {
-                        Debug.WriteLine("Orb hits enemy: " + collision.other.name);
-                        var game = (Game) engine.objects["game"];
+                        Debug.WriteLine("Orb hits enemy: " + other.name);
 
-                        var enemy = collision.other as Enemy;
-                        // broken, deliberately
-                        game.Hits(owner, enemy, collision, null);
+                        owner.DoDamage(other);
 
                         break;
                     }

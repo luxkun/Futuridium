@@ -2,41 +2,46 @@
 using System.Diagnostics;
 using Aiv.Engine;
 
-namespace StupidAivGame
+namespace Futuridium
 {
     public class Background : GameObject
     {
-        // use blockasset, if not available use blockobject
-        public SpriteAsset blockAsset = null;
-        public int blockH;
-        public Func<GameObject> blockObject = null;
-        public GameObject[,] blocks;
-
-        public bool blocksWithHitBox = true;
-        public int blockW;
-
         public Background()
         {
-            blockW = 32;
-            blockH = 32;
+            BlockW = 32;
+            BlockH = 32;
         }
+
+        // use blockasset, if not available use blockobject
+
+        public SpriteAsset BlockAsset { get; set; } = null;
+
+        public int BlockH { get; set; }
+
+        public int BlockW { get; set; }
+
+        public bool BlocksWithHitBox { get; set; } = true;
+
+        public GameObject[,] Blocks { get; set; }
+
+        public Func<GameObject> BlockObject { get; set; } = null;
 
         public override void Start()
         {
-            blocks = new GameObject[engine.width/blockW + 1, engine.height/blockH + 1];
+            Blocks = new GameObject[engine.width/BlockW + 1, engine.height/BlockH + 1];
         }
 
-        protected void SpawnBlock(int bx, int by)
+        private void SpawnBlock(int bx, int by)
         {
-            var blockName = string.Format("{0}_{1}_{2}_block", name, bx, by);
+            var blockName = $"{name}_{bx}_{@by}_block";
             GameObject block;
-            if (blockObject != null)
+            if (BlockObject != null)
             {
-                block = blockObject();
+                block = BlockObject();
             }
-            else if (blockAsset != null)
+            else if (BlockAsset != null)
             {
-                var blockSprite = (SpriteObject) ((SpriteObject) engine.objects[$"cache_{blockAsset.name}"]).Clone();
+                var blockSprite = (SpriteObject) ((SpriteObject) engine.objects[$"cache_{BlockAsset.name}"]).Clone();
                 block = blockSprite;
             }
             else
@@ -48,28 +53,28 @@ namespace StupidAivGame
 
         public void SpawnBlock(int bx, int by, GameObject spriteObj, string blockName)
         {
-            Debug.WriteLine("bx: {0}, by: {1}, {2} {3}", bx, by, blocks.GetLength(0), blocks.Length);
-            if (blocks[bx, by] == null)
+            Debug.WriteLine("bx: {0}, by: {1}, {2} {3}", bx, by, Blocks.GetLength(0), Blocks.Length);
+            if (Blocks[bx, by] == null)
             {
-                blocks[bx, by] = spriteObj;
-                blocks[bx, by].name = blockName;
+                Blocks[bx, by] = spriteObj;
+                Blocks[bx, by].name = blockName;
                 //blocks [x, y].currentSprite = (SpriteAsset) engine.GetAsset ("block");
-                blocks[bx, by].x = bx*blockW;
-                blocks[bx, by].y = by*blockH;
-                blocks[bx, by].order = order;
-                if (blocksWithHitBox)
-                    blocks[bx, by].AddHitBox(blockName, 0, 0, blockW, blockH);
-                Debug.WriteLine("Spawned block {0}.{1} at {2}.{3}", bx, by, blocks[bx, by].x, blocks[bx, by].y);
-                engine.SpawnObject(blockName, blocks[bx, by]);
+                Blocks[bx, by].x = bx*BlockW;
+                Blocks[bx, by].y = by*BlockH;
+                Blocks[bx, by].order = order;
+                if (BlocksWithHitBox)
+                    Blocks[bx, by].AddHitBox(blockName, 0, 0, BlockW, BlockH);
+                Debug.WriteLine("Spawned block {0}.{1} at {2}.{3}", bx, by, Blocks[bx, by].x, Blocks[bx, by].y);
+                engine.SpawnObject(blockName, Blocks[bx, by]);
             }
         }
 
         public void DestroyBlock(int bx, int by)
         {
-            if (blocks[bx, by] != null)
+            if (Blocks[bx, by] != null)
             {
-                blocks[bx, by].Destroy();
-                blocks[bx, by] = null;
+                Blocks[bx, by].Destroy();
+                Blocks[bx, by] = null;
             }
         }
 
@@ -78,23 +83,22 @@ namespace StupidAivGame
             Debug.WriteLine("Spawning borders.");
             var by = 0;
             var bx = 0;
-            for (bx = 0; bx < engine.width/blockW; bx++)
+            for (bx = 0; bx < engine.width/BlockW; bx++)
             {
                 SpawnBlock(bx, by);
             }
-            by = (engine.height - 1)/blockH;
-            for (bx = 0; bx < engine.width/blockW; bx++)
+            by = (engine.height - 1)/BlockH;
+            for (bx = 0; bx < engine.width/BlockW; bx++)
             {
                 SpawnBlock(bx, by);
             }
             bx = 0;
-            for (by = 0; by < engine.height/blockH; by++)
+            for (by = 0; by < engine.height/BlockH; by++)
             {
                 SpawnBlock(bx, by);
             }
-            bx = (engine.width - 1)/blockW;
-            ;
-            for (by = 0; by < engine.height/blockH; by++)
+            bx = (engine.width - 1)/BlockW;
+            for (by = 0; by < engine.height/BlockH; by++)
             {
                 SpawnBlock(bx, by);
             }

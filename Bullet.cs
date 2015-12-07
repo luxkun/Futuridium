@@ -3,7 +3,7 @@ using System.Diagnostics;
 using Aiv.Engine;
 using OpenTK;
 
-namespace StupidAivGame
+namespace Futuridium
 {
     public class Bullet : CircleObject
     {
@@ -12,37 +12,34 @@ namespace StupidAivGame
         private const float fadeAwayRange = 0.2f;
         private const float fadeAwayMod = 0.8f;
 
-        private const int maxLifeSpan = 5000; // dies after 5s
-        private readonly int bounceDelay = 250;
+        private const float maxLifeSpan = 5; // dies after 5s
+        private readonly float bounceDelay = 2.5f;
         private readonly double bounceMod = 0.8; // speed = bounceMod * speed
         private readonly int range = 500;
 
-        public bool bounceBullet = false;
+        private readonly bool bounceBullet = false;
         private Vector2 direction;
 
-        private int lastBounce;
+        private float lastBounce;
 
         private Vector2 lastPoint;
-        private int lifeSpan;
-        public GameObject owner;
+        private float lifeSpan;
 
         private int rangeToGo;
-        public int speed;
-        public int startingSpeed = 250;
         private Vector2 virtPos;
         private double virtRadius;
 
-        public Bullet(GameObject owner, Vector2 direction)
+        public Bullet(Character owner, Vector2 direction)
         {
-            this.owner = owner;
-            var ownerCharacter = owner as Character;
+            Owner = owner;
+            var ownerCharacter = owner;
             if (owner != null)
             {
-                startingSpeed = ownerCharacter.level.shotSpeed;
-                range = ownerCharacter.level.shotRange;
+                StartingSpeed = ownerCharacter.Level.shotSpeed;
+                range = ownerCharacter.Level.shotRange;
             }
-            speed = startingSpeed;
-            this.direction = direction;
+            Speed = StartingSpeed;
+            Direction = direction;
 
             rangeToGo = range;
             fill = true;
@@ -51,10 +48,23 @@ namespace StupidAivGame
             OnDestroy += DestroyEvent;
         }
 
+        public Vector2 Direction
+        {
+            get { return direction; }
+            set { direction = value; }
+        }
+
+        public Character Owner { get; set; }
+
+        public float Speed { get; set; }
+
+        public float StartingSpeed { get; set; } = 250f;
+
         private void DestroyEvent(object sender)
         {
-            var roomName = ((Game) engine.objects["game"]).currentFloor.currentRoom.name;
-            var particleSystem = new ParticleSystem($"{roomName}_{name}_psys", "homogeneous", 30, radius / 3, color, 400, speed, radius*2)
+            var roomName = ((Game) engine.objects["game"]).CurrentFloor.CurrentRoom.name;
+            var particleSystem = new ParticleSystem($"{roomName}_{name}_psys", "homogeneous", 30, radius/3, color, 400,
+                (int) Speed, radius*2)
             {
                 order = order,
                 x = x,
@@ -73,7 +83,7 @@ namespace StupidAivGame
 
         // simulate collision between two GameObject rectangles
         // returns 0: X collision ; 1: Y collision
-        public int SimulateCollision(Collision collision)
+        private int SimulateCollision(Collision collision)
         {
             var hitBox1 = hitBoxes[collision.hitBox]; // bullet
             var hitBox2 = collision.other.hitBoxes[collision.otherHitBox];
@@ -89,7 +99,7 @@ namespace StupidAivGame
             var diffX = x - (int) lastPoint.X;
             var diffY = y - (int) lastPoint.Y;
             Debug.Assert(Math.Abs(diffX) == Math.Abs(diffY));
-            // ignores first step
+            // ignores first Step
             // could optimize by starting near second hitbox
             var xCollisions = 0;
             var yCollisions = 0;
@@ -137,7 +147,7 @@ namespace StupidAivGame
                 }
                 else
                 {
-                    return BounceOrDie(SimulateCollision(collision), otherHitBox);
+                    return BounceOrDie(SimulateCollision(collision));
                     /*this.x = (int)lastPoint.X;
 					this.y = (int)lastPoint.Y;*/
                 }
@@ -148,11 +158,11 @@ namespace StupidAivGame
         }
 
         // collisionDirection: 0: X collision ; 1: Y collision
-        private bool BounceOrDie(int collisionDirection, HitBox colliderHitBox)
+        private bool BounceOrDie(int collisionDirection)
         {
             if (bounceBullet)
             {
-                Debug.WriteLine("Collision direction:" + collisionDirection);
+                Debug.WriteLine("Collision Direction:" + collisionDirection);
                 if (collisionDirection == 0)
                 {
                     direction.X *= -1;
@@ -172,9 +182,9 @@ namespace StupidAivGame
                     direction.X *= -1;
                     direction.Y *= -1;
                 }
-                speed = (int) (speed*bounceMod);
-                if (speed <= minSpeed)
-                    speed = minSpeed;
+                Speed = (int) (Speed*bounceMod);
+                if (Speed <= minSpeed)
+                    Speed = minSpeed;
                 else
                     rangeToGo = (int) (rangeToGo*bounceMod);
                 lastBounce = bounceDelay;
@@ -186,14 +196,14 @@ namespace StupidAivGame
             return false;
         }
 
-        public void NextMove()
+        private void NextMove()
         {
             if (rangeToGo <= 0)
             {
                 Destroy();
             }
-            virtPos.X += (int) (speed*direction.X*(deltaTicks / 1000f));
-            virtPos.Y += (int) (speed*direction.Y*(deltaTicks / 1000f));
+            virtPos.X += (int) (Speed*Direction.X*deltaTime);
+            virtPos.Y += (int) (Speed*Direction.Y*deltaTime);
             if (Math.Abs(virtPos.X) > 1)
             {
                 x += (int) virtPos.X;
@@ -204,22 +214,22 @@ namespace StupidAivGame
                 y += (int) virtPos.Y;
                 virtPos.Y -= (int) virtPos.Y;
             }
-            rangeToGo -= (int) (speed*(deltaTicks / 1000f));
+            rangeToGo -= (int) (Speed*deltaTime);
         }
 
         public override void Update()
         {
             // the opposite of the usual solution
-            lifeSpan += deltaTicks;
+            lifeSpan += deltaTime;
             if (lifeSpan > maxLifeSpan)
                 Destroy();
-            if (((Game) engine.objects["game"]).mainWindow == "game")
+            if (((Game) engine.objects["game"]).MainWindow == "game")
             {
                 if (lastBounce > 0)
-                    lastBounce -= deltaTicks;
+                    lastBounce -= deltaTime;
                 if (rangeToGo <= fadeAwayRange*range)
                 {
-                    var deltaRadius = (radius - radius*fadeAwayMod)*(deltaTicks / 1000f);
+                    var deltaRadius = (radius - radius*fadeAwayMod)*deltaTime;
                     if (deltaRadius > 0)
                     {
                         virtRadius += deltaRadius;
@@ -243,19 +253,16 @@ namespace StupidAivGame
                 var bounced = false;
                 foreach (var collision in collisions)
                 {
-                    if (collision.other.name == owner.name || collision.other.name.StartsWith("bullet") ||
+                    if (collision.other.name == Owner.name || collision.other.name.StartsWith("bullet") ||
                         collision.other.name.StartsWith("orb"))
                         continue;
                     Debug.WriteLine("Bullet hits enemy: " + collision.other.name);
                     if (BounceOrDie(collision))
                         bounced = true;
-                    if (collision.other.name.StartsWith("enemy"))
+                    var other = collision.other as Character;
+                    if (other != null)
                     {
-                        var game = (Game) engine.objects["game"];
-
-                        var enemy = collision.other as Enemy;
-                        game.Hits(this, enemy, collision);
-
+                        Owner.DoDamage(this, other, collision);
                         break;
                     }
                 }

@@ -3,15 +3,21 @@ using System.Drawing;
 using System.Windows.Forms;
 using Aiv.Engine;
 
-namespace StupidAivGame
+namespace Futuridium
 {
     public class Hud : GameObject
     {
         private const int hudWidth = 200;
         private const int fontSize = 16;
+        // hp bar
         protected RectangleObject hpBar;
         protected RectangleObject hpBarContainer;
         protected TextObject hpTextObj;
+        // energy bar
+        protected RectangleObject energyBar;
+        protected RectangleObject energyBarContainer;
+        protected TextObject energyTextObj;
+        // Xp bar
         protected TextObject levelTextObj;
         protected RectangleObject xpBar;
         protected RectangleObject xpBarContainer;
@@ -26,61 +32,114 @@ namespace StupidAivGame
         {
             var border = 1;
             var padding = 10;
-            var HP = new TextObject("Arial Black", fontSize, "darkred");
-            HP.order = order;
-            HP.text = "HP";
-            HP.x = padding;
-            HP.y = padding;
+            var HP = new TextObject("Arial Black", fontSize, "darkred")
+            {
+                order = order,
+                text = "HP",
+                x = padding,
+                y = padding
+            };
             var HPSize = TextRenderer.MeasureText(HP.text, HP.font);
-            hpBarContainer = new RectangleObject();
-            hpBarContainer.x = HP.x + padding + HPSize.Width;
-            hpBarContainer.y = HP.y;
-            hpBarContainer.order = order;
-            hpBarContainer.width = hudWidth;
-            hpBarContainer.height = HPSize.Height;
-            hpBarContainer.color = Color.Black;
-            hpBar = new RectangleObject();
-            hpBar.order = order;
-            hpBar.x = hpBarContainer.x + border;
-            hpBar.y = hpBarContainer.y + border;
-            hpBar.color = Color.DarkRed;
-            hpBar.fill = true;
-            hpBar.height = hpBarContainer.height - border*2;
-            hpTextObj = new TextObject("Arial Black", fontSize, "darkred");
-            hpTextObj.order = order;
-            hpTextObj.x = hpBarContainer.x + hpBarContainer.width + padding;
-            hpTextObj.y = HP.y;
+            hpBarContainer = new RectangleObject
+            {
+                x = HP.x + padding + HPSize.Width,
+                y = HP.y,
+                order = order,
+                width = hudWidth,
+                height = HPSize.Height,
+                color = Color.Black
+            };
+            hpBar = new RectangleObject
+            {
+                order = order,
+                x = hpBarContainer.x + border,
+                y = hpBarContainer.y + border,
+                color = Color.DarkRed,
+                fill = true,
+                height = hpBarContainer.height - border*2
+            };
+            hpTextObj = new TextObject("Arial Black", fontSize, "darkred")
+            {
+                order = order,
+                x = hpBarContainer.x + hpBarContainer.width + padding,
+                y = HP.y
+            };
 
-            var XP = new TextObject("Arial Black", fontSize, "darkgreen");
-            XP.order = order;
-            XP.text = "XP";
-            XP.x = padding;
-            XP.y = padding + HP.y + HPSize.Height;
+            var energyText = new TextObject("Arial Black", fontSize, "darkred")
+            {
+                text = "EN",
+                x = padding,
+                order = order,
+                y = padding + HP.y + HPSize.Height
+            };
+            var energyTextSize = TextRenderer.MeasureText(energyText.text, energyText.font);
+            energyBarContainer = new RectangleObject
+            {
+                x = energyText.x + padding + energyTextSize.Width,
+                y = energyText.y,
+                order = order,
+                width = hudWidth,
+                height = energyTextSize.Height,
+                color = Color.Black
+            };
+            energyBar = new RectangleObject
+            {
+                order = order,
+                x = energyBarContainer.x + border,
+                y = energyBarContainer.y + border,
+                color = Color.DarkBlue,
+                fill = true,
+                height = energyBarContainer.height - border*2
+            };
+            energyTextObj = new TextObject("Arial Black", fontSize, "darkred")
+            {
+                order = order,
+                x = energyBarContainer.x + energyBarContainer.width + padding,
+                y = energyText.y
+            };
+
+            var XP = new TextObject("Arial Black", fontSize, "darkgreen")
+            {
+                order = order,
+                text = "XP",
+                x = padding,
+                y = padding + energyText.y + energyTextSize.Height
+            };
             var XPSize = TextRenderer.MeasureText(XP.text, XP.font);
-            xpBarContainer = new RectangleObject();
-            xpBarContainer.x = XP.x + padding + XPSize.Width;
-            xpBarContainer.y = XP.y;
-            xpBarContainer.order = order;
-            xpBarContainer.width = hudWidth;
-            xpBarContainer.height = XPSize.Height;
-            xpBarContainer.color = Color.Black;
-            xpBar = new RectangleObject();
-            xpBar.order = order;
-            xpBar.x = xpBarContainer.x + border;
-            xpBar.y = xpBarContainer.y + border;
-            xpBar.color = Color.DarkOliveGreen;
-            xpBar.fill = true;
-            xpBar.height = xpBarContainer.height - border*2;
-            levelTextObj = new TextObject("Arial Black", fontSize, "darkgreen");
-            levelTextObj.order = order;
-            levelTextObj.text = "0% to 1";
-            levelTextObj.x = xpBarContainer.x + xpBarContainer.width + padding;
-            levelTextObj.y = XP.y;
+            xpBarContainer = new RectangleObject
+            {
+                x = XP.x + padding + XPSize.Width,
+                y = XP.y,
+                order = order,
+                width = hudWidth,
+                height = XPSize.Height,
+                color = Color.Black
+            };
+            xpBar = new RectangleObject
+            {
+                order = order,
+                x = xpBarContainer.x + border,
+                y = xpBarContainer.y + border,
+                color = Color.DarkOliveGreen,
+                fill = true,
+                height = xpBarContainer.height - border*2
+            };
+            levelTextObj = new TextObject("Arial Black", fontSize, "darkgreen")
+            {
+                order = order,
+                text = "0% to 1",
+                x = xpBarContainer.x + xpBarContainer.width + padding,
+                y = XP.y
+            };
 
             engine.SpawnObject(name + "_hpText", HP);
             engine.SpawnObject(name + "_hpBarContainer", hpBarContainer);
             engine.SpawnObject(name + "_hpBar", hpBar);
             engine.SpawnObject(name + "_hpTextObj", hpTextObj);
+            engine.SpawnObject(name + "_energyText", energyText);
+            engine.SpawnObject(name + "_energyBarContainer", energyBarContainer);
+            engine.SpawnObject(name + "_energyBar", energyBar);
+            engine.SpawnObject(name + "_energyTextObj", energyTextObj);
             engine.SpawnObject(name + "_xpText", XP);
             engine.SpawnObject(name + "_xpBarContainer", xpBarContainer);
             engine.SpawnObject(name + "_xpBar", xpBar);
@@ -89,12 +148,12 @@ namespace StupidAivGame
 
         public void UpdateXPBar()
         {
-            var player = ((Game) engine.objects["game"]).player;
-            if (player.level == null)
+            var player = ((Game) engine.objects["game"]).Player;
+            if (player.Level == null)
                 return;
-            var xp = player.xp;
-            var level = player.level;
-            var levelManager = ((Game) engine.objects["game"]).player.levelManager;
+            var xp = player.Xp;
+            var level = player.Level;
+            var levelManager = ((Game) engine.objects["game"]).Player.LevelManager;
             var xpPercentage = Math.Min(1, (double) xp/levelManager.levelUpTable[level.level + 1].neededXP);
             levelTextObj.text = Math.Round(xpPercentage*100, 2) + "% to " + (level.level + 1);
             var border = 1; //1px border?
@@ -115,14 +174,33 @@ namespace StupidAivGame
             }
         }
 
-        public void UpdateHPBar()
+        public void UpdateEnergyBar()
         {
-            var player = ((Game) engine.objects["game"]).player;
-            if (player.level == null)
+            var player = ((Game)engine.objects["game"]).Player;
+            if (player.Level == null)
                 return;
             var border = 1; //1px border?
-            var newWidth = (int) ((hpBarContainer.width - border*2)*(player.level.hp/(double) player.level.maxHP));
-            hpTextObj.text = string.Format("{0} / {1}", player.level.hp, player.level.maxHP);
+            var newWidth = (int)((energyBarContainer.width - border * 2) * (player.Level.energy / (double)player.Level.maxEnergy));
+            energyTextObj.text = string.Format("{0} / {1}", player.Level.energy, player.Level.maxEnergy);
+            var update = false;
+            if (energyBar == null || (Math.Abs(newWidth - energyBar.width) > 10))
+            {
+                update = true;
+            }
+            if (update)
+            {
+                energyBar.width = newWidth;
+            }
+        }
+
+        public void UpdateHPBar()
+        {
+            var player = ((Game) engine.objects["game"]).Player;
+            if (player.Level == null)
+                return;
+            var border = 1; //1px border?
+            var newWidth = (int) ((hpBarContainer.width - border*2)*(player.Level.hp/(double) player.Level.maxHP));
+            hpTextObj.text = string.Format("{0} / {1}", player.Level.hp, player.Level.maxHP);
             var update = false;
             if (hpBar == null || (Math.Abs(newWidth - hpBar.width) > 10))
             {

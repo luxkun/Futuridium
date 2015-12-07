@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace StupidAivGame
+namespace Futuridium
 {
     public class RandomSeed
     {

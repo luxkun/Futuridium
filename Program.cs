@@ -1,8 +1,7 @@
-﻿using System.Collections.Generic;
-using System.IO;
+﻿using System.IO;
 using Aiv.Engine;
 
-namespace StupidAivGame
+namespace Futuridium
 {
     internal class MainClass
     {
@@ -15,13 +14,13 @@ namespace StupidAivGame
             else
                 engine = new Engine("Futuridium", 1280, 720, 60);
 #if DEBUG
-            engine.debugCollisions = true;
+            engine.debugCollisions = false;
 #else
-            engine.FullScreen();
+            //engine.FullScreen();
 #endif
             Input.Initialize(engine);
 
-            var game = new Game {usingOpenTK = usingOpenTK};
+            var game = new Game {UsingOpenTK = usingOpenTK};
 
             // set the base path for assets
             Asset.basePath = "../../Assets";
@@ -44,10 +43,10 @@ namespace StupidAivGame
             // background
             engine.LoadAsset("static_background", new SpriteAsset(Path.Combine("background", "static_background.jpg")));
             // portals
-            engine.LoadAsset("top_door", new SpriteAsset(Path.Combine("background", "top_door.png"), 0, 0, 62, 85));
-            engine.LoadAsset("bottom_door", new SpriteAsset(Path.Combine("background", "bottom_door.png"), 62 * 4, 0, 62, 85));
-            engine.LoadAsset("left_door", new SpriteAsset(Path.Combine("background", "left_door.png"), 0, 62 * 4, 85, 62));
-            engine.LoadAsset("right_door", new SpriteAsset(Path.Combine("background", "right_door.png"), 0, 0, 85, 62));
+            engine.LoadAsset("top_door", new SpriteAsset(Path.Combine("background", "top_door.png"), 0, 0, 45, 70));
+            engine.LoadAsset("bottom_door", new SpriteAsset(Path.Combine("background", "bottom_door.png"), 51 * 4 + 1, 0, 45, 70));
+            engine.LoadAsset("left_door", new SpriteAsset(Path.Combine("background", "left_door.png"), 0, 51 * 4 + 1, 70, 45));
+            engine.LoadAsset("right_door", new SpriteAsset(Path.Combine("background", "right_door.png"), 0, 0, 70, 45));
             engine.LoadAsset("escape_floor", new SpriteAsset(Path.Combine("background", "escape_floor.png")));
 
             engine.SpawnObject("game", game);

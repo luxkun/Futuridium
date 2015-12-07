@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using Aiv.Engine;
 
-namespace StupidAivGame
+namespace Futuridium
 {
     public class Room : GameObject
     {
@@ -21,7 +21,7 @@ namespace StupidAivGame
 
         public Room(List<Enemy> enemies, Tuple<int, int> roomIndex, Floor floor)
         {
-            name = $"Room_{floor.floorIndex}_{roomIndex.Item1}.{roomIndex.Item2}";
+            name = $"Room_{floor.FloorIndex}_{roomIndex.Item1}.{roomIndex.Item2}";
             this.enemies = enemies;
             this.roomIndex = roomIndex;
             this.floor = floor;
@@ -30,7 +30,7 @@ namespace StupidAivGame
         public override void Start()
         {
             //engine.SpawnObject(string.Format("room_{0}", name), background);
-            gameBackground = new GameBackground(floor.floorBackgroundType, this);
+            gameBackground = new GameBackground(floor.FloorBackgroundType, this);
             engine.SpawnObject(gameBackground.name, gameBackground);
         }
 
@@ -40,7 +40,9 @@ namespace StupidAivGame
             var randomEnemies = new List<Enemy>();
             for (var i = 0; i < numberOfEnemies; i++)
             {
-                randomEnemies.Add(charactersInfo.RandomEnemy(i + 1, level, roomType, rnd));
+                Enemy enemy = charactersInfo.RandomEnemy(i + 1, level, roomType, rnd);
+                enemy.OnDestroy += (Object sender) => ((Game)engine.objects["game"]).CharacterDied((Character) sender);
+                randomEnemies.Add(enemy);
             }
             enemies = randomEnemies;
         }
@@ -53,7 +55,7 @@ namespace StupidAivGame
         public void SpawnEnemies()
         {
             var game = (Game) engine.objects["game"];
-            var rnd = game.random.GetRandom(name + "_spawn");
+            var rnd = game.Random.GetRandom(name + "_spawn");
             var count = 0;
             foreach (var enemy in enemies)
             {

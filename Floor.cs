@@ -3,48 +3,52 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using Aiv.Engine;
 
-namespace StupidAivGame
+namespace Futuridium
 {
     public class Floor : GameObject
     {
-        // next: real map floor, so with directions
-        public Room currentRoom;
-        public Room firstRoom;
-        public int floorBackgroundType;
-        public int floorIndex;
-        public int mapHeight;
-        public int mapWidth;
-        public Room[,] rooms;
-        public List<Room> roomsList;
+        public Room CurrentRoom { get; private set; }
+
+        public Room FirstRoom { get; private set; }
+
+        public int FloorBackgroundType { get; set; }
+
+        public int FloorIndex { get; private set; }
+
+        public int MapHeight { get; private set; }
+
+        public int MapWidth { get; private set; }
+
+        public Room[,] Rooms { get; private set; }
+
+        public List<Room> RoomsList { get; private set; }
 
         public Floor(int floorIndex)
         {
             name = "floor" + floorIndex;
-            this.floorIndex = floorIndex;
+            this.FloorIndex = floorIndex;
 
-            //rooms = new Room[500, 500]; // worst-case linear floor
-            roomsList = new List<Room>();
+            RoomsList = new List<Room>();
         }
 
         public Floor(Room[,] rooms, int floorIndex) : this(floorIndex)
         {
-            this.rooms = rooms;
+            this.Rooms = rooms;
         }
 
         private void CalcolateMapSize()
         {
-            //int[] rowsWidth = new int[rooms.GetLength (0)];
             var maxWidth = 0;
             var maxHeight = 0;
             var startsFromX = -1;
             var startsFromY = -1;
-            var rowsHeight = new int[rooms.GetLength(1)];
-            for (var x = 0; x < rooms.GetLength(0); x++)
+            var rowsHeight = new int[Rooms.GetLength(1)];
+            for (var x = 0; x < Rooms.GetLength(0); x++)
             {
                 var xL = 0;
-                for (var y = 0; y < rooms.GetLength(1); y++)
+                for (var y = 0; y < Rooms.GetLength(1); y++)
                 {
-                    if (rooms[x, y] != null)
+                    if (Rooms[x, y] != null)
                     {
                         if (startsFromX > x || startsFromX == -1)
                             startsFromX = x;
@@ -58,46 +62,45 @@ namespace StupidAivGame
                 }
                 if (xL > maxHeight)
                     maxHeight = xL;
-                //rowsWidth [x] = xL;
             }
             foreach (var yL in rowsHeight)
                 if (yL > maxWidth)
                     maxWidth = yL;
-            mapWidth = maxWidth - startsFromX + 1;
-            mapHeight = maxHeight - startsFromY + 1;
+            MapWidth = maxWidth - startsFromX + 1;
+            MapHeight = maxHeight - startsFromY + 1;
 
-            var newRooms = new Room[mapWidth, mapHeight];
+            var newRooms = new Room[MapWidth, MapHeight];
             if (startsFromX < 0)
                 startsFromX = 0;
             if (startsFromY < 0)
                 startsFromY = 0;
-            for (var bx = startsFromX; bx < rooms.GetLength(0); bx++)
+            for (var bx = startsFromX; bx < Rooms.GetLength(0); bx++)
             {
-                for (var by = startsFromY; by < rooms.GetLength(1); by++)
+                for (var by = startsFromY; by < Rooms.GetLength(1); by++)
                 {
-                    if (rooms[bx, by] != null)
-                        newRooms[bx - startsFromX, by - startsFromY] = rooms[bx, by];
+                    if (Rooms[bx, by] != null)
+                        newRooms[bx - startsFromX, by - startsFromY] = Rooms[bx, by];
                 }
             }
-            rooms = newRooms;
+            Rooms = newRooms;
         }
 
         public void RandomizeFloor(int minRoom, int maxRoom)
         {
-            var rnd = ((Game) engine.objects["game"]).random.GetRandom("randomizeFloor_" + floorIndex);
+            var rnd = ((Game) engine.objects["game"]).Random.GetRandom("randomizeFloor_" + FloorIndex);
 
-            floorBackgroundType = rnd.Next(0, GameBackground.availableBackgrounds);
+            FloorBackgroundType = rnd.Next(0, GameBackground.AvailableBackgrounds);
 
             var numberOfRooms = rnd.Next(minRoom, maxRoom);
-            var minEnemies = (int) (1*((floorIndex + 2)/2.0));
-            var maxEnemies = (int) (5*((floorIndex + 2)/2.0));
+            var minEnemies = (int) (1*((FloorIndex + 2)/2.0));
+            var maxEnemies = (int) (5*((FloorIndex + 2)/2.0));
 
             Debug.WriteLine("Randomizing floor, number of rooms: {0} ; background type: {1}", numberOfRooms,
-                floorBackgroundType);
-            rooms = new Room[numberOfRooms, numberOfRooms]; // worst-case linear floor
+                FloorBackgroundType);
+            Rooms = new Room[numberOfRooms, numberOfRooms]; // worst-case linear floor
 
             RandomRooms(numberOfRooms, minEnemies, maxEnemies, rnd);
-            foreach (var room in roomsList)
+            foreach (var room in RoomsList)
                 CheckRoomParents(room.roomIndex);
 
             CalcolateMapSize();
@@ -105,85 +108,50 @@ namespace StupidAivGame
 
         private void CheckRoomParents(Tuple<int, int> roomIndex)
         {
-            var room = rooms[roomIndex.Item1, roomIndex.Item2];
+            var room = Rooms[roomIndex.Item1, roomIndex.Item2];
             // left
-            if (roomIndex.Item1 > 0 && rooms[roomIndex.Item1 - 1, roomIndex.Item2] != null)
+            if (roomIndex.Item1 > 0 && Rooms[roomIndex.Item1 - 1, roomIndex.Item2] != null)
             {
-                rooms[roomIndex.Item1 - 1, roomIndex.Item2].right = room;
-                room.left = rooms[roomIndex.Item1 - 1, roomIndex.Item2];
+                Rooms[roomIndex.Item1 - 1, roomIndex.Item2].right = room;
+                room.left = Rooms[roomIndex.Item1 - 1, roomIndex.Item2];
             }
             // right
-            if (roomIndex.Item1 + 1 < rooms.GetLength(0) && rooms[roomIndex.Item1 + 1, roomIndex.Item2] != null)
+            if (roomIndex.Item1 + 1 < Rooms.GetLength(0) && Rooms[roomIndex.Item1 + 1, roomIndex.Item2] != null)
             {
-                rooms[roomIndex.Item1 + 1, roomIndex.Item2].left = room;
-                room.right = rooms[roomIndex.Item1 + 1, roomIndex.Item2];
+                Rooms[roomIndex.Item1 + 1, roomIndex.Item2].left = room;
+                room.right = Rooms[roomIndex.Item1 + 1, roomIndex.Item2];
             }
             // bottom
-            if (roomIndex.Item2 + 1 < rooms.GetLength(1) && rooms[roomIndex.Item1, roomIndex.Item2 + 1] != null)
+            if (roomIndex.Item2 + 1 < Rooms.GetLength(1) && Rooms[roomIndex.Item1, roomIndex.Item2 + 1] != null)
             {
-                rooms[roomIndex.Item1, roomIndex.Item2 + 1].top = room;
-                room.bottom = rooms[roomIndex.Item1, roomIndex.Item2 + 1];
+                Rooms[roomIndex.Item1, roomIndex.Item2 + 1].top = room;
+                room.bottom = Rooms[roomIndex.Item1, roomIndex.Item2 + 1];
             }
             // top
-            if (roomIndex.Item2 > 0 && rooms[roomIndex.Item1, roomIndex.Item2 - 1] != null)
+            if (roomIndex.Item2 > 0 && Rooms[roomIndex.Item1, roomIndex.Item2 - 1] != null)
             {
-                rooms[roomIndex.Item1, roomIndex.Item2 - 1].bottom = room;
-                room.top = rooms[roomIndex.Item1, roomIndex.Item2 - 1];
+                Rooms[roomIndex.Item1, roomIndex.Item2 - 1].bottom = room;
+                room.top = Rooms[roomIndex.Item1, roomIndex.Item2 - 1];
             }
         }
 
-        // 
-        // 1 if couldnt create
-        /* Depth
-		private int RandomRooms (Tuple<int, int> lastRoomIndex, int maxRooms, int minEnemies, int maxEnemies, Random rnd)
-		{
-			if (roomsList.Count >= maxRooms || lastRoomIndex.Item1 < 0 || lastRoomIndex.Item2 < 0 || 
-				lastRoomIndex.Item1 >= rooms.GetLength(0) || lastRoomIndex.Item2 >= rooms.GetLength(1) || rooms [lastRoomIndex.Item1, lastRoomIndex.Item2] != null)
-				return 1;
-			// spawn boss room, should be one of the farthest
-			if (roomsList.Count == (maxRooms - 1)) {
-			}
-			rooms [lastRoomIndex.Item1, lastRoomIndex.Item2] = Room.RandomRoom (roomsList.Count, minEnemies, maxEnemies, this, floorIndex, lastRoomIndex);
-			roomsList.Add (rooms [lastRoomIndex.Item1, lastRoomIndex.Item2]);
-			if (firstRoom == null)
-				firstRoom = rooms [lastRoomIndex.Item1, lastRoomIndex.Item2];
-			int startingRooms = roomsList.Count;
-			int errorRooms = 0;
-			while (startingRooms == roomsList.Count && errorRooms < 4) {
-				for (int i = 0; i < 4; i++) { // randomize visit
-					int rndX = rnd.Next(-1, 2);
-					int rndY = rnd.Next(-1, 2);
-					if (rndX != 0 && rndY != 0) {
-						if (rnd.Next (0, 2) == 1)
-							rndX = 0;
-						else
-							rndY = 0;
-					}
-					if (rnd.Next (0, 2) == 1) {
-						errorRooms += RandomRooms (Tuple.Create (lastRoomIndex.Item1 + rndX, lastRoomIndex.Item2 + rndY), maxRooms, minEnemies, maxEnemies, rnd);
-					}
-				}
-			}
-			return 0;
-		}
-		*/
         // breadth
         private void RandomRooms(int maxRooms, int minEnemies, int maxEnemies, Random rnd)
         {
-            if (firstRoom != null)
+            if (FirstRoom != null)
             {
                 throw new Exception("Floor.RandomRooms can be called only once per floor.");
             }
             var charactersInfo = (CharactersInfo) engine.objects["charactersInfo"];
-            var newRoomIndex = Tuple.Create(rooms.GetLength(0)/2, rooms.GetLength(1)/2);
-            firstRoom = new Room(null, newRoomIndex, this) {roomType = 0};
-            firstRoom.RandomizeRoom(0, 0, floorIndex, rnd, charactersInfo);
-            rooms[newRoomIndex.Item1, newRoomIndex.Item2] = firstRoom;
-            roomsList.Add(firstRoom);
+            var newRoomIndex = Tuple.Create(Rooms.GetLength(0)/2, Rooms.GetLength(1)/2);
+            FirstRoom = new Room(null, newRoomIndex, this) {roomType = 0};
+            FirstRoom.RandomizeRoom(0, 0, FloorIndex, rnd, charactersInfo);
+            Rooms[newRoomIndex.Item1, newRoomIndex.Item2] = FirstRoom;
+            RoomsList.Add(FirstRoom);
 
             var queue = new Queue<Room>(maxRooms);
-            queue.Enqueue(firstRoom);
-            while (roomsList.Count < maxRooms)
+            queue.Enqueue(FirstRoom);
+            while (RoomsList.Count < maxRooms)
             {
                 var currentRoom = queue.Dequeue();
                 int addedRooms = 0, i = 0;
@@ -208,17 +176,17 @@ namespace StupidAivGame
                             }
                             newRoomIndex = Tuple.Create(currentRoom.roomIndex.Item1 + rndX,
                                 currentRoom.roomIndex.Item2 + rndY);
-                        } while ((rndX == 0 && rndY == 0) || rooms[newRoomIndex.Item1, newRoomIndex.Item2] != null);
+                        } while ((rndX == 0 && rndY == 0) || Rooms[newRoomIndex.Item1, newRoomIndex.Item2] != null);
                         var roomType = 0;
-                        if (roomsList.Count == maxRooms - 1)
+                        if (RoomsList.Count == maxRooms - 1)
                         {
                             Debug.WriteLine("BOSS ROOM GEN.");
                             roomType = 1;
                         }
                         var newRoom = new Room(null, newRoomIndex, this) {roomType = roomType};
-                        newRoom.RandomizeRoom(minEnemies, maxEnemies, floorIndex, rnd, charactersInfo);
-                        rooms[newRoomIndex.Item1, newRoomIndex.Item2] = newRoom;
-                        roomsList.Add(newRoom);
+                        newRoom.RandomizeRoom(minEnemies, maxEnemies, FloorIndex, rnd, charactersInfo);
+                        Rooms[newRoomIndex.Item1, newRoomIndex.Item2] = newRoom;
+                        RoomsList.Add(newRoom);
                         queue.Enqueue(newRoom);
                         addedRooms++;
                         i++;
@@ -229,56 +197,58 @@ namespace StupidAivGame
 
         public bool OpenRoom(Room room)
         {
-            if (room != null && (currentRoom == null || currentRoom.enemies.Count == 0))
+            if (room != null && (CurrentRoom == null || CurrentRoom.enemies.Count == 0))
             {
                 var game = (Game) engine.objects["game"];
-                Debug.Assert(roomsList.Contains(room) &&
-                             (currentRoom == null || currentRoom.left == room || currentRoom.right == room ||
-                              currentRoom.top == room || currentRoom.bottom == room));
                 game.StartLoading();
-                if (currentRoom != null)
+                Debug.Assert(RoomsList.Contains(room) &&
+                             (CurrentRoom == null || CurrentRoom.left == room || CurrentRoom.right == room ||
+                              CurrentRoom.top == room || CurrentRoom.bottom == room));
+                if (CurrentRoom != null)
                 {
-                    int playerWidth = Utils.FixBoxValue(game.player.width);
-                    int playerHeight = Utils.FixBoxValue(game.player.height);
-                    if (currentRoom.left == room)
+                    var playerWidth = Utils.FixBoxValue(game.Player.width);
+                    var playerHeight = Utils.FixBoxValue(game.Player.height);
+                    if (CurrentRoom.left == room)
                     {
-                        game.player.x = game.engine.width - playerWidth - Utils.FixBoxValue(currentRoom.gameBackground.rightDoorAsset.sprite.Width)
-                            - currentRoom.gameBackground.spawnOnDoorPadding;
-                        game.player.y = game.engine.height/2;
+                        game.Player.x = game.engine.width - playerWidth -
+                                        Utils.FixBoxValue(CurrentRoom.gameBackground.RightDoorAsset.sprite.Width)
+                                        - CurrentRoom.gameBackground.SpawnOnDoorPadding;
+                        game.Player.y = game.engine.height/2;
                     }
-                    else if (currentRoom.right == room)
+                    else if (CurrentRoom.right == room)
                     {
-                        game.player.x = Utils.FixBoxValue(currentRoom.gameBackground.leftDoorAsset.sprite.Width)
-                            + currentRoom.gameBackground.spawnOnDoorPadding;
-                        game.player.y = game.engine.height/2;
+                        game.Player.x = Utils.FixBoxValue(CurrentRoom.gameBackground.LeftDoorAsset.sprite.Width)
+                                        + CurrentRoom.gameBackground.SpawnOnDoorPadding;
+                        game.Player.y = game.engine.height/2;
                     }
-                    else if (currentRoom.top == room)
+                    else if (CurrentRoom.top == room)
                     {
-                        game.player.x = game.engine.width/2;
-                        game.player.y = game.engine.height - playerHeight - Utils.FixBoxValue(currentRoom.gameBackground.bottomDoorAsset.sprite.Height) 
-                            - currentRoom.gameBackground.spawnOnDoorPadding;
+                        game.Player.x = game.engine.width/2;
+                        game.Player.y = game.engine.height - playerHeight -
+                                        Utils.FixBoxValue(CurrentRoom.gameBackground.BottomDoorAsset.sprite.Height)
+                                        - CurrentRoom.gameBackground.SpawnOnDoorPadding;
                     }
-                    else if (currentRoom.bottom == room)
+                    else if (CurrentRoom.bottom == room)
                     {
-                        game.player.x = game.engine.width/2;
-                        game.player.y = Utils.FixBoxValue(currentRoom.gameBackground.topDoorAsset.sprite.Height)
-                            + currentRoom.gameBackground.spawnOnDoorPadding;
+                        game.Player.x = game.engine.width/2;
+                        game.Player.y = Utils.FixBoxValue(CurrentRoom.gameBackground.TopDoorAsset.sprite.Height)
+                                        + CurrentRoom.gameBackground.SpawnOnDoorPadding;
                     }
                     else
                     {
                         return false;
                     }
                 }
-                if (currentRoom != null)
-                    Game.OnDestroyHelper(currentRoom);
+                if (CurrentRoom != null)
+                    Game.OnDestroyHelper(CurrentRoom);
 
-                currentRoom = room;
-                engine.SpawnObject(currentRoom.name, currentRoom);
-                currentRoom.SpawnEnemies();
+                CurrentRoom = room;
+                engine.SpawnObject(CurrentRoom.name, CurrentRoom);
+                CurrentRoom.SpawnEnemies();
                 // empty room
-                if (currentRoom.enemies.Count == 0)
+                if (CurrentRoom.enemies.Count == 0)
                 {
-                    currentRoom.gameBackground.OpenDoors();
+                    CurrentRoom.gameBackground.OpenDoors();
                 }
 
                 game.StopLoading();

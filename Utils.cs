@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Linq;
 
-namespace StupidAivGame
+namespace Futuridium
 {
-    public class Utils
+    public static class Utils
     {
         public static string RandomString(int length)
         {

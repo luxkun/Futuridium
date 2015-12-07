@@ -4,9 +4,9 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
     <ProjectGuid>{1A5B55A5-9105-46CA-BE21-C2FF69D6C577}</ProjectGuid>
-    <OutputType>Exe</OutputType>
-    <RootNamespace>StupidAivGame</RootNamespace>
-    <AssemblyName>StupidAivGame</AssemblyName>
+    <OutputType>WinExe</OutputType>
+    <RootNamespace>Futuridium</RootNamespace>
+    <AssemblyName>Futuridium</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
@@ -28,6 +28,9 @@
     <WarningLevel>4</WarningLevel>
     <Externalconsole>true</Externalconsole>
     <PlatformTarget>x86</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject />
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="aivengine, Version=1.0.5809.18607, Culture=neutral, processorArchitecture=MSIL">
@@ -56,6 +59,8 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Damage.cs" />
+    <Compile Include="Force.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Player.cs" />
@@ -76,6 +81,8 @@
     <Compile Include="Hud.cs" />
     <Compile Include="RandomSeed.cs" />
     <Compile Include="FloatingText.cs" />
+    <Compile Include="Spells\DriveX.cs" />
+    <Compile Include="Spells\Spell.cs" />
     <Compile Include="Utils.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />

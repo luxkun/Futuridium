@@ -1,10 +1,9 @@
 ﻿using Aiv.Engine;
 
-namespace StupidAivGame
+namespace Futuridium
 {
     public class Door : SpriteObject
     {
-
         public Door(string name)
         {
             this.name = name;

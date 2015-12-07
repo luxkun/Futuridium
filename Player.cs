@@ -5,34 +5,36 @@ using Aiv.Engine;
 using OpenTK;
 using OpenTK.Input;
 
-namespace StupidAivGame
+namespace Futuridium
 {
     public class Player : Character
     {
-        private const int maxHitsPerTime = 1000; // 500ms immunity after gets hit
-        private readonly int changeFloorDelay = 2000;
-        private int disableRedTimer;
+        private const float maxHitsPerTime = 1f; // 500ms immunity after gets hit
+        private const float changeFloorDelay = 2f;
+        private float disableRedTimer;
         private bool initHUD;
-        private int lastFloorChange;
-        private int lastHit;
+        private float lastFloorChangeTimer;
+        private float lastHitTimer;
         private Vector2 lastPosition;
         public string realName = "Rek";
         protected RectangleObject redWindow;
         private int spawnedOrbs;
         private Vector2 virtPos;
+
         //private List<int> pressedJoyButtons;
         public Player() : base("player", "Player", "player")
         {
             order = 7;
 
-            level0.maxHP = 300;
-            level0.speed = 150;
-            level0.shotDelay = 1500;
-            level0.attack = 25;
-            level0.neededXP = 100;
-            level0.shotSpeed = 200;
-            level0.shotRange = 400;
-            level0.shotRadius = 8;
+            Level0.maxHP = 30000;
+            Level0.maxEnergy = 100;
+            Level0.speed = 150;
+            Level0.shotDelay = 1.5f;
+            Level0.attack = 25;
+            Level0.neededXP = 100;
+            Level0.shotSpeed = 200f;
+            Level0.shotRange = 400;
+            Level0.shotRadius = 8;
             isCloseCombat = false;
 
 
@@ -45,15 +47,17 @@ namespace StupidAivGame
             int fheight = Utils.FixBoxValue(height);
             AddHitBox("player", 0, fheight / 3, fwidth, (int) (fheight * 2f/3));
 
-            redWindow = new RectangleObject();
-            redWindow.width = 0;
-            redWindow.height = 0;
-            redWindow.name = "redWindow";
-            redWindow.color = Color.Red;
-            redWindow.x = 0;
-            redWindow.y = 0;
-            redWindow.fill = true;
-            redWindow.order = 9;
+            redWindow = new RectangleObject
+            {
+                width = 0,
+                height = 0,
+                name = "redWindow",
+                color = Color.Red,
+                x = 0,
+                y = 0,
+                fill = true,
+                order = 9
+            };
             engine.SpawnObject("redWindow", redWindow);
 
             base.Start();
@@ -69,34 +73,39 @@ namespace StupidAivGame
             // should switch to Keys when game.usingOpenTK is false
             if (engine.IsKeyDown((int) Key.Right))
             {
-                virtPos.X += level.speed*(deltaTicks /1000f);
+                virtPos.X += Level.speed*deltaTime;
             }
             if (engine.IsKeyDown((int) Key.Left))
             {
-                virtPos.X -= level.speed*(deltaTicks / 1000f);
+                virtPos.X -= Level.speed*deltaTime;
             }
             if (engine.IsKeyDown((int) Key.Up))
             {
-                virtPos.Y -= level.speed*(deltaTicks / 1000f);
+                virtPos.Y -= Level.speed*deltaTime;
             }
             if (engine.IsKeyDown((int) Key.Down))
             {
-                virtPos.Y += level.speed*(deltaTicks / 1000f);
+                virtPos.Y += Level.speed*deltaTime;
             }
+            // setup shot type
+            if (engine.IsKeyDown((int)Key.F))
+                shotStatus = shotStatus == ShotStatus.DRIVEX ? ShotStatus.BULLET : ShotStatus.DRIVEX;
 
             // joystick controls
             var game = (Game) engine.objects["game"];
-            if (game.joystick != null)
+            if (game.Joystick != null)
             {
                 var moveDirection = new Vector2(
-                    game.joystick.GetAxis(game.joyStickConfig["Lx"])/127f,
-                    game.joystick.GetAxis(game.joyStickConfig["Ly"])/127f
+                    game.Joystick.GetAxis(game.JoyStickConfig["Lx"])/127f,
+                    game.Joystick.GetAxis(game.JoyStickConfig["Ly"])/127f
                     );
                 if (moveDirection.Length > 0.2)
                 {
-                    virtPos.X += level.speed*moveDirection.X*(deltaTicks / 1000f);
-                    virtPos.Y += level.speed*moveDirection.Y*(deltaTicks / 1000f);
+                    virtPos.X += Level.speed*moveDirection.X*deltaTime;
+                    virtPos.Y += Level.speed*moveDirection.Y*deltaTime;
                 }
+                if (game.Joystick.GetButton(game.JoyStickConfig["RT"])) 
+                    shotStatus = shotStatus == ShotStatus.DRIVEX ? ShotStatus.BULLET : ShotStatus.DRIVEX;
             }
 
             if (Math.Abs(virtPos.X) > 1)
@@ -113,39 +122,40 @@ namespace StupidAivGame
 
         private void ManageShot()
         {
-            if (lastShot > 0)
-                lastShot -= deltaTicks;
+            if (lastShotTimer > 0)
+                lastShotTimer -= deltaTime;
 
-            if (lastShot <= 0)
+            // if is shotting bullet check lastShot
+            if (shotStatus != ShotStatus.BULLET || lastShotTimer <= 0)
             {
                 var game = (Game) engine.objects["game"];
 
                 var direction = new Vector2();
-                if (game.joystick != null)
+                if (game.Joystick != null)
                 {
                     Debug.Write("Shotting axis on joystick: ");
                     for (var x = 0; x < 6; x++)
-                        Debug.Write($"{x}: {game.joystick.GetAxis(x)} ; ");
+                        Debug.Write($"{x}: {game.Joystick.GetAxis(x)} ; ");
                     Debug.WriteLine("");
                     direction = new Vector2(
-                        game.joystick.GetAxis(game.joyStickConfig["Rx"])/127f,
-                        game.joystick.GetAxis(game.joyStickConfig["Ry"])/127f
+                        game.Joystick.GetAxis(game.JoyStickConfig["Rx"])/127f,
+                        game.Joystick.GetAxis(game.JoyStickConfig["Ry"])/127f
                         );
                 }
 
-                var joyStickConfig = game.joyStickConfig;
+                var joyStickConfig = game.JoyStickConfig;
 
                 if (engine.IsKeyDown((int) Key.A) ||
-                    (game.joystick != null && game.joystick.GetButton(joyStickConfig["S"])))
+                    (game.Joystick != null && game.Joystick.GetButton(joyStickConfig["S"])))
                     direction = new Vector2(-1, 0);
                 else if (engine.IsKeyDown((int) Key.W) ||
-                         (game.joystick != null && game.joystick.GetButton(joyStickConfig["T"])))
+                         (game.Joystick != null && game.Joystick.GetButton(joyStickConfig["T"])))
                     direction = new Vector2(0, -1);
                 else if (engine.IsKeyDown((int) Key.D) ||
-                         (game.joystick != null && game.joystick.GetButton(joyStickConfig["C"])))
+                         (game.Joystick != null && game.Joystick.GetButton(joyStickConfig["C"])))
                     direction = new Vector2(1, 0);
                 else if (engine.IsKeyDown((int) Key.S) ||
-                         (game.joystick != null && game.joystick.GetButton(joyStickConfig["X"])))
+                         (game.Joystick != null && game.Joystick.GetButton(joyStickConfig["X"])))
                     direction = new Vector2(0, 1);
                 else if (engine.IsKeyDown((int) Key.Q))
                     direction = new Vector2(-0.5f, -0.5f);
@@ -158,7 +168,7 @@ namespace StupidAivGame
                 if (direction.Length >= 0.6)
                 {
                     Shot(direction);
-                    lastShot = level.shotDelay;
+                    lastShotTimer = Level.shotDelay;
                 }
             }
         }
@@ -178,12 +188,12 @@ namespace StupidAivGame
 
         private void ManageCollisions()
         {
-            if (lastHit > 0)
-                lastHit -= deltaTicks;
-            if (lastFloorChange > 0)
-                lastFloorChange -= deltaTicks;
-
-            if (lastHit <= 0)
+            if (lastHitTimer > 0)
+                lastHitTimer -= deltaTime;
+            if (lastFloorChangeTimer > 0)
+                lastFloorChangeTimer -= deltaTime;
+        
+            if (lastHitTimer <= 0)
             {
                 var collisions = CheckCollisions();
                 if (collisions.Count > 0)
@@ -192,40 +202,33 @@ namespace StupidAivGame
                 {
                     Debug.WriteLine("Character '{0}' touches '{1}'", name, collision.other.name);
                     var game = (Game) engine.objects["game"];
-                    if (collision.other.name.StartsWith("enemy"))
+                    if (collision.other as Enemy != null)
                     {
-                        var enemy = collision.other as Enemy;
-                        game.Hits(enemy, this, collision, null);
+                        ((Enemy) collision.other).DoDamage(this);
 
-                        Debug.WriteLine("{0}, {1}", level.hp, isAlive);
-                        if (!isAlive)
-                        {
-                            Destroy();
-                        }
-
-                        lastHit = maxHitsPerTime;
+                        lastHitTimer = maxHitsPerTime;
                     }
                     else if (collision.otherHitBox.StartsWith("wall"))
                     {
                         x = (int) lastPosition.X;
                         y = (int) lastPosition.Y;
                     }
-                    else if (collision.other.name.EndsWith("door") && lastFloorChange <= 0 && collision.other.enabled)
+                    else if (collision.other.name.EndsWith("door") && lastFloorChangeTimer <= 0 && collision.other.enabled)
                     {
                         x = (int) lastPosition.X;
                         y = (int) lastPosition.Y;
                         Debug.WriteLine("About to change room to: " + collision.other.name);
                         var changedFloor = false;
                         if (collision.other.name.EndsWith("top_door"))
-                            changedFloor = game.currentFloor.OpenRoom(game.currentFloor.currentRoom.top);
+                            changedFloor = game.CurrentFloor.OpenRoom(game.CurrentFloor.CurrentRoom.top);
                         else if (collision.other.name.EndsWith("left_door"))
-                            changedFloor = game.currentFloor.OpenRoom(game.currentFloor.currentRoom.left);
+                            changedFloor = game.CurrentFloor.OpenRoom(game.CurrentFloor.CurrentRoom.left);
                         else if (collision.other.name.EndsWith("bottom_door"))
-                            changedFloor = game.currentFloor.OpenRoom(game.currentFloor.currentRoom.bottom);
+                            changedFloor = game.CurrentFloor.OpenRoom(game.CurrentFloor.CurrentRoom.bottom);
                         else if (collision.other.name.EndsWith("right_door"))
-                            changedFloor = game.currentFloor.OpenRoom(game.currentFloor.currentRoom.right);
+                            changedFloor = game.CurrentFloor.OpenRoom(game.CurrentFloor.CurrentRoom.right);
                         if (changedFloor)
-                            lastFloorChange = changeFloorDelay;
+                            lastFloorChangeTimer = changeFloorDelay;
                     }
                     else if (collision.other.name.StartsWith("escape_floor_"))
                     {
@@ -236,27 +239,31 @@ namespace StupidAivGame
             }
         }
 
-        public override int GetDamage(Character enemy, Func<Character, Character, int> damageFunc)
+        protected override int GetDamage(Character enemy, Damage damage)
         {
             redWindow.width = engine.width;
             redWindow.height = engine.height;
             Debug.WriteLine("Player got damaged.");
-            disableRedTimer = ticks + 50;
+            disableRedTimer = 0.05f; // 50ms
 
-            return base.GetDamage(enemy, damageFunc);
+            return base.GetDamage(enemy, damage);
         }
 
         public override void Update()
         {
             base.Update();
-            if (((Game) engine.objects["game"]).mainWindow == "game")
+            if (((Game) engine.objects["game"]).MainWindow == "game")
             {
                 if (!initHUD)
                 {
                     initHUD = true;
-                    hud = (Hud) engine.objects["hud"];
-                    hud.UpdateHPBar();
-                    hud.UpdateXPBar();
+                    Hud = (Hud) engine.objects["hud"];
+                    Hud.UpdateHPBar();
+                    Hud.UpdateXPBar();
+                    Hud.UpdateEnergyBar();
+                    OnHpChanged += (Object sender) => { Hud.UpdateHPBar(); };
+                    OnEnergyChanged += (Object sender) => { Hud.UpdateEnergyBar(); };
+                    OnXpChanged += (Object sender) => { Hud.UpdateXPBar(); };
                 }
                 ManageControls();
                 ManageShot();
@@ -264,10 +271,15 @@ namespace StupidAivGame
                 if (engine.IsKeyDown ((int) Key.O))
                     SpawnOrb();
 
-                if (redWindow.width != 0 && ticks >= disableRedTimer)
+                if (redWindow.width != 0)
                 {
-                    redWindow.width = 0;
-                    redWindow.height = 0;
+                    if (disableRedTimer < 0)
+                    {
+                        redWindow.width = 0;
+                        redWindow.height = 0;
+                    }
+                    else
+                        disableRedTimer -= deltaTime;
                 }
             }
         }

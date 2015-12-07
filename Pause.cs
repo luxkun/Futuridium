@@ -3,7 +3,7 @@ using System.Drawing;
 using System.Windows.Forms;
 using Aiv.Engine;
 
-namespace StupidAivGame
+namespace Futuridium
 {
     public class Pause : GameObject
     {

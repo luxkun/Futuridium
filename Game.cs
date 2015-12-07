@@ -2,23 +2,28 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.Linq;
 using System.Windows.Forms;
 using Aiv.Engine;
 using OpenTK.Input;
 
-namespace StupidAivGame
+namespace Futuridium
 {
     public class Game : GameObject
     {
-        private static readonly int gameOverDelay = 1000;
-        private static readonly int windowChangeDelay = 500;
+        private static readonly float GameOverDelay = 1f;
+        private static readonly float WindowChangeDelay = 0.5f;
         // T (triangle) -> int etc.
-        public static Dictionary<string, int> thrustmasterConfig = new Dictionary<string, int>
+        private static readonly Dictionary<string, int> ThrustmasterConfig = new Dictionary<string, int>
         {
             {"T", 3},
             {"C", 2},
             {"S", 1},
             {"X", 0},
+            {"RB", -1},
+            {"LB", -1},
+            {"RT", -1},
+            {"LT", -1},
             {"SL", 8},
             {"ST", 9},
             {"Lx", 0},
@@ -27,13 +32,17 @@ namespace StupidAivGame
             {"Ry", 3}
         };
 
-        public static Dictionary<string, int> ds4Config = new Dictionary<string, int>
+        private static readonly Dictionary<string, int> Ds4Config = new Dictionary<string, int>
         {
             // tutti buggati tranne Lxy e Rxy
             {"T", 3},
             {"C", 2},
             {"S", 0},
             {"X", 1},
+            {"RB", -1},
+            {"LB", -1},
+            {"RT", -1},
+            {"LT", -1},
             {"SL", 8},
             {"ST", 9},
             {"Lx", 0},
@@ -42,43 +51,52 @@ namespace StupidAivGame
             {"Ry", 4}
         };
 
-        public static string[] joystickButtons = {"T", "C", "S", "X", "SL", "ST"};
-        public Floor currentFloor;
+        private static readonly string[] joystickButtons = {"T", "C", "S", "X", "SL", "ST"};
         private int floorIndex = -1;
-        public bool gameOver;
-        private int gameOverTimer;
+        private float gameOverTimer;
         //public List<Floor> floors;
 
-        public TKJoystick joystick;
-        public Dictionary<string, int> joyStickConfig;
         private string lastWindow;
-        private int lastWindowChange;
-        public string mainWindow; // game, map, ...
-        public Player player;
-        public RandomSeed random;
-        public Dictionary<string, List<string>> spritesAnimations;
-        internal bool usingOpenTK;
+        private float lastWindowChange;
+
+        public Floor CurrentFloor { get; private set; }
+
+        public bool GameOver { get; private set; }
+
+        public TKJoystick Joystick { get; private set; }
+
+        public Dictionary<string, int> JoyStickConfig { get; private set; }
+
+        public string MainWindow { get; private set; }
+
+        public Player Player { get; private set; }
+
+        public RandomSeed Random { get; private set; }
+
+        public Dictionary<string, List<string>> SpritesAnimations { get; set; }
+
+        public bool UsingOpenTK { get; set; }
 
         public Game()
         {
-            random = new RandomSeed(Utils.RandomString(5));
-            spritesAnimations = new Dictionary<string, List<string>>();
+            Random = new RandomSeed(Utils.RandomString(5));
+            SpritesAnimations = new Dictionary<string, List<string>>();
 
-            joyStickConfig = ds4Config;
+            JoyStickConfig = Ds4Config;
         }
 
         public void StartLoading()
         {
-            if (mainWindow != "loading")
+            if (MainWindow != "loading")
             {
-                lastWindow = mainWindow;
-                mainWindow = "loading";
+                lastWindow = MainWindow;
+                MainWindow = "loading";
             }
         }
 
         public void StopLoading()
         {
-            mainWindow = lastWindow;
+            MainWindow = lastWindow;
         }
 
         public void InitializeNewFloor()
@@ -86,14 +104,14 @@ namespace StupidAivGame
             StartLoading();
             if (floorIndex >= 0)
             {
-                OnDestroyHelper(currentFloor.currentRoom);
+                OnDestroyHelper(CurrentFloor.CurrentRoom);
             }
             floorIndex++;
-            currentFloor = new Floor(floorIndex);
-            engine.SpawnObject(currentFloor.name, currentFloor);
-            currentFloor.RandomizeFloor((int) (6*Math.Max(1, (floorIndex + 1)/5.0)),
+            CurrentFloor = new Floor(floorIndex);
+            engine.SpawnObject(CurrentFloor.name, CurrentFloor);
+            CurrentFloor.RandomizeFloor((int) (6*Math.Max(1, (floorIndex + 1)/5.0)),
                 (int) (8*Math.Max(1, (floorIndex + 1)/4.0)));
-            currentFloor.OpenRoom(currentFloor.firstRoom);
+            CurrentFloor.OpenRoom(CurrentFloor.FirstRoom);
             StopLoading();
         }
 
@@ -103,24 +121,25 @@ namespace StupidAivGame
 
             engine.SpawnObject(new CharactersInfo());
 
-            var logoObj = new SpriteObject();
-            logoObj.currentSprite = (SpriteAsset) engine.GetAsset("logo");
+            var logoObj = new SpriteObject {currentSprite = (SpriteAsset) engine.GetAsset("logo")};
             logoObj.x = engine.width/2 - logoObj.width/2;
             logoObj.y = engine.height/2 - logoObj.height/2;
             engine.SpawnObject("logo", logoObj);
-            mainWindow = "logo";
+            MainWindow = "logo";
         }
 
         private void StartGame()
         {
             OnDestroyHelper((SpriteObject) engine.objects["logo"]);
-            mainWindow = "game";
+            MainWindow = "game";
 
-            player = new Player();
-            player.x = engine.width / 2;
-            player.y = engine.height / 2;
-            player.currentSprite = (SpriteAsset) engine.GetAsset("player");
-            engine.SpawnObject("player", player);
+            Player = new Player
+            {
+                x = engine.width/2,
+                y = engine.height/2,
+                currentSprite = (SpriteAsset) engine.GetAsset("player")
+            };
+            engine.SpawnObject("player", Player);
 
             var hud = new Hud();
             engine.SpawnObject("hud", hud);
@@ -128,83 +147,54 @@ namespace StupidAivGame
             InitializeNewFloor();
         }
 
-        // bullet hits enemy
-        public bool Hits(Bullet bullet, Character enemy, Collision collision)
+        public void CharacterDied(Character character)
         {
-            return Hits((Character) bullet.owner, enemy, collision,
-                (Character ch0, Character ch1) =>
-                {
-                    return (int) (ch0.level.attack*((double) bullet.speed/bullet.startingSpeed));
-                });
-        }
-
-        // character hits enemy
-        public bool Hits(Character character, Character enemy, Collision collision,
-            Func<Character, Character, int> damageFunc)
-        {
-            if (damageFunc == null)
-                damageFunc = (Character ch0, Character ch1) => { return ch1.level.attack; };
-
-            enemy.GetDamage(character, damageFunc);
-
-            if (!enemy.isAlive)
+            var enemyObj = character as Enemy;
+            if (enemyObj != null)
             {
-                collision.other.Destroy();
+                CurrentFloor.CurrentRoom.RemoveEnemy(enemyObj);
 
-                if (player != null)
+                Debug.WriteLine("Enemies to go in current room: " + CurrentFloor.CurrentRoom.enemies.Count);
+                foreach (var en in CurrentFloor.CurrentRoom.enemies)
                 {
-                    player.xp = player.xp + enemy.level.xpReward;
+                    Debug.Write("{0} - ", en.name);
                 }
 
-                var enemyObj = enemy as Enemy;
-                if (enemyObj != null)
+                if (CurrentFloor.CurrentRoom.enemies.Count == 0)
                 {
-                    currentFloor.currentRoom.RemoveEnemy(enemyObj);
-
-                    Debug.WriteLine("Enemies to go in current room: " + currentFloor.currentRoom.enemies.Count);
-                    foreach (var en in currentFloor.currentRoom.enemies)
-                    {
-                        Debug.Write("{0} - ", en.name);
-                    }
-
-                    if (currentFloor.currentRoom.enemies.Count == 0)
-                    {
-                        currentFloor.currentRoom.gameBackground.OpenDoors();
-                    }
+                    CurrentFloor.CurrentRoom.gameBackground.OpenDoors();
                 }
             }
-            return enemy.isAlive;
         }
 
         private void ManageFloor()
         {
-            foreach (var room in currentFloor.roomsList)
+            if (CurrentFloor.RoomsList.Any(room => room.enemies.Count > 0))
             {
-                if (room.enemies.Count > 0)
-                    return;
+                return;
             }
-            var escapeFloorName = string.Format("escape_floor_{0}", currentFloor.floorIndex);
-            var escapeFloorObj = new SpriteObject();
-            escapeFloorObj.order = 5;
-            escapeFloorObj.x = engine.width/2;
-            escapeFloorObj.y = engine.height/2;
-            escapeFloorObj.currentSprite = (SpriteAsset) engine.GetAsset("escape_floor");
+            var escapeFloorName = $"escape_floor_{CurrentFloor.FloorIndex}";
+            var escapeFloorObj = new SpriteObject
+            {
+                order = 5,
+                x = engine.width/2,
+                y = engine.height/2,
+                currentSprite = (SpriteAsset) engine.GetAsset("escape_floor")
+            };
             escapeFloorObj.AddHitBox(escapeFloorName, 0, 0, 32, 32);
             engine.SpawnObject(escapeFloorName, escapeFloorObj);
         }
 
         private void ManageJoystick()
         {
-            if (joystick == null || !joystick.IsConnected())
+            if (Joystick != null && Joystick.IsConnected()) return;
+            Joystick = null;
+            for (var i = 0; i < 8; i++)
             {
-                joystick = null;
-                for (var i = 0; i < 8; i++)
+                if (engine.joysticks[i] != null)
                 {
-                    if (engine.joysticks[i] != null)
-                    {
-                        joystick = (TKJoystick) engine.joysticks[i];
-                        break;
-                    }
+                    Joystick = (TKJoystick) engine.joysticks[i];
+                    break;
                 }
             }
             /*if (joystick != null && false) {
@@ -225,38 +215,33 @@ namespace StupidAivGame
 
         private void OpenMap()
         {
-            mainWindow = "map";
+            MainWindow = "map";
             var map = new Map();
             engine.SpawnObject("map", map);
         }
 
         private void CloseMap()
         {
-            mainWindow = "game";
+            MainWindow = "game";
             OnDestroyHelper(engine.objects["map"]);
         }
 
         private void Pause()
         {
-            mainWindow = "pause";
+            MainWindow = "pause";
             var pause = new Pause();
             engine.SpawnObject("pause", pause);
         }
 
         private void UnPause()
         {
-            mainWindow = "game";
+            MainWindow = "game";
             OnDestroyHelper(engine.objects["pause"]);
         }
 
         public static void OnDestroyHelper(GameObject objBeingDestroyed)
         {
-            var toDestroy = new List<GameObject>();
-            foreach (var obj in objBeingDestroyed.engine.objects.Values)
-            {
-                if (obj.name.StartsWith(objBeingDestroyed.name))
-                    toDestroy.Add(obj);
-            }
+            var toDestroy = objBeingDestroyed.engine.objects.Values.Where(obj => obj.name.StartsWith(objBeingDestroyed.name)).ToList();
             foreach (var obj in toDestroy)
                 obj.Destroy();
         }
@@ -264,57 +249,50 @@ namespace StupidAivGame
         private void ManageControls()
         {
             if (lastWindowChange > 0)
-                lastWindowChange -= deltaTicks;
+                lastWindowChange -= deltaTime;
             if (lastWindowChange <= 0)
             {
-                var startingWindow = mainWindow;
+                var startingWindow = MainWindow;
 
-                if (mainWindow == "game")
+                switch (MainWindow)
                 {
-                    if (engine.IsKeyDown((int) Key.M) ||
-                        (joystick != null && joystick.GetButton(joyStickConfig["SL"])))
-                        OpenMap();
-                    else if (engine.IsKeyDown((int) Key.Escape) ||
-                             (joystick != null && joystick.GetButton(joyStickConfig["ST"])))
-                        Pause();
+                    case "game":
+                        if (engine.IsKeyDown((int) Key.M) ||
+                            (Joystick != null && Joystick.GetButton(JoyStickConfig["SL"])))
+                            OpenMap();
+                        else if (engine.IsKeyDown((int) Key.Escape) ||
+                                 (Joystick != null && Joystick.GetButton(JoyStickConfig["ST"])))
+                            Pause();
+                        break;
+                    case "map":
+                        if (engine.IsKeyDown((int) Key.M) || engine.IsKeyDown((int) Key.Escape) ||
+                            (Joystick != null && Joystick.GetButton(JoyStickConfig["SL"])))
+                            CloseMap();
+                        break;
+                    case "pause":
+                        if (engine.IsKeyDown((int) Key.P) || engine.IsKeyDown((int) Key.Escape) ||
+                            (Joystick != null && Joystick.GetButton(JoyStickConfig["ST"])))
+                            UnPause();
+                        break;
+                    case "logo":
+                        if (AnyKeyDown() || (Joystick != null && AnyJoystickButtonPressed()))
+                            StartGame();
+                        break;
+                    case "gameover":
+                        if (gameOverTimer > 0)
+                            gameOverTimer -= deltaTime;
+                        if (gameOverTimer <= 0 && (AnyKeyDown() || (Joystick != null && AnyJoystickButtonPressed())))
+                            engine.isGameRunning = false;
+                        break;
                 }
-                else if (mainWindow == "map")
-                {
-                    if (engine.IsKeyDown((int) Key.M) || engine.IsKeyDown((int) Key.Escape) ||
-                        (joystick != null && joystick.GetButton(joyStickConfig["SL"])))
-                        CloseMap();
-                }
-                else if (mainWindow == "pause")
-                {
-                    if (engine.IsKeyDown((int) Key.P) || engine.IsKeyDown((int) Key.Escape) ||
-                        (joystick != null && joystick.GetButton(joyStickConfig["ST"])))
-                        UnPause();
-                }
-                else if (mainWindow == "logo")
-                {
-                    if (AnyKeyDown() || (joystick != null && AnyJoystickButtonPressed()))
-                        StartGame();
-                }
-                else if (mainWindow == "gameover")
-                {
-                    if (gameOverTimer > 0)
-                        gameOverTimer -= deltaTicks;
-                    if (gameOverTimer <= 0 && (AnyKeyDown() || (joystick != null && AnyJoystickButtonPressed())))
-                        engine.isGameRunning = false;
-                }
-                if (startingWindow != mainWindow)
-                    lastWindowChange = windowChangeDelay;
+                if (startingWindow != MainWindow)
+                    lastWindowChange = WindowChangeDelay;
             }
         }
 
         public bool AnyJoystickButtonPressed()
         {
-            foreach (var button in joystickButtons)
-            {
-                if (joystick.GetButton(joyStickConfig[button]))
-                    return true;
-            }
-            return false;
+            return joystickButtons.Any(button => Joystick.GetButton(JoyStickConfig[button]));
         }
 
         // TODO: better way to do this through the engine
@@ -328,38 +306,39 @@ namespace StupidAivGame
             return false;
         }
 
-        public void GameOver()
+        private void StartGameOver()
         {
-            mainWindow = "gameover";
-            var background = new RectangleObject();
-            background.color = Color.Black;
-            background.fill = true;
-            background.width = engine.width;
-            background.height = engine.height;
-            background.order = 10;
+            MainWindow = "gameover";
+            var background = new RectangleObject
+            {
+                color = Color.Black,
+                fill = true,
+                width = engine.width,
+                height = engine.height,
+                order = 10
+            };
             engine.SpawnObject("gameover_background", background);
-            var gameOver = new TextObject("Phosphate", 80, "red");
-            gameOver.text = "GAMEOVER";
+            var gameOver = new TextObject("Phosphate", 80, "red") {text = "GAMEOVER"};
             var gameOverSize = TextRenderer.MeasureText(gameOver.text, gameOver.font);
             gameOver.x = engine.width/2 - gameOverSize.Width/2;
             gameOver.y = engine.height/2 - gameOverSize.Height/2;
             gameOver.order = 11;
             engine.SpawnObject("gameover_text", gameOver);
-            gameOverTimer = gameOverDelay;
+            gameOverTimer = GameOverDelay;
         }
 
         public override void Update()
         {
             ManageJoystick();
             ManageControls();
-            if (mainWindow == "game")
+            if (MainWindow == "game")
             {
-                if (player.level != null && !player.isAlive)
-                    gameOver = true;
+                if (Player.Level != null && !Player.IsAlive)
+                    GameOver = true;
                 // check for gameOver
-                if (gameOver)
+                if (GameOver)
                 {
-                    GameOver();
+                    StartGameOver();
                 }
 
                 ManageFloor();
