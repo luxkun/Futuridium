@@ -5,6 +5,7 @@ using OpenTK;
 
 namespace Futuridium
 {
+    // convert to Spell, add to character available spells
     public class Orb : CircleObject
     {
         private readonly Character owner;

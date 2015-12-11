@@ -9,11 +9,11 @@ namespace Futuridium
     {
         private const int hudWidth = 200;
         private const int fontSize = 16;
-        // hp bar
+        // Hp bar
         protected RectangleObject hpBar;
         protected RectangleObject hpBarContainer;
         protected TextObject hpTextObj;
-        // energy bar
+        // Energy bar
         protected RectangleObject energyBar;
         protected RectangleObject energyBarContainer;
         protected TextObject energyTextObj;
@@ -151,10 +151,10 @@ namespace Futuridium
             var player = ((Game) engine.objects["game"]).Player;
             if (player.Level == null)
                 return;
-            var xp = player.Xp;
+            var xp = (int)player.Xp;
             var level = player.Level;
             var levelManager = ((Game) engine.objects["game"]).Player.LevelManager;
-            var xpPercentage = Math.Min(1, (double) xp/levelManager.levelUpTable[level.level + 1].neededXP);
+            var xpPercentage = Math.Min(1, (double) xp/levelManager.levelUpTable[level.level + 1].NeededXp);
             levelTextObj.text = Math.Round(xpPercentage*100, 2) + "% to " + (level.level + 1);
             var border = 1; //1px border?
             int newWidth;
@@ -162,13 +162,7 @@ namespace Futuridium
                 newWidth = xpBarContainer.width - border*2;
             else
                 newWidth = (int) ((xpBarContainer.width - border*2)*xpPercentage);
-            var update = false;
-            if (xpBar == null || (Math.Abs(newWidth - xpBar.width) > 10))
-            {
-                // ignore small changes
-                update = true;
-            }
-            if (update)
+            if (xpBar != null)
             {
                 xpBar.width = newWidth;
             }
@@ -180,14 +174,10 @@ namespace Futuridium
             if (player.Level == null)
                 return;
             var border = 1; //1px border?
-            var newWidth = (int)((energyBarContainer.width - border * 2) * (player.Level.energy / (double)player.Level.maxEnergy));
-            energyTextObj.text = string.Format("{0} / {1}", player.Level.energy, player.Level.maxEnergy);
-            var update = false;
-            if (energyBar == null || (Math.Abs(newWidth - energyBar.width) > 10))
-            {
-                update = true;
-            }
-            if (update)
+            var energy = (int) player.Level.Energy;
+            var newWidth = (int)((energyBarContainer.width - border * 2) * (energy / (double)player.Level.maxEnergy));
+            energyTextObj.text = string.Format("{0} / {1}", energy, player.Level.maxEnergy);
+            if (energyBar != null)
             {
                 energyBar.width = newWidth;
             }
@@ -199,15 +189,10 @@ namespace Futuridium
             if (player.Level == null)
                 return;
             var border = 1; //1px border?
-            var newWidth = (int) ((hpBarContainer.width - border*2)*(player.Level.hp/(double) player.Level.maxHP));
-            hpTextObj.text = string.Format("{0} / {1}", player.Level.hp, player.Level.maxHP);
-            var update = false;
-            if (hpBar == null || (Math.Abs(newWidth - hpBar.width) > 10))
-            {
-                // ignore small changes
-                update = true;
-            }
-            if (update)
+            var hp = (int) player.Level.Hp;
+            var newWidth = (int) ((hpBarContainer.width - border*2)*(hp/(double) player.Level.maxHp));
+            hpTextObj.text = string.Format("{0} / {1}", hp, player.Level.maxHp);
+            if (hpBar != null)
             {
                 hpBar.width = newWidth;
             }

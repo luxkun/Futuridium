@@ -26,7 +26,7 @@ namespace Futuridium
 
         // TEMP
         // TODO: A* algorithm if there will ever be obstacles 
-        // TODO: (futuro) algoritmo intelligente che mette in conto dove sta andando il player
+        //      (futuro) algoritmo intelligente che mette in conto dove sta andando il player
         private void RandomizeNextObjective()
         {
             var agentV = new Vector2(x, y);
@@ -53,24 +53,24 @@ namespace Futuridium
         private void RandomMove()
         {
             RandomizeNextObjective();
-            MoveTo(rndPoint, (int) (Level.speed*0.5));
+            MoveTo(rndPoint, (int) (Level.Speed*0.5));
         }
 
-        // TODO: make sure enemy can't enter inside the player
         private void Move(Player player)
         {
             var objectiveV = new Vector2(player.x, player.y);
             var agentV = new Vector2(x, y);
             //var paddingV = new Vector2(10, 10);
             var distance = (int) (objectiveV - agentV).Length;
-            if (distance > radarRadius*2)
+            // if has been hitted the radarRadius is doubled
+            if (distance > radarRadius * (Level.Hp < Level.maxHp ? 4 : 2))
             {
                 RandomMove();
                 return;
             }
             if (rndPoint.X != -1)
                 rndPoint = new Vector2(-1, -1);
-            MoveTo(objectiveV, Level.speed);
+            MoveTo(objectiveV, Level.Speed);
         }
 
         // FIX: stop when near objective
@@ -106,7 +106,6 @@ namespace Futuridium
                 Level0 = Level0.Clone(),
                 UseAnimations = UseAnimations
             };
-            // TODO: use base.Clone() somehow
             /*if (animations != null)
             {
                 result.animations = new Dictionary<string, Animation>();

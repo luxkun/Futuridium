@@ -23,10 +23,10 @@ namespace Futuridium
             {
                 Level0 =
                 {
-                    maxHP = 60,
+                    maxHp = 60,
                     attack = 40,
-                    xpReward = 12,
-                    speed = 100f
+                    XpReward = 12,
+                    Speed = 100f
                 }
             };
             //bigMonkey.useAnimations = true;
@@ -35,10 +35,10 @@ namespace Futuridium
             {
                 Level0 =
                 {
-                    maxHP = 40,
+                    maxHp = 40,
                     attack = 20,
-                    xpReward = 8,
-                    speed = 120f
+                    XpReward = 8,
+                    Speed = 120f
                 }
             };
 
@@ -46,10 +46,10 @@ namespace Futuridium
             {
                 Level0 =
                 {
-                    maxHP = 200,
+                    maxHp = 200,
                     attack = 50,
-                    xpReward = 25,
-                    speed = 70f
+                    XpReward = 25,
+                    Speed = 70f
                 }
             };
 
@@ -61,15 +61,14 @@ namespace Futuridium
 
 
             // ROOM TYPE: 1
-            // TODO: special attacks, charge for mino, bullets for megamonkey
             var mino = new Enemy("enemy_mino", "Mino", "mino")
             {
                 Level0 =
                 {
-                    maxHP = 600,
+                    maxHp = 600,
                     attack = 100,
-                    xpReward = 100,
-                    speed = 100f
+                    XpReward = 100,
+                    Speed = 100f
                 }
             };
 
@@ -77,10 +76,10 @@ namespace Futuridium
             {
                 Level0 =
                 {
-                    maxHP = 500,
+                    maxHp = 500,
                     attack = 70,
-                    xpReward = 50,
-                    speed = 150
+                    XpReward = 50,
+                    Speed = 150
                 }
             };
 
@@ -111,13 +110,11 @@ namespace Futuridium
                     var enemy = pair.Key;
                     if (enemy.UseAnimations)
                     {
-                        // TODO: use animations... 
                         enemy.currentSprite =
                             (SpriteAsset) engine.GetAsset(game.SpritesAnimations[enemy.CharacterName][0]);
                     }
                     else
                     {
-                        // TODO: add all sprites
                         enemy.currentSprite = (SpriteAsset) engine.GetAsset(enemy.CharacterName); //enemy.name);
                     }
                 }
@@ -147,7 +144,7 @@ namespace Futuridium
             //Character enemyInfo = enemies [rnd.Next (0, enemies.Length)];
             var result = (Enemy) enemyInfo.Clone();
             result.name += letters[counter - 1%letters.Length];
-            result.Xp = result.LevelManager.levelUpTable[level].neededXP;
+            result.Xp = result.LevelManager.levelUpTable[level].NeededXp;
             result.LevelCheck();
             return result;
         }

@@ -25,7 +25,7 @@ namespace Futuridium
 
         public Vector2 InverseDirection { get; private set; }
 
-        public Func<Character, Character, int> DamageFunc { private get; set; }
+        public Func<Character, Character, float> DamageFunc { private get; set; }
 
         public Character Enemy { get; set; }
 
@@ -33,7 +33,7 @@ namespace Futuridium
 
         public Character Character { get; set; }
 
-        public int Caculate(Character character, Character enemy)
+        public float Caculate(Character character, Character enemy)
         {
             return DamageFunc(character, enemy);
         }

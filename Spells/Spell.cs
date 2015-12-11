@@ -7,7 +7,7 @@ namespace Futuridium.Spells
 {
     public class Spell : GameObject
     {
-        // energy usage per cast
+        // Energy usage per cast
 
         // helper variables, used to move the object with precision
 
@@ -15,71 +15,101 @@ namespace Futuridium.Spells
         // or the Direction where the spell should go
 
         // speed per second
+        public delegate void CastingDoneEventHandler(object sender);
 
-        public int EnergyUsage { get; set; }
+        public delegate void CollisionEventHandler(object sender, Collision collision);
 
-        public int EnergyUsagePerSecond { get; set; }
+        public delegate void EndCollisionCheckEventHandler(object sender);
+
+        public delegate void StartCollisionCheckEventHandler(object sender);
+
+        private Func<bool> castCheck;
+
+        // resetted to 0 everytime a collision check is started
+        // - when setted to 1 the collision check returns false
+        // - when setted to 2 the collision check returns true
+        protected int collisionCheckResult;
+        private float hitDelayTimer;
+        private bool isCasting;
+
+        protected Vector2 lastPoint;
+        private float lifeSpan;
+        private Character owner;
+        private int range = 500;
+
+        private int rangeToGo;
+
+        public string SpellName;
 
         private float vx;
         private float vy;
+        public int xOffset;
+        public int yOffset;
 
-        protected float Vx
+        public virtual int EnergyUsage { get; set; }
+
+        public virtual int EnergyUsagePerSecond { get; set; }
+
+        protected virtual float Vx
         {
             get { return vx; }
             set
             {
                 if (Math.Abs(value) > 1)
                 {
-                    X += (int)value;
-                    value -= (int)value;
+                    X += (int) value;
+                    value -= (int) value;
                 }
                 vx = value;
             }
         }
 
-        protected float Vy
+        protected virtual float Vy
         {
             get { return vy; }
             set
             {
                 if (Math.Abs(value) > 1)
                 {
-                    Y += (int)value;
-                    value -= (int)value;
+                    Y += (int) value;
+                    value -= (int) value;
                 }
                 vy = value;
             }
         }
 
-        private int rangeToGo;
-        private int range = 500;
+        public virtual int X
+        {
+            get { return x; }
+            set { x = value; }
+        }
 
-        public virtual int X { get; set; }
-        public virtual int Y { get; set; }
+        public virtual int Y
+        {
+            get { return y; }
+            set { y = value; }
+        }
 
-        public Vector2 Direction { get; set; }
+        public virtual Vector2 Direction { get; set; }
 
-        public float Speed { get; protected set; }
+        public virtual float Speed { get; protected set; }
+        public virtual float StartingSpeed { get; set; } = 250f;
 
-        public float StartingSpeed { get; set; } = 250f;
-
-        public Character Owner
+        public virtual Character Owner
         {
             get { return owner; }
             set
             {
                 owner = value;
 
-                StartingSpeed = owner.Level.shotSpeed;
-                Range = owner.Level.shotRange;
+                if (order != owner.order)
+                    order = owner.order;
+                StartingSpeed = owner.Level.ShotSpeed;
+                Range = owner.Level.ShotRange;
             }
         }
 
-        public float CdTimer { get; set; }
-
-        public bool OnCd => CdTimer > 0;
-
-        public float LifeSpan
+        public virtual float LifeSpan
         {
             get { return lifeSpan; }
             private set
@@ -90,7 +120,7 @@ namespace Futuridium.Spells
             }
         }
 
-        protected int RangeToGo
+        protected virtual int RangeToGo
         {
             get { return rangeToGo; }
 
@@ -102,7 +132,7 @@ namespace Futuridium.Spells
             }
         }
 
-        protected int Range
+        protected virtual int Range
         {
             get { return range; }
 
@@ -113,45 +143,131 @@ namespace Futuridium.Spells
             }
         }
 
-        public string SpellName;
-        private Character owner;
-        private float lifeSpan;
+        public virtual Func<bool> CastCheck
+        {
+            get { return castCheck; }
+            set
+            {
+                castCheck = value;
+                IsCasting = true;
+            }
+        }
+
+        public virtual bool IsCasting
+        {
+            get { return enabled && isCasting; }
+            set
+            {
+                isCasting = value;
+                if (!value)
+                    OnCastingDone?.Invoke(this);
+            }
+        }
+
+        public virtual float HitsDelay { get; set; } = 0.5f;
+        public bool RoomConstricted { get; protected set; }
+
+        public event CastingDoneEventHandler OnCastingDone;
+        public event StartCollisionCheckEventHandler OnStartCollisionCheck;
+        public event EndCollisionCheckEventHandler OnEndCollisionCheck;
+        public event CollisionEventHandler OnCollision;
 
         public override void Start()
         {
-            OnAfterUpdate += AfterUpdate;
-            Owner.Level.energy -= EnergyUsage;
+            X = Owner.x + xOffset;
+            Y = Owner.y + yOffset;
+            OnBeforeUpdate += BeforeUpdate;
+            Owner.Level.Energy -= EnergyUsage;
             LifeSpan = RangeToGo/Speed; // used in case the spell's speed is decreased
             Speed = StartingSpeed;
         }
 
-        private void AfterUpdate(Object sender)
+        private void BeforeUpdate(object sender)
         {
-            Owner.Level.energy -= (int) (EnergyUsagePerSecond * deltaTime);
+            if (EnergyUsagePerSecond != 0)
+            {
+                var deltaEnergy = EnergyUsagePerSecond*deltaTime;
+                if (deltaEnergy > Owner.Level.Energy)
+                    Destroy();
+                else
+                    Owner.Level.Energy -= deltaEnergy;
+            }
+        }
+
+        private bool EndCollisionCheck(bool result)
+        {
+            collisionCheckResult = result ? 2 : 1;
+            OnEndCollisionCheck?.Invoke(this);
+            collisionCheckResult = 0;
+            return result;
+        }
+
+        protected bool ManageCollisions()
+        {
+            OnStartCollisionCheck?.Invoke(this);
+            if (!enabled)
+                return EndCollisionCheck(true);
+            if (collisionCheckResult != 0)
+                return EndCollisionCheck(collisionCheckResult != 1);
+            var collisions = CheckCollisions();
+            if (collisions.Count > 0)
+                Debug.WriteLine($"{name} {SpellName} collides with n. {collisions.Count}");
+            var collides = false;
+            foreach (var collision in collisions)
+            {
+                if (collision.other.name == Owner.name || collision.other.name.Contains("spell"))
+                    continue;
+                Debug.WriteLine($"{name} {SpellName} hits enemy: {collision.other.name} ({collision.otherHitBox})");
+                collides = true;
+                OnCollision?.Invoke(this, collision);
+                var other = collision.other as Character;
+                if (other != null && hitDelayTimer <= 0)
+                {
+                    Owner.DoDamage(this, other, collision);
+                    hitDelayTimer = HitsDelay;
+                    break;
+                }
+
+                if (!enabled)
+                    break;
+                if (collisionCheckResult != 0)
+                    return EndCollisionCheck(collisionCheckResult != 1);
+            }
+            return EndCollisionCheck(collides);
         }
 
         public override void Update()
         {
+            lastPoint = new Vector2(X, Y);
             base.Update();
 
-            LifeSpan -= deltaTime;
+            if (hitDelayTimer > 0)
+                hitDelayTimer -= deltaTime;
 
-            if (OnCd) { 
-                CdTimer -= deltaTime;
-                Debug.WriteLine(CdTimer);
+            if (IsCasting && !CastCheck())
+            {
+                IsCasting = false;
             }
+
+            if (rangeToGo > 0)
+                LifeSpan -= deltaTime;
 
             NextMove();
         }
 
         // to use for moving spells (ex. Bullet)
-        protected void NextMove()
+        protected virtual void NextMove()
         {
-            Vector2 nextStep = Direction * (Speed * deltaTime);
+            var nextStep = Direction*(Speed*deltaTime);
             Vx += nextStep.X;
             Vy += nextStep.Y;
 
-            RangeToGo -= (int)(Speed * deltaTime);
+            RangeToGo -= (int) (Speed*deltaTime);
+        }
+
+        public virtual float CalculateDamage(Character enemy, float baseModifier)
+        {
+            return Owner.Level.attack*(Speed/StartingSpeed)*baseModifier;
         }
     }
 }

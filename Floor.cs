@@ -201,7 +201,6 @@ namespace Futuridium
             if (room != null && (CurrentRoom == null || CurrentRoom.Enemies.Count == 0))
             {
                 var game = (Game) engine.objects["game"];
-                game.StartLoading();
                 Debug.Assert(RoomsList.Contains(room) &&
                              (CurrentRoom == null || CurrentRoom.Left == room || CurrentRoom.Right == room ||
                               CurrentRoom.Top == room || CurrentRoom.Bottom == room));
@@ -251,8 +250,6 @@ namespace Futuridium
                 {
                     CurrentRoom.GameBackground.OpenDoors();
                 }
-
-                game.StopLoading();
 
                 return true;
             }

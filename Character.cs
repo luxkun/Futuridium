@@ -11,6 +11,7 @@ namespace Futuridium
 {
     public class Character : SpriteObject
     {
+        // TODO: Energy regen
         public delegate void EnergyChangedEventHandler(object sender);
 
         public delegate void HPChangedEventHandler(object sender);
@@ -20,16 +21,18 @@ namespace Futuridium
         private readonly List<Force> forces;
 
         public Dictionary<Type, List<Spell>> activeSpells;
+        private int chosenSpellIndex = -1;
         private int forceCount;
 
         protected bool isCloseCombat = true;
 
         private int spellCounter;
 
+        public Dictionary<Type, float> spellsCd;
+
         private float vx;
         private float vy;
         private long xp;
-        private int chosenSpellIndex = -1;
 
         public Character(string name, string formattedName, string characterName)
         {
@@ -40,6 +43,8 @@ namespace Futuridium
             this.name = name;
             FormattedName = formattedName;
             CharacterName = characterName;
+
+            OnUpdate += SpellsCdUpdateEvent;
         }
 
         public float Vx
@@ -82,7 +87,7 @@ namespace Futuridium
             }
         }
 
-        public bool IsAlive => Level.hp > 0;
+        public bool IsAlive => Level.Hp > 0;
 
         public string CharacterName { get; set; }
 
@@ -103,12 +108,29 @@ namespace Futuridium
             get { return chosenSpellIndex; }
             set
             {
-                chosenSpellIndex = value % Level.spellList.Count;
+                chosenSpellIndex = value%Level.spellList.Count;
                 ChosenSpell = Level.spellList[chosenSpellIndex];
             }
         }
 
         public Type ChosenSpell { get; private set; }
+
+        public Spell LastCastedSpell { get; set; }
+
+        public float BounceTime { get; set; } = 0.1f;
+
+        public float BounceSpeed { get; set; } = 20;
+
+        private void SpellsCdUpdateEvent(object sender)
+        {
+            foreach (var key in spellsCd.Keys.ToList())
+            {
+                if (spellsCd[key] > 0f)
+                {
+                    spellsCd[key] -= deltaTime;
+                }
+            }
+        }
 
         public event HPChangedEventHandler OnHpChanged;
         public event EnergyChangedEventHandler OnEnergyChanged;
@@ -127,13 +149,17 @@ namespace Futuridium
 
         protected bool SpellOnCd(Type spellType)
         {
-            foreach (var spell in activeSpells[spellType])
+            /*foreach (var spell in activeSpells[spellType])
             {
                 if (spell.OnCd)
                     return true;
 
-            }
-            return false;
+            }*/
+            var result = spellsCd[spellType] > 0;
+            // if spell is alive and still casting
+            if (!result && LastCastedSpell != null && LastCastedSpell.IsCasting)
+                return true;
+            return result;
         }
 
         public void LevelCheck()
@@ -142,10 +168,12 @@ namespace Futuridium
                 LevelManager = new LevelManager(this, Level0);
             if (LevelManager.CheckLevelUp())
             {
-                foreach (var pair in Level.spellList)
+                foreach (var type in Level.spellList)
                 {
-                    if (!activeSpells.ContainsKey(pair))
-                        activeSpells[pair] = new List<Spell>();
+                    if (!activeSpells.ContainsKey(type))
+                        activeSpells[type] = new List<Spell>();
+                    if (!spellsCd.ContainsKey(type))
+                        spellsCd[type] = 0f;
                 }
                 if (this is Player && Level.level > 0)
                 {
@@ -157,67 +185,81 @@ namespace Futuridium
         public override void Start()
         {
             activeSpells = new Dictionary<Type, List<Spell>>();
+            spellsCd = new Dictionary<Type, float>();
             LevelCheck();
             SwapSpell();
         }
 
-        protected void Shot(Vector2 direction)
+        protected void Shot(Vector2 direction, Func<bool> castCheck = null)
         {
             if (SpellOnCd(ChosenSpell))
                 return;
             direction.Normalize();
             Debug.WriteLine("{0} is shotting to Direction: {1}", name, direction);
-            var spell = ActivateSpell(ChosenSpell);
-            spell.Direction = direction;
+            var spell = ActivateSpell(ChosenSpell, castCheck);
+            if (spell == null)
+                return;
 
             var bullet = spell as Bullet;
             if (bullet != null)
             {
-                var xMod = direction.X + 0.5f;
-                var yMod = direction.Y + 0.5f;
-                bullet.X = x + (int) (width*xMod);
-                bullet.Y = y + (int) (height*yMod);
-                bullet.Radius = Level.shotRadius;
-                bullet.Color = Color.WhiteSmoke;
-                bullet.CdTimer = Level.shotDelay;
+                bullet.Radius = Level.ShotRadius;
+                bullet.Color = Color.LightGray;
             }
+            var xMod = direction.X + 0.5f;
+            var yMod = direction.Y + 0.5f;
+            spell.xOffset = (int) (width*xMod);
+            spell.yOffset = (int) (height*yMod);
+            spell.Direction = direction;
+
             engine.SpawnObject(spell);
         }
 
+        // TODO: swapspell cooldown
         protected void SwapSpell()
         {
             if (Level.spellList.Count == 0)
                 return;
             ChosenSpellIndex++;
+            Debug.WriteLine($"Chosen spell '{ChosenSpell}'.");
         }
 
-        private Spell ActivateSpell(Type spellType)
+        private Spell ActivateSpell(Type spellType, Func<bool> castCheck = null)
         {
             //if (SpellOnCd(spellType))
             //    throw new Exception("Spell '$(spellType)' is on cold down.");
             var spell = (Spell) Activator.CreateInstance(spellType);
-            if (Level.energy < spell.EnergyUsage)
+            if (Level.Energy < spell.EnergyUsage)
                 return null;
             activeSpells[spellType].Add(spell);
+            // every spell should have different delay? same is ok for now since they're Energy bound
+            LastCastedSpell = spell;
+            spellsCd[spellType] = Level.ShotDelay;
+            spell.CastCheck = castCheck;
+            spell.OnDestroy += sender => DisactivateSpell(spell, false);
             spell.Owner = this;
-            spell.name = name + "_spell" + spellCounter++;
+            spell.name = spell.RoomConstricted
+                ? ((Game) engine.objects["game"]).CurrentFloor.CurrentRoom.name
+                : "" + name + "_spell" + spellCounter++;
+            spell.order = order + 1;
             return spell;
         }
 
-        public void DisactivateSpell(Spell spell)
+        public void DisactivateSpell(Spell spell, bool destroy = true)
         {
             if (!activeSpells[spell.GetType()].Contains(spell))
-                throw new Exception("Spell '$(spellType)' hasn't already been casted.");
+                return;
+            //throw new Exception("Spell '$(spellType)' hasn't already been casted.");
             activeSpells[spell.GetType()].Remove(spell);
-            spell.Destroy();
-            throw new Exception("Spell '$(spellType)' hasn't already been casted.");
+            if (destroy)
+                spell.Destroy();
         }
 
         internal void HpChanged()
         {
             OnHpChanged?.Invoke(this);
-            Console.WriteLine($"{name} hp changed to {Level.hp}");
-            if (Level.hp <= 0)
+            Console.WriteLine($"{name} hp changed to {Level.Hp}");
+            if (Level.Hp <= 0)
                 Destroy();
         }
 
@@ -226,10 +268,9 @@ namespace Futuridium
         {
             var damage = new Damage(spell.Owner, enemy)
             {
-                Direction = spell.Direction
+                Direction = spell.Direction,
+                DamageFunc = (Character ch0, Character ch1) => spell.CalculateDamage(ch1, 1f)
             };
-            damage.DamageFunc =
-                (Character ch0, Character ch1) => (int) (ch0.Level.attack*((double) spell.Speed/spell.StartingSpeed));
             return DoDamage(enemy, damage);
         }
 
@@ -237,22 +278,21 @@ namespace Futuridium
         {
             if (damage == null)
             {
-                damage = new Damage(this, enemy);
-                damage.DamageFunc = (Character ch0, Character ch1) => ch1.Level.attack;
+                damage = new Damage(this, enemy) {DamageFunc = (Character ch0, Character ch1) => ch1.Level.attack};
             }
 
             enemy.GetDamage(this, damage);
             if (!enemy.IsAlive)
-                Xp += enemy.Level.xpReward;
+                Xp += enemy.Level.XpReward;
             return enemy.IsAlive;
         }
 
-        protected virtual int GetDamage(Character enemy, Damage damage)
+        protected virtual float GetDamage(Character enemy, Damage damage)
         {
             LevelCheck(); // could happen that the player kills the enemy before he fully spawn (before Start "starts")
             enemy.LevelCheck();
             var dmg = damage.Caculate(this, enemy);
-            Level.hp -= dmg; //enemy.level.attack;
+            Level.Hp -= dmg; //enemy.level.attack;
 
             var floatingText = new FloatingText(this, "-" + dmg, "orange");
             engine.SpawnObject(
@@ -262,19 +302,17 @@ namespace Futuridium
             // bounce back only if the damage is from a ranged enemy
             if (!damage.IsCloseCombat)
                 BounceBack(damage.Direction);
-            return Level.hp;
+            return Level.Hp;
         }
 
         private void BounceBack(Vector2 inverseDirection)
         {
-            const float destroyTimer = 0.1f;
-            const float step = 20/destroyTimer;
             var force = new Force
             {
                 Owner = this,
                 Direction = inverseDirection,
-                Step = step,
-                DestroyTimer = destroyTimer
+                Step = BounceSpeed/BounceTime,
+                DestroyTimer = BounceTime
             };
             forces.Add(force);
             engine.SpawnObject($"{name}_bouncebackforce_{forceCount++}", force);

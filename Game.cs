@@ -102,6 +102,7 @@ namespace Futuridium
         public void InitializeNewFloor()
         {
             StartLoading();
+
             if (floorIndex >= 0)
             {
                 OnDestroyHelper(CurrentFloor.CurrentRoom);
@@ -112,6 +113,7 @@ namespace Futuridium
             CurrentFloor.RandomizeFloor((int) (6*Math.Max(1, (floorIndex + 1)/5.0)),
                 (int) (8*Math.Max(1, (floorIndex + 1)/4.0)));
             CurrentFloor.OpenRoom(CurrentFloor.FirstRoom);
+
             StopLoading();
         }
 
@@ -163,26 +165,31 @@ namespace Futuridium
                 if (CurrentFloor.CurrentRoom.Enemies.Count == 0)
                 {
                     CurrentFloor.CurrentRoom.GameBackground.OpenDoors();
+                    // check if the floor has been cleared
+                    ManageFloorExit();
                 }
             }
         }
 
-        private void ManageFloor()
+        public void ManageFloorExit()
         {
             if (CurrentFloor.RoomsList.Any(room => room.Enemies.Count > 0))
             {
                 return;
             }
             var escapeFloorName = $"escape_floor_{CurrentFloor.FloorIndex}";
-            var escapeFloorObj = new SpriteObject
-            {
-                order = 5,
-                x = engine.width/2,
-                y = engine.height/2,
-                currentSprite = (SpriteAsset) engine.GetAsset("escape_floor")
-            };
-            escapeFloorObj.AddHitBox(escapeFloorName, 0, 0, 32, 32);
-            engine.SpawnObject(escapeFloorName, escapeFloorObj);
+            if (!engine.objects.ContainsKey(escapeFloorName)) { 
+                var escapeFloorObj = new SpriteObject
+                {
+                    name = escapeFloorName, 
+                    order = 5,
+                    x = engine.width/2,
+                    y = engine.height/2,
+                    currentSprite = (SpriteAsset) engine.GetAsset("escape_floor")
+                };
+                escapeFloorObj.AddHitBox(escapeFloorName, 0, 0, 32, 32);
+                engine.SpawnObject(escapeFloorObj);
+            }
         }
 
         private void ManageJoystick()
@@ -293,7 +300,6 @@ namespace Futuridium
             return joystickButtons.Any(button => Joystick.GetButton(JoyStickConfig[button]));
         }
 
-        // TODO: better way to do this through the engine
         public bool AnyKeyDown()
         {
             foreach (Key key in Enum.GetValues(typeof (Key)))
@@ -338,8 +344,6 @@ namespace Futuridium
                 {
                     StartGameOver();
                 }
-
-                ManageFloor();
             }
         }
     }

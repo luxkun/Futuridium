@@ -7,38 +7,45 @@ using OpenTK;
 
 namespace Futuridium
 {
-    public class Bullet : Spell
+    public sealed class Bullet : Spell
     {
         private const int MinSpeed = 2;
-        
-        private readonly bool bounceBullet = false;
-        private readonly float bounceDelay = 2.5f;
-        private readonly double bounceMod = 0.8; // speed = bounceMod * speed
 
-        private CircleObject body;
+        private readonly CircleObject body;
+        private bool bounced;
         private Vector2 direction;
 
         private float fadeAwayStep;
 
         private float lastBounce;
 
-        private Vector2 lastPoint;
-
         private float virtRadius;
-
-        private float vx;
-        private float vy;
 
         public Bullet()
         {
-            order = 6;
+            EnergyUsage = 0;
+            EnergyUsagePerSecond = 0;
             SpellName = "Energy Bullet";
+            RoomConstricted = true;
 
             body = new CircleObject();
 
             OnDestroy += DestroyEvent;
             OnStart += StartEvent;
             OnUpdate += UpdateEvent;
+            OnStartCollisionCheck += StartCollisionEvent;
+            OnEndCollisionCheck += EndCollisionEvent;
+            OnCollision += CollisionEvent;
+        }
+
+        public override int order
+        {
+            get { return base.order; }
+            set
+            {
+                base.order = value;
+                body.order = value;
+            }
         }
 
         public int Radius
@@ -79,20 +86,20 @@ namespace Futuridium
 
         public override int X
         {
-            get { return x; }
+            get { return base.X; }
             set
             {
-                x = value;
+                base.X = value;
                 body.x = value;
             }
         }
 
         public override int Y
         {
-            get { return y; }
+            get { return base.Y; }
             set
             {
-                y = value;
+                base.Y = value;
                 body.y = value;
             }
         }
@@ -104,35 +111,47 @@ namespace Futuridium
             set { body.color = value; }
         }
 
+        public bool SpawnParticleOnDestroy { get; set; }
+
+        public bool BounceBullet { get; set; } = false;
+
+        public float BounceDelay { get; set; } = 2.5f;
+
+        public double BounceMod { get; set; } = 0.8;
+
         private void DestroyEvent(object sender)
         {
             var roomName = ((Game) engine.objects["game"]).CurrentFloor.CurrentRoom.name;
-            var particleRadius = Radius/2;
-            if (particleRadius < 1)
-                particleRadius = 1;
-            var particleSystem = new ParticleSystem($"{roomName}_{name}_psys", "homogeneous", 30, particleRadius, Color,
-                400,
-                (int) Speed, Radius)
+            if (SpawnParticleOnDestroy)
             {
-                order = order,
-                x = X,
-                y = Y,
-                fade = 200
-            };
-            Debug.WriteLine(particleSystem.name);
-            engine.SpawnObject(particleSystem.name, particleSystem);
+                var particleRadius = Radius/2;
+                if (particleRadius < 1)
+                    particleRadius = 1;
+                var particleSystem = new ParticleSystem($"{roomName}_{name}_psys", "homogeneous", 30, particleRadius,
+                    Color,
+                    400,
+                    (int) Speed, Radius)
+                {
+                    order = order,
+                    x = X,
+                    y = Y,
+                    fade = 200
+                };
+                Debug.WriteLine(particleSystem.name);
+                engine.SpawnObject(particleSystem.name, particleSystem);
+            }
+            enabled = false;
 
             body.Destroy();
         }
 
-        private void StartEvent(Object sender)
+        private void StartEvent(object sender)
         {
-            base.Start();
             AddHitBox("mass", 0, 0, Radius*2, Radius*2);
             lastPoint = new Vector2(X, Y);
             Fill = true;
 
-            body.name = this.name + "_body";
+            body.name = name + "_body";
             engine.SpawnObject(body);
         }
 
@@ -191,7 +210,7 @@ namespace Futuridium
         // doesn't and won't handle collision between two moving objects
         private bool BounceOrDie(Collision collision)
         {
-            if (bounceBullet)
+            if (BounceBullet)
             {
                 var otherHitBox = collision.other.hitBoxes[collision.otherHitBox];
                 if (lastBounce > 0)
@@ -215,7 +234,7 @@ namespace Futuridium
         // collisionDirection: 0: X collision ; 1: Y collision
         private bool BounceOrDie(int collisionDirection)
         {
-            if (bounceBullet)
+            if (BounceBullet)
             {
                 Debug.WriteLine("Collision Direction:" + collisionDirection);
                 if (collisionDirection == 0)
@@ -237,12 +256,12 @@ namespace Futuridium
                     direction.X *= -1;
                     direction.Y *= -1;
                 }
-                Speed = (int) (Speed*bounceMod);
+                Speed = (int) (Speed*BounceMod);
                 if (Speed <= MinSpeed)
                     Speed = MinSpeed;
                 else
-                    RangeToGo = (int) (RangeToGo*bounceMod);
-                lastBounce = bounceDelay;
+                    RangeToGo = (int) (RangeToGo*BounceMod);
+                lastBounce = BounceDelay;
                 X = (int) lastPoint.X;
                 Y = (int) lastPoint.Y;
                 return true;
@@ -251,39 +270,34 @@ namespace Futuridium
             return false;
         }
 
-        private void UpdateEvent(Object sender)
+        private void UpdateEvent(object sender)
         {
-            if (((Game) engine.objects["game"]).MainWindow == "game")
-            {
-                if (lastBounce > 0)
-                    lastBounce -= deltaTime;
-                ManageFade();
+            if (((Game) engine.objects["game"]).MainWindow != "game")
+                return;
+            if (lastBounce > 0)
+                lastBounce -= deltaTime;
+            ManageFade();
 
-                var collisions = CheckCollisions();
-                if (collisions.Count > 0)
-                    Debug.WriteLine("Bullet collides with n." + collisions.Count);
-                var bounced = false;
-                foreach (var collision in collisions)
-                {
-                    if (collision.other.name == Owner.name || collision.other.name.StartsWith("bullet") ||
-                        collision.other.name.StartsWith("orb"))
-                        continue;
-                    Debug.WriteLine("Bullet hits enemy: " + collision.other.name);
-                    if (BounceOrDie(collision))
-                        bounced = true;
-                    var other = collision.other as Character;
-                    if (other != null)
-                    {
-                        Owner.DoDamage(this, other, collision);
-                        break;
-                    }
-                }
-                if (bounced)
-                    NextMove();
-                lastPoint = new Vector2(X, Y);
-            }
+            ManageCollisions();
         }
 
+        private void CollisionEvent(object sender, Collision collision)
+        {
+            bounced = BounceOrDie(collision) || bounced;
+        }
+
+        private void StartCollisionEvent(object sender)
+        {
+            bounced = false;
+        }
+
+        private void EndCollisionEvent(object sender)
+        {
+            if (bounced)
+                NextMove();
+        }
+
+        // TODO: bullet doesn't fade
         private void ManageFade()
         {
             if (RangeToGo > FadeAwayRange*Range) return;

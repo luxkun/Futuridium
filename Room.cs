@@ -68,12 +68,10 @@ namespace Futuridium
                 Debug.WriteLine("Spawning enemy: {0} n.{1}", enemy.name, count);
                 /*if (enemy.useAnimations)
                 {
-                    // TODO: use animations... 
                     enemy.currentSprite = (SpriteAsset) engine.GetAsset(game.spritesAnimations[enemy.characterName][0]);
                 }
                 else
                 {
-                    // TODO: add all sprites
                     enemy.currentSprite = (SpriteAsset) engine.GetAsset(enemy.characterName); //enemy.name);
                 }*/
                 engine.SpawnObject(enemy.name + count++, enemy);

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using Aiv.Engine;
 
 namespace Futuridium
@@ -13,6 +14,17 @@ namespace Futuridium
         public static readonly int WallWidth = 109;
         public static readonly int WallHeight = 109;
 
+
+        public GameBackground(int backgroundChosen, Room room)
+        {
+            name = room.name + "_game_background";
+            Room = room;
+
+            order = 1;
+
+            BackgroundChosen = backgroundChosen;
+        }
+
         public int BackgroundChosen { get; set; }
 
         public SpriteAsset BottomDoorAsset { get; set; }
@@ -25,22 +37,12 @@ namespace Futuridium
 
         public Room Room { get; set; }
 
-        public int SpawnOnDoorPadding { get; set; } = (ExtraHitBoxSize + PaddingFromEnd) * 3;
+        public int SpawnOnDoorPadding { get; set; } = (ExtraHitBoxSize + PaddingFromEnd)*3;
 
         public bool SpawnSmallObj { get; set; } = true;
 
-
-        public GameBackground(int backgroundChosen, Room room)
-        {
-            name = room.name + "_game_background";
-            this.Room = room;
-
-            order = 1;
-
-            this.BackgroundChosen = backgroundChosen;
-        }
-
-        private void SpawnBackgroundPart(int partX, int partY, SpriteObject background, int partOrder = 0, int width = -1,
+        private void SpawnBackgroundPart(int partX, int partY, SpriteObject background, int partOrder = 0,
+            int width = -1,
             int height = -1, int paddingx = 0, int paddingy = 0)
         {
             background = (SpriteObject) background.Clone();
@@ -49,7 +51,8 @@ namespace Futuridium
             background.x = width*partX + paddingx;
             background.y = height*partY + paddingy;
             background.order = partOrder;
-            engine.SpawnObject(string.Format("{2}_bgblock_{0}.{1}_{3}", partX, partY, name, background.currentSprite.fileName),
+            engine.SpawnObject(
+                string.Format("{2}_bgblock_{0}.{1}_{3}", partX, partY, name, background.currentSprite.fileName),
                 background);
         }
 
@@ -57,10 +60,12 @@ namespace Futuridium
         {
             base.Start();
 
-            AddHitBox("wallLeft", 0, 0, WallWidth, engine.height);
-            AddHitBox("wallTop", WallWidth, 0, engine.width - WallWidth*2, WallHeight);
-            AddHitBox("wallRight", engine.width - WallWidth, 0, WallWidth, engine.height);
-            AddHitBox("wallBottom", WallWidth, engine.height - WallHeight, engine.width - WallWidth*2, WallHeight);
+            var extraHitBoxSize = 100;
+            AddHitBox("wallLeft", -extraHitBoxSize, 0, WallWidth + extraHitBoxSize, engine.height);
+            AddHitBox("wallTop", WallWidth, -extraHitBoxSize, engine.width - WallWidth*2, WallHeight + extraHitBoxSize);
+            AddHitBox("wallRight", engine.width - WallWidth, 0, WallWidth + extraHitBoxSize, engine.height);
+            AddHitBox("wallBottom", WallWidth, engine.height - WallHeight, engine.width - WallWidth*2,
+                WallHeight + extraHitBoxSize);
 
             var rnd = ((Game) engine.objects["game"]).Random.GetRandom(name);
 
@@ -91,17 +96,18 @@ namespace Futuridium
                         var chosen = rnd.Next(0, 50*(Room.RoomType == 0 ? 5 : 1));
                         var paddingx = rnd.Next(0, 16) + WallWidth;
                         var paddingy = rnd.Next(0, 16) + WallHeight;
-                        var spawned = true;
+                        SpriteObject chosenAsset = null;
                         if (chosen == 0)
-                            SpawnBackgroundPart(partX, partY, bloodAsset, 1, BlockW, BlockH, paddingx, paddingy);
+                            chosenAsset = bloodAsset;
                         else if (chosen == 1)
-                            SpawnBackgroundPart(partX, partY, sadSkullAsset, 1, BlockW, BlockH, paddingx, paddingy);
+                            chosenAsset = sadSkullAsset;
                         else if (chosen == 2)
-                            SpawnBackgroundPart(partX, partY, skullAsset, 1, BlockW, BlockH, paddingx, paddingy);
-                        else
-                            spawned = false;
-                        if (spawned)
+                            chosenAsset = skullAsset;
+                        if (chosenAsset != null)
+                        {
+                            SpawnBackgroundPart(partX, partY, chosenAsset, order, BlockW, BlockH, paddingx, paddingy);
                             spawnedCount++;
+                        }
                     }
                 Console.WriteLine(spawnedCount);
             }

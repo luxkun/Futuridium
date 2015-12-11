@@ -6,56 +6,65 @@ namespace Futuridium
 {
     public class Level
     {
-        public int attack;
-        public int maxHP;
-        // hp
-        private int _hp;
-        public int hp
+        public float attack;
+        public float maxHp;
+        // Hp
+        private float hp;
+        public float Hp
         {
-            get { return _hp; }
+            get { return hp; }
             set
             {
-                _hp = value;
-                if (activated) { 
-                    levelManager.character.HpChanged();
+                hp = value;
+                if (Activated) { 
+                    LevelManager.character.HpChanged();
                 }
             }
         }
-        public int maxEnergy;
-        // energy
-        private int _energy;
-        public int energy
+        public float maxEnergy;
+        // Energy
+        private float energy;
+        public float Energy
         {
-            get { return _energy; }
+            get { return energy; }
             set
             {
-                _energy = value;
-                if (activated)
-                    levelManager.character.EnergyChanged();
+                energy = value;
+                if (Activated)
+                    LevelManager.character.EnergyChanged();
             }
         }
-        public int level;
-        private long _neededXP = 100;
-        public long neededXP
-        {
-            get { return _neededXP; }
-            set
-            {
-                _neededXP = value;
-                if (activated)
-                    levelManager.character.XpChanged();
-            }
-        }
-        public float shotDelay;
-        public int shotRadius;
-        public int shotRange;
-        public float shotSpeed;
-        public float speed;
-        public long xpReward;
-        public LevelManager levelManager;
 
-        public bool activated;
-        
+        private long neededXp = 100;
+        public long NeededXp
+        {
+            get { return neededXp; }
+            set
+            {
+                neededXp = value;
+                if (Activated)
+                    LevelManager.character.XpChanged();
+            }
+        }
+
+        public int level { get; set; }
+
+        public float ShotDelay { get; set; }
+
+        public int ShotRadius { get; set; }
+
+        public int ShotRange { get; set; }
+
+        public float ShotSpeed { get; set; }
+
+        public float Speed { get; set; }
+
+        public long XpReward { get; set; }
+
+        public LevelManager LevelManager { get; set; }
+
+        public bool Activated { get; set; }
+
 
         public List<Type> spellList;
 
@@ -66,29 +75,29 @@ namespace Futuridium
 
         public Level(LevelManager levelManager)
         {
-            this.levelManager = levelManager;
+            this.LevelManager = levelManager;
         }
 
         public void Init(Level oldLevel)
         {
             if (spellList == null)
                 spellList = new List<Type>();
-            activated = true;
+            Activated = true;
             if (oldLevel != null)
             {
-                hp = oldLevel.hp;
-                hp += (int)(maxHP * 0.25);
-                if (hp > maxHP)
-                    hp = maxHP;
-                energy = oldLevel.energy;
-                energy += (int)(maxEnergy * 0.25);
-                if (energy > maxEnergy)
-                    energy = maxEnergy;
+                Hp = oldLevel.Hp;
+                Hp += (int)(maxHp * 0.25);
+                if (Hp > maxHp)
+                    Hp = maxHp;
+                Energy = oldLevel.Energy;
+                Energy += (int)(maxEnergy * 0.25);
+                if (Energy > maxEnergy)
+                    Energy = maxEnergy;
             }
             else
             {
-                hp = maxHP;
-                energy = maxEnergy;
+                Hp = maxHp;
+                Energy = maxEnergy;
             }
         }
 
@@ -112,7 +121,7 @@ namespace Futuridium
 
         private void CreateLevelUpTable(Level level0)
         {
-            level0.levelManager = this;
+            level0.LevelManager = this;
             levelUpTable = new Level[100];
             Level lvl;
             levelUpTable[0] = level0;
@@ -121,22 +130,22 @@ namespace Futuridium
                 lvl = new Level(this)
                 {
                     level = level,
-                    maxHP = (int) (level0.maxHP*(1 + level/6f)),
+                    maxHp = (int) (level0.maxHp*(1 + level/6f)),
                     maxEnergy = (int) (level0.maxEnergy*(1 + level/6f)),
-                    xpReward = level0.xpReward*level*level,
+                    XpReward = level0.XpReward*level*level,
                     attack = (int) (level0.attack*(1 + level/4f)),
-                    speed = (float) (level0.speed*(1 + level/15f)),
-                    shotDelay = (float) (level0.shotDelay*(1 - level/100f)),
-                    shotSpeed = (float) (level0.shotSpeed*(1 + level/6f)),
-                    shotRange = (int) (level0.shotRange*(1 + level/10f)),
-                    neededXP = level0.neededXP*level*level*level,
+                    Speed = (float) (level0.Speed*(1 + level/15f)),
+                    ShotDelay = (float) (level0.ShotDelay*(1 - level/100f)),
+                    ShotSpeed = (float) (level0.ShotSpeed*(1 + level/6f)),
+                    ShotRange = (int) (level0.ShotRange*(1 + level/10f)),
+                    NeededXp = level0.NeededXp*level*level*level,
                     spellList = level0.spellList
                 };
-                lvl.hp = lvl.maxHP;
-                lvl.energy = lvl.maxEnergy;
+                lvl.Hp = lvl.maxHp;
+                lvl.Energy = lvl.maxEnergy;
                 // x^3
                 // x^2
-                lvl.shotRadius = (int) (level0.shotRadius*(1 + level/10.0));
+                lvl.ShotRadius = (int) (level0.ShotRadius*(1 + level/10.0));
                 levelUpTable[level] = lvl;
             }
         }
@@ -154,7 +163,7 @@ namespace Futuridium
             if (character.Level.level == levelUpTable.Length - 1)
                 return false;
             var nextLevel = levelUpTable[character.Level.level + 1];
-            if (character.Xp >= nextLevel.neededXP)
+            if (character.Xp >= nextLevel.NeededXp)
             {
                 character.Level = nextLevel;
                 nextLevel.Init(character.Level);

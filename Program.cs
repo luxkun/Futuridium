@@ -14,7 +14,7 @@ namespace Futuridium
             else
                 engine = new Engine("Futuridium", 1280, 720, 60);
 #if DEBUG
-            engine.debugCollisions = false;
+            engine.debugCollisions = true;
 #else
             //engine.FullScreen();
 #endif
