@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Drawing;
 using Aiv.Engine;
 using OpenTK;
 
@@ -7,14 +8,6 @@ namespace Futuridium.Spells
 {
     public class Spell : GameObject
     {
-        // Energy usage per cast
-
-        // helper variables, used to move the object with precision
-
-        // is either the point where the spell is casted
-        // or the Direction where the spell should go
-
-        // speed per second
         public delegate void CastingDoneEventHandler(object sender);
 
         public delegate void CollisionEventHandler(object sender, Collision collision);
@@ -22,6 +15,9 @@ namespace Futuridium.Spells
         public delegate void EndCollisionCheckEventHandler(object sender);
 
         public delegate void StartCollisionCheckEventHandler(object sender);
+
+        public static string spellName = "";
+        public static bool roomConstricted = true;
 
         private Func<bool> castCheck;
 
@@ -34,17 +30,21 @@ namespace Futuridium.Spells
 
         protected Vector2 lastPoint;
         private float lifeSpan;
-        private Character owner;
-        private int range = 500;
+        private int range;
 
         private int rangeToGo;
-
-        public string SpellName;
 
         private float vx;
         private float vy;
         public int xOffset;
         public int yOffset;
+
+        public string SpellName => spellName;
+        public bool RoomConstricted => roomConstricted;
+
+        // an activated spell is a spell that's activated first time it's casted
+        // the next time it's casted it's disactivated
+        public virtual bool ActivatedSpell { get; protected set; }
 
         public virtual int EnergyUsage { get; set; }
 
@@ -90,24 +90,35 @@ namespace Futuridium.Spells
             set { y = value; }
         }
 
+        public virtual float KnockBack { get; set; }
+
+        // is either the point where the spell is casted
+        // or the Direction where the spell should go
+        // some spells (like Orb, or a passive spell) can have no direction
         public virtual Vector2 Direction { get; set; }
 
         public virtual float Speed { get; protected set; }
         public virtual float StartingSpeed { get; set; } = 250f;
 
-        public virtual Character Owner
+        public virtual Color DamageColor
         {
-            get { return owner; }
-            set
+            get
             {
-                owner = value;
-
-                if (order != owner.order)
-                    order = owner.order;
-                StartingSpeed = owner.Level.ShotSpeed;
-                Range = owner.Level.ShotRange;
+                // by default 500 is considered "max attack"
+                var maxAttack = 500f;
+                var minAttackForColorChange = 25f;
+                float colorMod;
+                if (Owner.Level.Attack > maxAttack)
+                    colorMod = 0f;
+                else if (Owner.Level.Attack < minAttackForColorChange)
+                    colorMod = 1f;
+                else
+                    colorMod = 1f - (Owner.Level.Attack - minAttackForColorChange)/(maxAttack - minAttackForColorChange);
+                return Color.FromArgb((int) (255f*colorMod*0.5f + 125), (int) (255f*colorMod), (int) (255f*colorMod));
             }
         }
+        
+        public virtual Character Owner { get; set; }
 
         public virtual float LifeSpan
         {
@@ -165,7 +176,10 @@ namespace Futuridium.Spells
         }
 
         public virtual float HitsDelay { get; set; } = 0.5f;
-        public bool RoomConstricted { get; protected set; }
+
+        public virtual float StartingCd => Owner.Level.SpellCd;
+
+        public bool MovingSpell { get; protected set; } = true;
 
         public event CastingDoneEventHandler OnCastingDone;
         public event StartCollisionCheckEventHandler OnStartCollisionCheck;
@@ -178,8 +192,13 @@ namespace Futuridium.Spells
             Y = Owner.y + yOffset;
             OnBeforeUpdate += BeforeUpdate;
             Owner.Level.Energy -= EnergyUsage;
-            LifeSpan = RangeToGo/Speed; // used in case the spell's speed is decreased
             Speed = StartingSpeed;
+            order = Owner.order;
+            StartingSpeed = Owner.Level.SpellSpeed;
+            if (!ActivatedSpell) { 
+                Range = Owner.Level.SpellRange;
+                LifeSpan = RangeToGo/Speed; // used in case the spell's speed is decreased
+            }
         }
 
         private void BeforeUpdate(object sender)
@@ -211,13 +230,13 @@ namespace Futuridium.Spells
                 return EndCollisionCheck(collisionCheckResult != 1);
             var collisions = CheckCollisions();
             if (collisions.Count > 0)
-                Debug.WriteLine($"{name} {SpellName} collides with n. {collisions.Count}");
+                Debug.WriteLine($"{name} {spellName} collides with n. {collisions.Count}");
             var collides = false;
             foreach (var collision in collisions)
             {
                 if (collision.other.name == Owner.name || collision.other.name.Contains("spell"))
                     continue;
-                Debug.WriteLine($"{name} {SpellName} hits enemy: {collision.other.name} ({collision.otherHitBox})");
+                Debug.WriteLine($"{name} {spellName} hits enemy: {collision.other.name} ({collision.otherHitBox})");
                 collides = true;
                 OnCollision?.Invoke(this, collision);
                 var other = collision.other as Character;
@@ -238,6 +257,7 @@ namespace Futuridium.Spells
 
         public override void Update()
         {
+            if (Game.Instance.MainWindow != "game") return;
             lastPoint = new Vector2(X, Y);
             base.Update();
 
@@ -249,10 +269,11 @@ namespace Futuridium.Spells
                 IsCasting = false;
             }
 
-            if (rangeToGo > 0)
+            if (RangeToGo > 0 && LifeSpan > 0)
                 LifeSpan -= deltaTime;
 
-            NextMove();
+            if (MovingSpell)
+                NextMove();
         }
 
         // to use for moving spells (ex. Bullet)
@@ -267,7 +288,7 @@ namespace Futuridium.Spells
 
         public virtual float CalculateDamage(Character enemy, float baseModifier)
         {
-            return Owner.Level.attack*(Speed/StartingSpeed)*baseModifier;
+            return Owner.Level.Attack*(Speed/StartingSpeed)*baseModifier;
         }
     }
 }

@@ -2,10 +2,9 @@
 using System.Diagnostics;
 using System.Drawing;
 using Aiv.Engine;
-using Futuridium.Spells;
 using OpenTK;
 
-namespace Futuridium
+namespace Futuridium.Spells
 {
     public sealed class Bullet : Spell
     {
@@ -21,12 +20,13 @@ namespace Futuridium
 
         private float virtRadius;
 
+        public new static string spellName = "Energy Bullet";
+
         public Bullet()
         {
             EnergyUsage = 0;
             EnergyUsagePerSecond = 0;
-            SpellName = "Energy Bullet";
-            RoomConstricted = true;
+            KnockBack = 1f;
 
             body = new CircleObject();
 
@@ -44,7 +44,7 @@ namespace Futuridium
             set
             {
                 base.order = value;
-                body.order = value;
+                body.order = base.order;
             }
         }
 
@@ -60,19 +60,17 @@ namespace Futuridium
 
             set
             {
-                if (value >= 1f && Radius >= 1 + (int) value)
+                virtRadius = value;
+                if (virtRadius >= 1f && Radius >= 1 + (int) virtRadius)
                 {
-                    var deltaPos = value/2;
-                    X += (int) deltaPos;
-                    Y += (int) deltaPos;
-                    Radius -= (int) value;
-                    value -= (int) value;
+                    var deltaPos = value/2f;
+                    Vx += deltaPos;
+                    Vy += deltaPos;
+                    Radius -= (int) virtRadius;
+                    virtRadius -= (int) virtRadius;
                     hitBoxes["mass"].height = Radius*2;
                     hitBoxes["mass"].width = Radius*2;
-                    if (Radius <= 1)
-                        Console.WriteLine(Radius);
                 }
-                virtRadius = value;
             }
         }
 
@@ -90,7 +88,7 @@ namespace Futuridium
             set
             {
                 base.X = value;
-                body.x = value;
+                body.x = base.X;
             }
         }
 
@@ -100,15 +98,8 @@ namespace Futuridium
             set
             {
                 base.Y = value;
-                body.y = value;
+                body.y = base.Y;
             }
-        }
-
-        public Color Color
-        {
-            get { return body.color; }
-
-            set { body.color = value; }
         }
 
         public bool SpawnParticleOnDestroy { get; set; }
@@ -121,14 +112,14 @@ namespace Futuridium
 
         private void DestroyEvent(object sender)
         {
-            var roomName = ((Game) engine.objects["game"]).CurrentFloor.CurrentRoom.name;
+            var roomName = Game.Instance.CurrentFloor.CurrentRoom.name;
             if (SpawnParticleOnDestroy)
             {
                 var particleRadius = Radius/2;
                 if (particleRadius < 1)
                     particleRadius = 1;
                 var particleSystem = new ParticleSystem($"{roomName}_{name}_psys", "homogeneous", 30, particleRadius,
-                    Color,
+                    DamageColor,
                     400,
                     (int) Speed, Radius)
                 {
@@ -140,19 +131,21 @@ namespace Futuridium
                 Debug.WriteLine(particleSystem.name);
                 engine.SpawnObject(particleSystem.name, particleSystem);
             }
-            enabled = false;
 
             body.Destroy();
         }
 
         private void StartEvent(object sender)
         {
-            AddHitBox("mass", 0, 0, Radius*2, Radius*2);
             lastPoint = new Vector2(X, Y);
-            Fill = true;
 
+            Fill = true;
             body.name = name + "_body";
+            body.color = DamageColor;
+            Radius = Owner.Level.SpellSize;
             engine.SpawnObject(body);
+
+            AddHitBox("mass", 0, 0, Radius*2, Radius*2);
         }
 
         // simulate collision between two GameObject rectangles
@@ -272,7 +265,7 @@ namespace Futuridium
 
         private void UpdateEvent(object sender)
         {
-            if (((Game) engine.objects["game"]).MainWindow != "game")
+            if (Game.Instance.MainWindow != "game")
                 return;
             if (lastBounce > 0)
                 lastBounce -= deltaTime;
@@ -297,7 +290,6 @@ namespace Futuridium
                 NextMove();
         }
 
-        // TODO: bullet doesn't fade
         private void ManageFade()
         {
             if (RangeToGo > FadeAwayRange*Range) return;

@@ -67,7 +67,7 @@ namespace Futuridium
             AddHitBox("wallBottom", WallWidth, engine.height - WallHeight, engine.width - WallWidth*2,
                 WallHeight + extraHitBoxSize);
 
-            var rnd = ((Game) engine.objects["game"]).Random.GetRandom(name);
+            var rnd = Game.Instance.Random.GetRandom(name);
 
             TopDoorAsset = (SpriteAsset) engine.GetAsset("top_door");
             LeftDoorAsset = (SpriteAsset) engine.GetAsset("left_door");
@@ -87,8 +87,8 @@ namespace Futuridium
                 var bloodAsset = (SpriteObject) engine.objects["cache_blood"];
                 var skullAsset = (SpriteObject) engine.objects["cache_skull"];
                 var sadSkullAsset = (SpriteObject) engine.objects["cache_sadskull"];
-                var maxStepX = (gameWidth - WallWidth*2)/BlockW;
-                var maxStepY = (gameHeight - WallHeight*2)/BlockH;
+                var maxStepX = (gameWidth - WallWidth*2)/BlockW - 1;
+                var maxStepY = (gameHeight - WallHeight*2)/BlockH - 1;
                 var spawnedCount = 0;
                 for (var partX = 0; partX < maxStepX; partX++)
                     for (var partY = 0; partY < maxStepY; partY++)
@@ -113,24 +113,7 @@ namespace Futuridium
             }
 
             InitDoors();
-
-            //SpawnBorders();
         }
-
-        /*public new void SpawnBorders()
-        {
-            blockObject = () =>
-            {
-                var rectangleBlock = new RectangleObject();
-                rectangleBlock.color = Color.SandyBrown;
-                rectangleBlock.width = blockW;
-                rectangleBlock.height = blockH;
-                rectangleBlock.Fill = true;
-                rectangleBlock.partOrder = 10;
-                return rectangleBlock;
-            };
-            base.SpawnBorders();
-        }*/
 
         internal static void Initialize(Engine engine)
         {
@@ -142,7 +125,6 @@ namespace Futuridium
                 {"skull", 0},
                 {"sadskull", 0}
             };
-            var game = (Game) engine.objects["game"];
             foreach (var pair in toGo)
             {
                 if (pair.Value == 0)
@@ -158,7 +140,7 @@ namespace Futuridium
                 }
                 else
                 {
-                    foreach (var assetName in game.SpritesAnimations[pair.Key])
+                    foreach (var assetName in Game.Instance.SpritesAnimations[pair.Key])
                     {
                         var spriteAsset = (SpriteAsset) engine.GetAsset(assetName);
                         var obj = new SpriteObject

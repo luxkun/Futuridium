@@ -6,8 +6,6 @@ namespace Futuridium
 {
     public class Level
     {
-        public float attack;
-        public float maxHp;
         // Hp
         private float hp;
         public float Hp
@@ -16,12 +14,11 @@ namespace Futuridium
             set
             {
                 hp = value;
-                if (Activated) { 
+                if (Activated)
                     LevelManager.character.HpChanged();
-                }
             }
         }
-        public float maxEnergy;
+
         // Energy
         private float energy;
         public float Energy
@@ -49,13 +46,13 @@ namespace Futuridium
 
         public int level { get; set; }
 
-        public float ShotDelay { get; set; }
+        public float SpellCd { get; set; }
 
-        public int ShotRadius { get; set; }
+        public int SpellSize { get; set; }
 
-        public int ShotRange { get; set; }
+        public int SpellRange { get; set; }
 
-        public float ShotSpeed { get; set; }
+        public float SpellSpeed { get; set; }
 
         public float Speed { get; set; }
 
@@ -65,6 +62,11 @@ namespace Futuridium
 
         public bool Activated { get; set; }
 
+        public float MaxHp { get; set; }
+
+        public float Attack { get; set; }
+
+        public float MaxEnergy { get; set; }
 
         public List<Type> spellList;
 
@@ -86,18 +88,18 @@ namespace Futuridium
             if (oldLevel != null)
             {
                 Hp = oldLevel.Hp;
-                Hp += (int)(maxHp * 0.25);
-                if (Hp > maxHp)
-                    Hp = maxHp;
+                Hp += (int)(MaxHp * 0.25);
+                if (Hp > MaxHp)
+                    Hp = MaxHp;
                 Energy = oldLevel.Energy;
-                Energy += (int)(maxEnergy * 0.25);
-                if (Energy > maxEnergy)
-                    Energy = maxEnergy;
+                Energy += (int)(MaxEnergy * 0.25);
+                if (Energy > MaxEnergy)
+                    Energy = MaxEnergy;
             }
             else
             {
-                Hp = maxHp;
-                Energy = maxEnergy;
+                Hp = MaxHp;
+                Energy = MaxEnergy;
             }
         }
 
@@ -123,31 +125,31 @@ namespace Futuridium
         {
             level0.LevelManager = this;
             levelUpTable = new Level[100];
-            Level lvl;
             levelUpTable[0] = level0;
             for (var level = 1; level < 100; level++)
             {
-                lvl = new Level(this)
+                var lvl = new Level(this)
                 {
                     level = level,
-                    maxHp = (int) (level0.maxHp*(1 + level/6f)),
-                    maxEnergy = (int) (level0.maxEnergy*(1 + level/6f)),
+                    MaxHp = (int) (level0.MaxHp*(1 + level/6f)),
+                    MaxEnergy = (int) (level0.MaxEnergy*(1 + level/6f)),
                     XpReward = level0.XpReward*level*level,
-                    attack = (int) (level0.attack*(1 + level/4f)),
+                    Attack = (int) (level0.Attack*(1 + level/4f)),
                     Speed = (float) (level0.Speed*(1 + level/15f)),
-                    ShotDelay = (float) (level0.ShotDelay*(1 - level/100f)),
-                    ShotSpeed = (float) (level0.ShotSpeed*(1 + level/6f)),
-                    ShotRange = (int) (level0.ShotRange*(1 + level/10f)),
+                    SpellCd = (float) (level0.SpellCd*(1 - level/100f)),
+                    SpellSpeed = (float) (level0.SpellSpeed*(1 + level/6f)),
+                    SpellRange = (int) (level0.SpellRange*(1 + level/10f)),
                     NeededXp = level0.NeededXp*level*level*level,
                     spellList = level0.spellList
                 };
-                lvl.Hp = lvl.maxHp;
-                lvl.Energy = lvl.maxEnergy;
+                lvl.Hp = lvl.MaxHp;
+                lvl.Energy = lvl.MaxEnergy;
                 // x^3
                 // x^2
-                lvl.ShotRadius = (int) (level0.ShotRadius*(1 + level/10.0));
+                lvl.SpellSize = (int) (level0.SpellSize*(1 + level/10.0));
                 levelUpTable[level] = lvl;
             }
+            level0.NeededXp = 0;
         }
 
         public bool CheckLevelUp()

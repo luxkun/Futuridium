@@ -7,26 +7,30 @@ namespace Futuridium
 {
     public class Enemy : Character
     {
-        private const float DelayBeforeActivation = 0.5f;
         private const float Minbestdelta = 0.01f;
         private readonly int maxPointDistance = 400;
         private readonly int minDistance = 10; // calculate this somehow
         // virtual circular radar
         private readonly int radarRadius = 150;
-        private bool activated;
         private float lastMove;
         private Vector2 nextStep;
 
         private Vector2 rndPoint = new Vector2(-1, -1);
-        private float timeBeforeActivation;
+
+        private enum State
+        {
+            Normal = 1, Warned = 2, Damaged = 3
+        }
+        private State state = State.Normal;
 
         public Enemy(string name, string formattedName, string characterName) : base(name, formattedName, characterName)
         {
+            OnAfterUpdate += UpdateEvent;
         }
 
         // TEMP
         // TODO: A* algorithm if there will ever be obstacles 
-        //      (futuro) algoritmo intelligente che mette in conto dove sta andando il player
+        //      (futuro) algoritmo intelligente che mette in conto dove sta andando il character
         private void RandomizeNextObjective()
         {
             var agentV = new Vector2(x, y);
@@ -56,18 +60,26 @@ namespace Futuridium
             MoveTo(rndPoint, (int) (Level.Speed*0.5));
         }
 
-        private void Move(Player player)
+        private void Move(Character character)
         {
-            var objectiveV = new Vector2(player.x, player.y);
+            // center of enemy body
+            var objectiveV = new Vector2(
+                character.x + character.hitBoxes["mass"].x + (character.width - character.hitBoxes["mass"].x) / 2, 
+                character.y + character.hitBoxes["mass"].y + (character.height - character.hitBoxes["mass"].y) / 2
+                );
             var agentV = new Vector2(x, y);
             //var paddingV = new Vector2(10, 10);
             var distance = (int) (objectiveV - agentV).Length;
             // if has been hitted the radarRadius is doubled
-            if (distance > radarRadius * (Level.Hp < Level.maxHp ? 4 : 2))
+            if (state >= State.Normal && Level.Hp < Level.MaxHp)
+                state = State.Damaged;
+            if (distance > radarRadius * (1 + (int)state))
             {
                 RandomMove();
                 return;
             }
+            if (state == State.Normal)
+                state = State.Warned;
             if (rndPoint.X != -1)
                 rndPoint = new Vector2(-1, -1);
             MoveTo(objectiveV, Level.Speed);
@@ -78,11 +90,10 @@ namespace Futuridium
         {
             nextStep = new Vector2();
             var agentV = new Vector2(x, y);
-            var player = (Player) engine.objects["player"];
             //var distance = Math.Abs(agentV.X - objectiveV.X) + Math.Abs(agentV.Y + objectiveV.Y);
             // just touching the objective is enough
             if ((Math.Abs(agentV.X - objectiveV.X) > width || Math.Abs(agentV.Y + objectiveV.Y) > height) &&
-                !hitBoxes.FirstOrDefault().Value.CollideWith(player.hitBoxes.FirstOrDefault().Value))
+                !hitBoxes.FirstOrDefault().Value.CollideWith(Player.Instance.hitBoxes.FirstOrDefault().Value))
                 // first or value dependant key?
             {
                 nextStep = objectiveV - agentV;
@@ -121,32 +132,16 @@ namespace Futuridium
             return go;
         }
 
-        public override void Update()
+        private void UpdateEvent(object sender)
         {
-            base.Update();
-            if (((Game) engine.objects["game"]).MainWindow != "game") return;
-            if (!activated)
-            {
-                if (timeBeforeActivation == 0)
-                    timeBeforeActivation = DelayBeforeActivation;
-                else
-                {
-                    if (timeBeforeActivation > 0)
-                        timeBeforeActivation -= deltaTime;
-                    if (timeBeforeActivation < 0)
-                    {
-                        activated = true;
-                        AddHitBox("enemy_" + name, 0, 0, width, height);
-                    }
-                }
-            }
-            else
+            if (Game.Instance.MainWindow != "game") return;
+            if (activated)
             {
                 if (lastMove > 0)
                     lastMove -= deltaTime;
                 if (lastMove <= 0)
                 {
-                    Move(((Game) engine.objects["game"]).Player);
+                    Move(Player.Instance);
                     lastMove = 0.005f; // move every 5ms
                 }
             }

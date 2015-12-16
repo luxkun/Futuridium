@@ -20,7 +20,7 @@ namespace Futuridium
 #endif
             Input.Initialize(engine);
 
-            var game = new Game {UsingOpenTK = usingOpenTK};
+            Game.Instance.UsingOpenTK = usingOpenTK;
 
             // set the base path for assets
             Asset.basePath = "../../Assets";
@@ -51,7 +51,7 @@ namespace Futuridium
             engine.LoadAsset("right_door", new SpriteAsset(Path.Combine("background", "right_door.png"), 0, 0, 70, 45));
             engine.LoadAsset("escape_floor", new SpriteAsset(Path.Combine("background", "escape_floor.png")));
 
-            engine.SpawnObject("game", game);
+            engine.SpawnObject("game", Game.Instance);
 
             engine.Run();
         }

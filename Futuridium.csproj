@@ -67,13 +67,14 @@
     <Compile Include="Game.cs" />
     <Compile Include="LevelManager.cs" />
     <Compile Include="Enemy.cs" />
+    <Compile Include="Spells\SpellManager.cs" />
     <Compile Include="Spells\Bullet.cs" />
     <Compile Include="Character.cs" />
     <Compile Include="Room.cs" />
     <Compile Include="CharactersInfo.cs" />
     <Compile Include="Floor.cs" />
     <Compile Include="Background.cs" />
-    <Compile Include="Orb.cs" />
+    <Compile Include="Spells\Orb.cs" />
     <Compile Include="Door.cs" />
     <Compile Include="Map.cs" />
     <Compile Include="Pause.cs" />

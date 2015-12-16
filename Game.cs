@@ -9,7 +9,7 @@ using OpenTK.Input;
 
 namespace Futuridium
 {
-    public class Game : GameObject
+    class Game : GameObject
     {
         private static readonly float GameOverDelay = 1f;
         private static readonly float WindowChangeDelay = 0.5f;
@@ -69,15 +69,16 @@ namespace Futuridium
 
         public string MainWindow { get; private set; }
 
-        public Player Player { get; private set; }
-
         public RandomSeed Random { get; private set; }
 
         public Dictionary<string, List<string>> SpritesAnimations { get; set; }
 
         public bool UsingOpenTK { get; set; }
 
-        public Game()
+        private static Game instance;
+        public static Game Instance => instance ?? (instance = new Game());
+
+        private Game()
         {
             Random = new RandomSeed(Utils.RandomString(5));
             SpritesAnimations = new Dictionary<string, List<string>>();
@@ -89,6 +90,7 @@ namespace Futuridium
         {
             if (MainWindow != "loading")
             {
+                engine.TimeModifier = 0f;
                 lastWindow = MainWindow;
                 MainWindow = "loading";
             }
@@ -96,6 +98,7 @@ namespace Futuridium
 
         public void StopLoading()
         {
+            engine.TimeModifier = 1f;
             MainWindow = lastWindow;
         }
 
@@ -135,16 +138,9 @@ namespace Futuridium
             OnDestroyHelper((SpriteObject) engine.objects["logo"]);
             MainWindow = "game";
 
-            Player = new Player
-            {
-                x = engine.width/2,
-                y = engine.height/2,
-                currentSprite = (SpriteAsset) engine.GetAsset("player")
-            };
-            engine.SpawnObject("player", Player);
+            engine.SpawnObject(Player.Instance);
 
-            var hud = new Hud();
-            engine.SpawnObject("hud", hud);
+            engine.SpawnObject(Hud.Instance);
 
             InitializeNewFloor();
         }
@@ -220,6 +216,7 @@ namespace Futuridium
 			}*/
         }
 
+        // TODO: window state class
         private void OpenMap()
         {
             MainWindow = "map";
@@ -337,7 +334,7 @@ namespace Futuridium
             ManageControls();
             if (MainWindow == "game")
             {
-                if (Player.Level != null && !Player.IsAlive)
+                if (Player.Instance.Level != null && !Player.Instance.IsAlive)
                     GameOver = true;
                 // check for gameOver
                 if (GameOver)

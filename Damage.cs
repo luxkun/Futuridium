@@ -1,4 +1,5 @@
 ﻿using System;
+using Futuridium.Spells;
 using OpenTK;
 
 namespace Futuridium
@@ -29,7 +30,7 @@ namespace Futuridium
 
         public Character Enemy { get; set; }
 
-        public bool IsCloseCombat { get; set; }
+        public Spell Spell { get; set; } = null;
 
         public Character Character { get; set; }
 

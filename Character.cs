@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Drawing;
-using System.Linq;
 using Aiv.Engine;
 using Futuridium.Spells;
 using OpenTK;
@@ -11,28 +9,30 @@ namespace Futuridium
 {
     public class Character : SpriteObject
     {
-        // TODO: Energy regen
+        // TODO: Energy regen? per room? per second?
         public delegate void EnergyChangedEventHandler(object sender);
 
         public delegate void HPChangedEventHandler(object sender);
 
         public delegate void XPChangedEventHandler(object sender);
 
-        private readonly List<Force> forces;
+        public delegate void LevelupEventHandler(object sender);
 
-        public Dictionary<Type, List<Spell>> activeSpells;
-        private int chosenSpellIndex = -1;
+        protected float delayBeforeActivation = 0.5f;
+
+        private readonly List<Force> forces;
+        protected bool activated;
+
         private int forceCount;
 
-        protected bool isCloseCombat = true;
-
-        private int spellCounter;
-
-        public Dictionary<Type, float> spellsCd;
+        private Level level;
+        public SpellManager spellManager;
+        private float timeBeforeActivation;
 
         private float vx;
         private float vy;
         private long xp;
+        private bool startedActivationTimer;
 
         public Character(string name, string formattedName, string characterName)
         {
@@ -43,8 +43,6 @@ namespace Futuridium
             this.name = name;
             FormattedName = formattedName;
             CharacterName = characterName;
-
-            OnUpdate += SpellsCdUpdateEvent;
         }
 
         public float Vx
@@ -52,12 +50,12 @@ namespace Futuridium
             get { return vx; }
             set
             {
-                if (Math.Abs(value) > 1)
-                {
-                    x += (int) value;
-                    value -= (int) value;
-                }
                 vx = value;
+                if (Math.Abs(vx) > 1)
+                {
+                    x += (int) vx;
+                    vx -= (int) vx;
+                }
             }
         }
 
@@ -67,12 +65,12 @@ namespace Futuridium
             get { return vy; }
             set
             {
-                if (Math.Abs(value) > 1)
-                {
-                    y += (int) value;
-                    value -= (int) value;
-                }
                 vy = value;
+                if (Math.Abs(vy) > 1)
+                {
+                    y += (int) vy;
+                    vy -= (int) vy;
+                }
             }
         }
 
@@ -95,7 +93,16 @@ namespace Futuridium
 
         public Hud Hud { get; set; } = null;
 
-        public Level Level { get; set; }
+        public Level Level
+        {
+            get { return level; }
+            set
+            {
+                level = value;
+
+                spellManager?.UpdateSpells();
+            }
+        }
 
         public Level Level0 { get; set; }
 
@@ -103,37 +110,14 @@ namespace Futuridium
 
         public bool UseAnimations { get; set; } = false;
 
-        protected int ChosenSpellIndex
-        {
-            get { return chosenSpellIndex; }
-            set
-            {
-                chosenSpellIndex = value%Level.spellList.Count;
-                ChosenSpell = Level.spellList[chosenSpellIndex];
-            }
-        }
-
-        public Type ChosenSpell { get; private set; }
-
-        public Spell LastCastedSpell { get; set; }
 
         public float BounceTime { get; set; } = 0.1f;
 
         public float BounceSpeed { get; set; } = 20;
 
-        private void SpellsCdUpdateEvent(object sender)
-        {
-            foreach (var key in spellsCd.Keys.ToList())
-            {
-                if (spellsCd[key] > 0f)
-                {
-                    spellsCd[key] -= deltaTime;
-                }
-            }
-        }
-
         public event HPChangedEventHandler OnHpChanged;
         public event EnergyChangedEventHandler OnEnergyChanged;
+        public event LevelupEventHandler OnLevelup;
 
         public void EnergyChanged()
         {
@@ -147,112 +131,75 @@ namespace Futuridium
             OnXpChanged?.Invoke(this);
         }
 
-        protected bool SpellOnCd(Type spellType)
-        {
-            /*foreach (var spell in activeSpells[spellType])
-            {
-                if (spell.OnCd)
-                    return true;
-
-            }*/
-            var result = spellsCd[spellType] > 0;
-            // if spell is alive and still casting
-            if (!result && LastCastedSpell != null && LastCastedSpell.IsCasting)
-                return true;
-            return result;
-        }
-
         public void LevelCheck()
         {
             if (LevelManager == null)
                 LevelManager = new LevelManager(this, Level0);
             if (LevelManager.CheckLevelUp())
             {
-                foreach (var type in Level.spellList)
-                {
-                    if (!activeSpells.ContainsKey(type))
-                        activeSpells[type] = new List<Spell>();
-                    if (!spellsCd.ContainsKey(type))
-                        spellsCd[type] = 0f;
-                }
-                if (this is Player && Level.level > 0)
-                {
-                    //engine.PlaySound("levelup_sound");
-                }
+                OnLevelup?.Invoke(this);
+                //if (this is Player && Level.level > 0)
+                //{
+                //    //engine.PlaySound("levelup_sound");
+                //}
             }
         }
 
         public override void Start()
         {
-            activeSpells = new Dictionary<Type, List<Spell>>();
-            spellsCd = new Dictionary<Type, float>();
             LevelCheck();
-            SwapSpell();
+            spellManager = new SpellManager(this);
+            engine.SpawnObject(spellManager);
+        }
+
+        public override void Update()
+        {
+            if (!activated)
+            {
+                if (!startedActivationTimer) { 
+                    timeBeforeActivation = delayBeforeActivation;
+                    startedActivationTimer = true;
+                }
+                else
+                {
+                    if (timeBeforeActivation > 0)
+                        timeBeforeActivation -= deltaTime;
+                    if (timeBeforeActivation <= 0)
+                    {
+                        activated = true;
+                        CreateHitBox();
+                    }
+                }
+            }
+        }
+
+        protected virtual void CreateHitBox()
+        {
+            var mod = 0.2f;
+            if (height < 50)
+                mod = 0f;
+            AddHitBox("mass", 0, (int)(height * mod), width, (int) (height * (1 - mod)));
         }
 
         protected void Shot(Vector2 direction, Func<bool> castCheck = null)
         {
-            if (SpellOnCd(ChosenSpell))
-                return;
             direction.Normalize();
             Debug.WriteLine("{0} is shotting to Direction: {1}", name, direction);
-            var spell = ActivateSpell(ChosenSpell, castCheck);
+            var spell = spellManager.ActivateSpell(castCheck: castCheck);
             if (spell == null)
                 return;
 
-            var bullet = spell as Bullet;
-            if (bullet != null)
-            {
-                bullet.Radius = Level.ShotRadius;
-                bullet.Color = Color.LightGray;
-            }
-            var xMod = direction.X + 0.5f;
-            var yMod = direction.Y + 0.5f;
+            float xMod = (direction.X + 1f) / 2f;
+            float yMod = (direction.Y + 1f) / 2f;
+            if (Math.Abs(direction.X) / Math.Abs(direction.Y) > (float)width/height)
+                xMod = direction.X > 0 ? 1f : 0f;
+            else
+                yMod = direction.Y > 0 ? 1f : 0f;
             spell.xOffset = (int) (width*xMod);
             spell.yOffset = (int) (height*yMod);
             spell.Direction = direction;
 
             engine.SpawnObject(spell);
-        }
-
-        // TODO: swapspell cooldown
-        protected void SwapSpell()
-        {
-            if (Level.spellList.Count == 0)
-                return;
-            ChosenSpellIndex++;
-            Debug.WriteLine($"Chosen spell '{ChosenSpell}'.");
-        }
-
-        private Spell ActivateSpell(Type spellType, Func<bool> castCheck = null)
-        {
-            //if (SpellOnCd(spellType))
-            //    throw new Exception("Spell '$(spellType)' is on cold down.");
-            var spell = (Spell) Activator.CreateInstance(spellType);
-            if (Level.Energy < spell.EnergyUsage)
-                return null;
-            activeSpells[spellType].Add(spell);
-            // every spell should have different delay? same is ok for now since they're Energy bound
-            LastCastedSpell = spell;
-            spellsCd[spellType] = Level.ShotDelay;
-            spell.CastCheck = castCheck;
-            spell.OnDestroy += sender => DisactivateSpell(spell, false);
-            spell.Owner = this;
-            spell.name = spell.RoomConstricted
-                ? ((Game) engine.objects["game"]).CurrentFloor.CurrentRoom.name
-                : "" + name + "_spell" + spellCounter++;
-            spell.order = order + 1;
-            return spell;
-        }
-
-        public void DisactivateSpell(Spell spell, bool destroy = true)
-        {
-            if (!activeSpells[spell.GetType()].Contains(spell))
-                return;
-            //throw new Exception("Spell '$(spellType)' hasn't already been casted.");
-            activeSpells[spell.GetType()].Remove(spell);
-            if (destroy)
-                spell.Destroy();
         }
 
         internal void HpChanged()
@@ -269,7 +216,8 @@ namespace Futuridium
             var damage = new Damage(spell.Owner, enemy)
             {
                 Direction = spell.Direction,
-                DamageFunc = (Character ch0, Character ch1) => spell.CalculateDamage(ch1, 1f)
+                DamageFunc = (Character ch0, Character ch1) => spell.CalculateDamage(ch1, 1f),
+                Spell = spell
             };
             return DoDamage(enemy, damage);
         }
@@ -278,7 +226,8 @@ namespace Futuridium
         {
             if (damage == null)
             {
-                damage = new Damage(this, enemy) {DamageFunc = (Character ch0, Character ch1) => ch1.Level.attack};
+                // simple (closecombat usually) damage
+                damage = new Damage(this, enemy) {DamageFunc = (Character ch0, Character ch1) => ch1.Level.Attack};
             }
 
             enemy.GetDamage(this, damage);
@@ -292,27 +241,27 @@ namespace Futuridium
             LevelCheck(); // could happen that the player kills the enemy before he fully spawn (before Start "starts")
             enemy.LevelCheck();
             var dmg = damage.Caculate(this, enemy);
-            Level.Hp -= dmg; //enemy.level.attack;
+            Level.Hp -= dmg;
 
-            var floatingText = new FloatingText(this, "-" + dmg, "orange");
+            var floatingText = new FloatingText(this, "-" + (int) dmg, "orange", 8 + (int)(dmg / 15));
             engine.SpawnObject(
                 floatingText.name, floatingText
                 );
 
             // bounce back only if the damage is from a ranged enemy
-            if (!damage.IsCloseCombat)
-                BounceBack(damage.Direction);
+            if (damage.Spell != null && damage.Spell.KnockBack > 0f)
+                BounceBack(damage);
             return Level.Hp;
         }
 
-        private void BounceBack(Vector2 inverseDirection)
+        private void BounceBack(Damage damage)
         {
             var force = new Force
             {
                 Owner = this,
-                Direction = inverseDirection,
+                Direction = damage.Direction,
                 Step = BounceSpeed/BounceTime,
-                DestroyTimer = BounceTime
+                DestroyTimer = BounceTime * damage.Spell.KnockBack
             };
             forces.Add(force);
             engine.SpawnObject($"{name}_bouncebackforce_{forceCount++}", force);

@@ -16,7 +16,7 @@ namespace Futuridium
 
         public override void Start()
         {
-            var floor = ((Game) engine.objects["game"]).CurrentFloor;
+            var floor = Game.Instance.CurrentFloor;
             Debug.WriteLine("Map size: {0}.{1}", floor.MapWidth, floor.MapHeight);
 
             /*RectangleObject background = new RectangleObject ();
@@ -65,33 +65,32 @@ namespace Futuridium
             };
 
             SpawnBorders();
-
-            var game = (Game) engine.objects["game"];
-            var roomWidth = (engine.width - BlockW*2)/game.CurrentFloor.MapWidth;
-            var roomHeight = (engine.height - BlockH*2)/game.CurrentFloor.MapHeight;
-            if (game.CurrentFloor.MapWidth >= game.CurrentFloor.MapHeight)
+            
+            var roomWidth = (engine.width - BlockW*2)/Game.Instance.CurrentFloor.MapWidth;
+            var roomHeight = (engine.height - BlockH*2)/Game.Instance.CurrentFloor.MapHeight;
+            if (Game.Instance.CurrentFloor.MapWidth >= Game.Instance.CurrentFloor.MapHeight)
             {
                 roomHeight = (int) (roomWidth/1.77);
             }
-            else if (game.CurrentFloor.MapHeight > game.CurrentFloor.MapWidth)
+            else if (Game.Instance.CurrentFloor.MapHeight > Game.Instance.CurrentFloor.MapWidth)
             {
                 roomWidth = (int) (roomHeight*1.77);
             }
 
-            var paddingX = (engine.width - roomWidth*game.CurrentFloor.MapWidth - BlockW*2)/2 + BlockW;
-            var paddingY = (engine.height - roomHeight*game.CurrentFloor.MapHeight - BlockH*2)/2 + BlockH;
+            var paddingX = (engine.width - roomWidth*Game.Instance.CurrentFloor.MapWidth - BlockW*2)/2 + BlockW;
+            var paddingY = (engine.height - roomHeight*Game.Instance.CurrentFloor.MapHeight - BlockH*2)/2 + BlockH;
 
-            for (var bx = 0; bx < game.CurrentFloor.MapWidth; bx++)
+            for (var bx = 0; bx < Game.Instance.CurrentFloor.MapWidth; bx++)
             {
-                for (var by = 0; by < game.CurrentFloor.MapHeight; by++)
+                for (var by = 0; by < Game.Instance.CurrentFloor.MapHeight; by++)
                 {
-                    if (game.CurrentFloor.Rooms[bx, by] != null)
+                    if (Game.Instance.CurrentFloor.Rooms[bx, by] != null)
                     {
-                        //Room room = game.currentFloor.rooms [x, y];
+                        //Room room = Game.Instance.currentFloor.rooms [x, y];
                         var mapObj = new RectangleObject();
-                        mapObj.color = game.CurrentFloor.Rooms[bx, by] == game.CurrentFloor.CurrentRoom
+                        mapObj.color = Game.Instance.CurrentFloor.Rooms[bx, by] == Game.Instance.CurrentFloor.CurrentRoom
                             ? Color.Green
-                            : (game.CurrentFloor.Rooms[bx, by].Enemies.Count > 0 ? Color.SaddleBrown : Color.Wheat);
+                            : (Game.Instance.CurrentFloor.Rooms[bx, by].Enemies.Count > 0 ? Color.SaddleBrown : Color.Wheat);
                         mapObj.fill = true;
                         mapObj.x = paddingX + roomWidth*bx + roomHeight/10;
                         mapObj.y = paddingY + roomHeight*by + roomWidth/10;

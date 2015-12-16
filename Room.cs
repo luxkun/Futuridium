@@ -47,7 +47,7 @@ namespace Futuridium
             for (var i = 0; i < numberOfEnemies; i++)
             {
                 var enemy = charactersInfo.RandomEnemy(i + 1, level, RoomType, rnd);
-                enemy.OnDestroy += (object sender) => ((Game) engine.objects["game"]).CharacterDied((Character) sender);
+                enemy.OnDestroy += (object sender) => Game.Instance.CharacterDied((Character) sender);
                 randomEnemies.Add(enemy);
             }
             Enemies = randomEnemies;
@@ -60,8 +60,7 @@ namespace Futuridium
 
         public void SpawnEnemies()
         {
-            var game = (Game) engine.objects["game"];
-            var rnd = game.Random.GetRandom(name + "_spawn");
+            var rnd = Game.Instance.Random.GetRandom(name + "_spawn");
             var count = 0;
             foreach (var enemy in Enemies)
             {

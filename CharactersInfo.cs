@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using Aiv.Engine;
 
 namespace Futuridium
@@ -23,8 +24,8 @@ namespace Futuridium
             {
                 Level0 =
                 {
-                    maxHp = 60,
-                    attack = 40,
+                    MaxHp = 60,
+                    Attack = 40,
                     XpReward = 12,
                     Speed = 100f
                 }
@@ -35,8 +36,8 @@ namespace Futuridium
             {
                 Level0 =
                 {
-                    maxHp = 40,
-                    attack = 20,
+                    MaxHp = 40,
+                    Attack = 20,
                     XpReward = 8,
                     Speed = 120f
                 }
@@ -46,8 +47,8 @@ namespace Futuridium
             {
                 Level0 =
                 {
-                    maxHp = 200,
-                    attack = 50,
+                    MaxHp = 200,
+                    Attack = 50,
                     XpReward = 25,
                     Speed = 70f
                 }
@@ -65,8 +66,8 @@ namespace Futuridium
             {
                 Level0 =
                 {
-                    maxHp = 600,
-                    attack = 100,
+                    MaxHp = 600,
+                    Attack = 100,
                     XpReward = 100,
                     Speed = 100f
                 }
@@ -76,8 +77,8 @@ namespace Futuridium
             {
                 Level0 =
                 {
-                    maxHp = 500,
-                    attack = 70,
+                    MaxHp = 500,
+                    Attack = 70,
                     XpReward = 50,
                     Speed = 150
                 }
@@ -102,7 +103,6 @@ namespace Futuridium
 
         public override void Start()
         {
-            var game = (Game) engine.objects["game"];
             foreach (var enemiesList in enemies)
             {
                 foreach (var pair in enemiesList)
@@ -111,7 +111,7 @@ namespace Futuridium
                     if (enemy.UseAnimations)
                     {
                         enemy.currentSprite =
-                            (SpriteAsset) engine.GetAsset(game.SpritesAnimations[enemy.CharacterName][0]);
+                            (SpriteAsset) engine.GetAsset(Game.Instance.SpritesAnimations[enemy.CharacterName][0]);
                     }
                     else
                     {
@@ -129,19 +129,18 @@ namespace Futuridium
             //  e smettendo di sottrarre quando si arriva ad un numero negativo (o 0)
             //  si sceglie un nemico random
             // graficamente: |----Goblin----|-uGobl-|----Drowner---|F|
-            var range = rnd.NextDouble()*rndRanges[roomType];
+            var range = (float) rnd.NextDouble()*rndRanges[roomType];
+            var srange = range;
             var enemiesList = enemies[roomType].GetEnumerator();
             Enemy enemyInfo = null;
-            enemiesList.MoveNext();
-            for (var i = 0; range > 0.0 && i < enemies.Count; i++)
+            for (var i = 0; range >= 0f && i <= enemies.Count; i++)
             {
+                enemiesList.MoveNext();
                 range -= enemiesList.Current.Value;
                 enemyInfo = enemiesList.Current.Key;
-                if (i + 1 < enemies.Count)
-                    enemiesList.MoveNext();
             }
 
-            //Character enemyInfo = enemies [rnd.Next (0, enemies.Length)];
+            Debug.WriteLine($"Random enemy: {srange} to {range}, {rndRanges[roomType]} => {enemyInfo.CharacterName}");
             var result = (Enemy) enemyInfo.Clone();
             result.name += letters[counter - 1%letters.Length];
             result.Xp = result.LevelManager.levelUpTable[level].NeededXp;

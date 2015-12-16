@@ -87,7 +87,7 @@ namespace Futuridium
 
         public void RandomizeFloor(int minRoom, int maxRoom)
         {
-            var rnd = ((Game) engine.objects["game"]).Random.GetRandom("randomizeFloor_" + FloorIndex);
+            var rnd = Game.Instance.Random.GetRandom("randomizeFloor_" + FloorIndex);
 
             FloorBackgroundType = rnd.Next(0, GameBackground.AvailableBackgrounds);
 
@@ -200,47 +200,47 @@ namespace Futuridium
         {
             if (room != null && (CurrentRoom == null || CurrentRoom.Enemies.Count == 0))
             {
-                var game = (Game) engine.objects["game"];
+                Game.Instance.StartLoading();
                 Debug.Assert(RoomsList.Contains(room) &&
                              (CurrentRoom == null || CurrentRoom.Left == room || CurrentRoom.Right == room ||
                               CurrentRoom.Top == room || CurrentRoom.Bottom == room));
                 if (CurrentRoom != null)
                 {
-                    var playerWidth = Utils.FixBoxValue(game.Player.width);
-                    var playerHeight = Utils.FixBoxValue(game.Player.height);
+                    var playerWidth = Utils.FixBoxValue(Player.Instance.width);
+                    var playerHeight = Utils.FixBoxValue(Player.Instance.height);
                     if (CurrentRoom.Left == room)
                     {
-                        game.Player.x = game.engine.width - playerWidth -
+                        Player.Instance.x = Game.Instance.engine.width - playerWidth -
                                         Utils.FixBoxValue(CurrentRoom.GameBackground.RightDoorAsset.sprite.Width)
                                         - CurrentRoom.GameBackground.SpawnOnDoorPadding;
-                        game.Player.y = game.engine.height/2;
+                        //Player.Instance.y = Game.Instance.engine.height/2 - playerWidth/2;
                     }
                     else if (CurrentRoom.Right == room)
                     {
-                        game.Player.x = Utils.FixBoxValue(CurrentRoom.GameBackground.LeftDoorAsset.sprite.Width)
+                        Player.Instance.x = Utils.FixBoxValue(CurrentRoom.GameBackground.LeftDoorAsset.sprite.Width)
                                         + CurrentRoom.GameBackground.SpawnOnDoorPadding;
-                        game.Player.y = game.engine.height/2;
+                        //Player.Instance.y = Game.Instance.engine.height/2 - playerWidth/2;
                     }
                     else if (CurrentRoom.Top == room)
                     {
-                        game.Player.x = game.engine.width/2;
-                        game.Player.y = game.engine.height - playerHeight -
+                        //Player.Instance.x = Game.Instance.engine.width/2 - playerHeight/2;
+                        Player.Instance.y = Game.Instance.engine.height - playerHeight -
                                         Utils.FixBoxValue(CurrentRoom.GameBackground.BottomDoorAsset.sprite.Height)
                                         - CurrentRoom.GameBackground.SpawnOnDoorPadding;
                     }
                     else if (CurrentRoom.Bottom == room)
                     {
-                        game.Player.x = game.engine.width/2;
-                        game.Player.y = Utils.FixBoxValue(CurrentRoom.GameBackground.TopDoorAsset.sprite.Height)
+                        //Player.Instance.x = Game.Instance.engine.width/2 - playerHeight/2;
+                        Player.Instance.y = Utils.FixBoxValue(CurrentRoom.GameBackground.TopDoorAsset.sprite.Height)
                                         + CurrentRoom.GameBackground.SpawnOnDoorPadding;
                     }
                     else
                     {
+                        Game.Instance.StopLoading();
                         return false;
                     }
-                }
-                if (CurrentRoom != null)
                     Game.OnDestroyHelper(CurrentRoom);
+                }
 
                 CurrentRoom = room;
                 engine.SpawnObject(CurrentRoom.name, CurrentRoom);
@@ -250,6 +250,7 @@ namespace Futuridium
                 {
                     CurrentRoom.GameBackground.OpenDoors();
                 }
+                Game.Instance.StopLoading();
 
                 return true;
             }

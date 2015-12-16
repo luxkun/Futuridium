@@ -17,8 +17,8 @@ namespace Futuridium.Spells
             EnergyUsage = 3;
             EnergyUsagePerSecond = 5;
             laserLine = new DriveXRayObject();
-            laserLine.color = Color.WhiteSmoke;
             laserLine.width = 3;
+            KnockBack = 1.33f;
 
             OnStart += StartEvent;
             OnUpdate += UpdateEvent;
@@ -26,6 +26,8 @@ namespace Futuridium.Spells
             OnDestroy += DestroyEvent;
             OnStartCollisionCheck += StartCollisionEvent;
         }
+
+        public new static string spellName = "Drive-X";
 
         public override int X
         {
@@ -90,6 +92,8 @@ namespace Futuridium.Spells
 
         private void StartEvent(object sender)
         {
+            laserLine.color = Color.WhiteSmoke;
+            laserLine.SecondaryColor = DamageColor;
             engine.SpawnObject($"{name}_laserLine", laserLine);
             // generic hitbox to check if the tip of the laser is hitting something
             AddHitBox("mass", 0, 0, StepSize, StepSize);
@@ -97,7 +101,7 @@ namespace Futuridium.Spells
 
         private void UpdateEvent(object sender)
         {
-            if (((Game) engine.objects["game"]).MainWindow != "game")
+            if (Game.Instance.MainWindow != "game")
                 return;
 
             laserLine.points.Clear();
@@ -143,7 +147,7 @@ namespace Futuridium.Spells
 
         public override float CalculateDamage(Character enemy, float baseModifier)
         {
-            return Owner.Level.attack*DamageModifer*baseModifier;
+            return Owner.Level.Attack*DamageModifer*baseModifier;
         }
     }
 
@@ -153,13 +157,15 @@ namespace Futuridium.Spells
 
         public int Waves { get; set; } = 5;
 
+        public Color SecondaryColor { get; set; }
+
         public override void Draw()
         {
             base.Draw();
             if (secondaryPen == null)
             {
                 pen.Width = 4;
-                secondaryPen = new Pen(Color.Gray, pen.Width/2) {DashCap = DashCap.Round};
+                secondaryPen = new Pen(SecondaryColor, pen.Width/2) {DashCap = DashCap.Round};
                 pen.DashCap = DashCap.Round;
             }
             for (var i = 1; i < points.Count; i++)
