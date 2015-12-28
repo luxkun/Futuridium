@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using Futuridium.Spells;
 
 namespace Futuridium
 {
@@ -8,6 +7,7 @@ namespace Futuridium
     {
         // Hp
         private float hp;
+
         public float Hp
         {
             get { return hp; }
@@ -21,6 +21,7 @@ namespace Futuridium
 
         // Energy
         private float energy;
+
         public float Energy
         {
             get { return energy; }
@@ -33,6 +34,7 @@ namespace Futuridium
         }
 
         private long neededXp = 100;
+
         public long NeededXp
         {
             get { return neededXp; }
@@ -105,7 +107,7 @@ namespace Futuridium
 
         public Level Clone()
         {
-            var clone = (Level) MemberwiseClone();
+            var clone = (Level)MemberwiseClone();
             return clone;
         }
     }
@@ -131,22 +133,22 @@ namespace Futuridium
                 var lvl = new Level(this)
                 {
                     level = level,
-                    MaxHp = (int) (level0.MaxHp*(1 + level/6f)),
-                    MaxEnergy = (int) (level0.MaxEnergy*(1 + level/6f)),
-                    XpReward = level0.XpReward*level*level,
-                    Attack = (int) (level0.Attack*(1 + level/4f)),
-                    Speed = (float) (level0.Speed*(1 + level/15f)),
-                    SpellCd = (float) (level0.SpellCd*(1 - level/100f)),
-                    SpellSpeed = (float) (level0.SpellSpeed*(1 + level/6f)),
-                    SpellRange = (int) (level0.SpellRange*(1 + level/10f)),
-                    NeededXp = level0.NeededXp*level*level*level,
+                    MaxHp = (int)(level0.MaxHp * (1 + level * 0.1f)),
+                    MaxEnergy = (int)(level0.MaxEnergy * (1 + level * 0.1f)),
+                    XpReward = level0.XpReward * level * level,
+                    Attack = (int)(level0.Attack * (1 + level * 0.11f)),
+                    Speed = (float)(level0.Speed * (1 + level * 0.025f)),
+                    SpellCd = (float)(level0.SpellCd * Math.Min(0.25f, 1 - level * 0.025f)),
+                    SpellSpeed = (float)(level0.SpellSpeed * (1 + level * 0.12f)),
+                    SpellRange = (int)(level0.SpellRange * (1 + level * 0.12f)),
+                    NeededXp = (int)(level0.NeededXp * level * level * 3f),
                     spellList = level0.spellList
                 };
                 lvl.Hp = lvl.MaxHp;
                 lvl.Energy = lvl.MaxEnergy;
                 // x^3
                 // x^2
-                lvl.SpellSize = (int) (level0.SpellSize*(1 + level/10.0));
+                lvl.SpellSize = (int)(level0.SpellSize * (1 + level / 10.0));
                 levelUpTable[level] = lvl;
             }
             level0.NeededXp = 0;

@@ -1,7 +1,7 @@
-﻿using System;
+﻿using Aiv.Engine;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using Aiv.Engine;
 
 namespace Futuridium
 {
@@ -19,22 +19,6 @@ namespace Futuridium
         {
             Rooms = rooms;
         }
-
-        public Room CurrentRoom { get; private set; }
-
-        public Room FirstRoom { get; private set; }
-
-        public int FloorBackgroundType { get; set; }
-
-        public int FloorIndex { get; }
-
-        public int MapHeight { get; private set; }
-
-        public int MapWidth { get; private set; }
-
-        public Room[,] Rooms { get; private set; }
-
-        public List<Room> RoomsList { get; }
 
         private void CalcolateMapSize()
         {
@@ -85,27 +69,6 @@ namespace Futuridium
             Rooms = newRooms;
         }
 
-        public void RandomizeFloor(int minRoom, int maxRoom)
-        {
-            var rnd = Game.Instance.Random.GetRandom("randomizeFloor_" + FloorIndex);
-
-            FloorBackgroundType = rnd.Next(0, GameBackground.AvailableBackgrounds);
-
-            var numberOfRooms = rnd.Next(minRoom, maxRoom);
-            var minEnemies = (int) (1*((FloorIndex + 2)/2.0));
-            var maxEnemies = (int) (5*((FloorIndex + 2)/2.0));
-
-            Debug.WriteLine("Randomizing floor, number of rooms: {0} ; background type: {1}", numberOfRooms,
-                FloorBackgroundType);
-            Rooms = new Room[numberOfRooms, numberOfRooms]; // worst-case linear floor
-
-            RandomRooms(numberOfRooms, minEnemies, maxEnemies, rnd);
-            foreach (var room in RoomsList)
-                CheckRoomParents(room.RoomIndex);
-
-            CalcolateMapSize();
-        }
-
         private void CheckRoomParents(Tuple<int, int> roomIndex)
         {
             var room = Rooms[roomIndex.Item1, roomIndex.Item2];
@@ -142,9 +105,9 @@ namespace Futuridium
             {
                 throw new Exception("Floor.RandomRooms can be called only once per floor.");
             }
-            var charactersInfo = (CharactersInfo) engine.objects["charactersInfo"];
-            var newRoomIndex = Tuple.Create(Rooms.GetLength(0)/2, Rooms.GetLength(1)/2);
-            FirstRoom = new Room(null, newRoomIndex, this) {RoomType = 0};
+            var charactersInfo = (CharactersInfo)engine.objects["charactersInfo"];
+            var newRoomIndex = Tuple.Create(Rooms.GetLength(0) / 2, Rooms.GetLength(1) / 2);
+            FirstRoom = new Room(null, newRoomIndex, this) { RoomType = 0 };
             FirstRoom.RandomizeRoom(0, 0, FloorIndex, rnd, charactersInfo);
             Rooms[newRoomIndex.Item1, newRoomIndex.Item2] = FirstRoom;
             RoomsList.Add(FirstRoom);
@@ -183,7 +146,7 @@ namespace Futuridium
                             Debug.WriteLine("BOSS ROOM GEN.");
                             roomType = 1;
                         }
-                        var newRoom = new Room(null, newRoomIndex, this) {RoomType = roomType};
+                        var newRoom = new Room(null, newRoomIndex, this) { RoomType = roomType };
                         newRoom.RandomizeRoom(roomType == 1 ? 1 : minEnemies, roomType == 1 ? 1 : maxEnemies, FloorIndex,
                             rnd, charactersInfo);
                         Rooms[newRoomIndex.Item1, newRoomIndex.Item2] = newRoom;
@@ -206,11 +169,14 @@ namespace Futuridium
                               CurrentRoom.Top == room || CurrentRoom.Bottom == room));
                 if (CurrentRoom != null)
                 {
+                    // TODO: other rooms offset
+                    var roomWidth = Game.Instance.CurrentFloor.CurrentRoom.Width;
+                    var roomHeight = Game.Instance.CurrentFloor.CurrentRoom.Height;
                     var playerWidth = Utils.FixBoxValue(Player.Instance.width);
                     var playerHeight = Utils.FixBoxValue(Player.Instance.height);
                     if (CurrentRoom.Left == room)
                     {
-                        Player.Instance.x = Game.Instance.engine.width - playerWidth -
+                        Player.Instance.x = roomWidth - playerWidth -
                                         Utils.FixBoxValue(CurrentRoom.GameBackground.RightDoorAsset.sprite.Width)
                                         - CurrentRoom.GameBackground.SpawnOnDoorPadding;
                         //Player.Instance.y = Game.Instance.engine.height/2 - playerWidth/2;
@@ -224,7 +190,7 @@ namespace Futuridium
                     else if (CurrentRoom.Top == room)
                     {
                         //Player.Instance.x = Game.Instance.engine.width/2 - playerHeight/2;
-                        Player.Instance.y = Game.Instance.engine.height - playerHeight -
+                        Player.Instance.y = roomHeight - playerHeight -
                                         Utils.FixBoxValue(CurrentRoom.GameBackground.BottomDoorAsset.sprite.Height)
                                         - CurrentRoom.GameBackground.SpawnOnDoorPadding;
                     }
@@ -256,5 +222,42 @@ namespace Futuridium
             }
             return false;
         }
+
+        public void RandomizeFloor(int minRoom, int maxRoom)
+        {
+            var rnd = Game.Instance.Random.GetRandom("randomizeFloor_" + FloorIndex);
+
+            FloorBackgroundType = rnd.Next(0, GameBackground.AvailableBackgrounds);
+
+            var numberOfRooms = rnd.Next(minRoom, maxRoom);
+            var minEnemies = (int)(4 * ((FloorIndex + 5) / 10f));
+            var maxEnemies = (int)(8 * ((FloorIndex + 5) / 9f));
+
+            Debug.WriteLine("Randomizing floor, number of rooms: {0} ; background type: {1}", numberOfRooms,
+                FloorBackgroundType);
+            Rooms = new Room[numberOfRooms, numberOfRooms]; // worst-case linear floor
+
+            RandomRooms(numberOfRooms, minEnemies, maxEnemies, rnd);
+            foreach (var room in RoomsList)
+                CheckRoomParents(room.RoomIndex);
+
+            CalcolateMapSize();
+        }
+
+        public Room CurrentRoom { get; private set; }
+
+        public Room FirstRoom { get; private set; }
+
+        public int FloorBackgroundType { get; set; }
+
+        public int FloorIndex { get; }
+
+        public int MapHeight { get; private set; }
+
+        public int MapWidth { get; private set; }
+
+        public Room[,] Rooms { get; private set; }
+
+        public List<Room> RoomsList { get; }
     }
 }

@@ -1,18 +1,19 @@
-﻿using System;
+﻿using Aiv.Engine;
+using OpenTK.Input;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
-using Aiv.Engine;
-using OpenTK.Input;
 
 namespace Futuridium
 {
-    class Game : GameObject
+    internal class Game : GameObject
     {
         private static readonly float GameOverDelay = 1f;
         private static readonly float WindowChangeDelay = 0.5f;
+
         // T (triangle) -> int etc.
         private static readonly Dictionary<string, int> ThrustmasterConfig = new Dictionary<string, int>
         {
@@ -36,28 +37,26 @@ namespace Futuridium
         {
             // tutti buggati tranne Lxy e Rxy
             {"T", 3},
-            {"C", 2},
-            {"S", 0},
-            {"X", 1},
-            {"RB", -1},
-            {"LB", -1},
+            {"C", 1},
+            {"S", 2},
+            {"X", 0},
+            {"RB", 4},
+            {"LB", 5},
             {"RT", -1},
             {"LT", -1},
-            {"SL", 8},
-            {"ST", 9},
+            {"SL", 6},
+            {"ST", 7},
             {"Lx", 0},
             {"Ly", 1},
             {"Rx", 3},
             {"Ry", 4}
         };
 
-        private static readonly string[] joystickButtons = {"T", "C", "S", "X", "SL", "ST"};
+        public static readonly string[] JoystickButtons = { "T", "C", "S", "X", "SL", "ST" };
         private int floorIndex = -1;
-        private float gameOverTimer;
         //public List<Floor> floors;
 
         private string lastWindow;
-        private float lastWindowChange;
 
         public Floor CurrentFloor { get; private set; }
 
@@ -71,8 +70,6 @@ namespace Futuridium
 
         public RandomSeed Random { get; private set; }
 
-        public Dictionary<string, List<string>> SpritesAnimations { get; set; }
-
         public bool UsingOpenTK { get; set; }
 
         private static Game instance;
@@ -81,7 +78,6 @@ namespace Futuridium
         private Game()
         {
             Random = new RandomSeed(Utils.RandomString(5));
-            SpritesAnimations = new Dictionary<string, List<string>>();
 
             JoyStickConfig = Ds4Config;
         }
@@ -113,8 +109,9 @@ namespace Futuridium
             floorIndex++;
             CurrentFloor = new Floor(floorIndex);
             engine.SpawnObject(CurrentFloor.name, CurrentFloor);
-            CurrentFloor.RandomizeFloor((int) (6*Math.Max(1, (floorIndex + 1)/5.0)),
-                (int) (8*Math.Max(1, (floorIndex + 1)/4.0)));
+            var minRooms = (int)(5 * ((floorIndex + 9) / 10f));
+            var maxRooms = (int)(8 * ((floorIndex + 9) / 9f));
+            CurrentFloor.RandomizeFloor(minRooms, maxRooms);
             CurrentFloor.OpenRoom(CurrentFloor.FirstRoom);
 
             StopLoading();
@@ -122,20 +119,21 @@ namespace Futuridium
 
         public override void Start()
         {
+            base.Start();
             GameBackground.Initialize(engine);
 
             engine.SpawnObject(new CharactersInfo());
 
-            var logoObj = new SpriteObject {currentSprite = (SpriteAsset) engine.GetAsset("logo")};
-            logoObj.x = engine.width/2 - logoObj.width/2;
-            logoObj.y = engine.height/2 - logoObj.height/2;
+            var logoObj = new SpriteObject { currentSprite = (SpriteAsset)engine.GetAsset("logo") };
+            logoObj.x = engine.width / 2 - logoObj.width / 2;
+            logoObj.y = engine.height / 2 - logoObj.height / 2;
             engine.SpawnObject("logo", logoObj);
             MainWindow = "logo";
         }
 
         private void StartGame()
         {
-            OnDestroyHelper((SpriteObject) engine.objects["logo"]);
+            OnDestroyHelper((SpriteObject)engine.objects["logo"]);
             MainWindow = "game";
 
             engine.SpawnObject(Player.Instance);
@@ -174,14 +172,15 @@ namespace Futuridium
                 return;
             }
             var escapeFloorName = $"escape_floor_{CurrentFloor.FloorIndex}";
-            if (!engine.objects.ContainsKey(escapeFloorName)) { 
+            if (!engine.objects.ContainsKey(escapeFloorName))
+            {
                 var escapeFloorObj = new SpriteObject
                 {
-                    name = escapeFloorName, 
+                    name = escapeFloorName,
                     order = 5,
-                    x = engine.width/2,
-                    y = engine.height/2,
-                    currentSprite = (SpriteAsset) engine.GetAsset("escape_floor")
+                    x = engine.width / 2,
+                    y = engine.height / 2,
+                    currentSprite = (SpriteAsset)engine.GetAsset("escape_floor")
                 };
                 escapeFloorObj.AddHitBox(escapeFloorName, 0, 0, 32, 32);
                 engine.SpawnObject(escapeFloorObj);
@@ -196,7 +195,7 @@ namespace Futuridium
             {
                 if (engine.joysticks[i] != null)
                 {
-                    Joystick = (TKJoystick) engine.joysticks[i];
+                    Joystick = (TKJoystick)engine.joysticks[i];
                     break;
                 }
             }
@@ -252,56 +251,56 @@ namespace Futuridium
 
         private void ManageControls()
         {
-            if (lastWindowChange > 0)
-                lastWindowChange -= deltaTime;
-            if (!(lastWindowChange <= 0)) return;
+            if (Timer.Get("lastWindowChange") > 0f) return;
             var startingWindow = MainWindow;
 
             switch (MainWindow)
             {
                 case "game":
-                    if (engine.IsKeyDown((int) Key.M) ||
+                    if (engine.IsKeyDown((int)Key.M) ||
                         (Joystick != null && Joystick.GetButton(JoyStickConfig["SL"])))
                         OpenMap();
-                    else if (engine.IsKeyDown((int) Key.Escape) ||
+                    else if (engine.IsKeyDown((int)Key.Escape) ||
                              (Joystick != null && Joystick.GetButton(JoyStickConfig["ST"])))
                         Pause();
                     break;
+
                 case "map":
-                    if (engine.IsKeyDown((int) Key.M) || engine.IsKeyDown((int) Key.Escape) ||
+                    if (engine.IsKeyDown((int)Key.M) || engine.IsKeyDown((int)Key.Escape) ||
                         (Joystick != null && Joystick.GetButton(JoyStickConfig["SL"])))
                         CloseMap();
                     break;
+
                 case "pause":
-                    if (engine.IsKeyDown((int) Key.P) || engine.IsKeyDown((int) Key.Escape) ||
+                    if (engine.IsKeyDown((int)Key.P) || engine.IsKeyDown((int)Key.Escape) ||
                         (Joystick != null && Joystick.GetButton(JoyStickConfig["ST"])))
                         UnPause();
                     break;
+
                 case "logo":
                     if (AnyKeyDown() || (Joystick != null && AnyJoystickButtonPressed()))
                         StartGame();
                     break;
+
                 case "gameover":
-                    if (gameOverTimer > 0)
-                        gameOverTimer -= deltaTime;
-                    if (gameOverTimer <= 0 && (AnyKeyDown() || (Joystick != null && AnyJoystickButtonPressed())))
+                    if (Timer.Get("gameOverTimer") <= 0 && (AnyKeyDown() || (Joystick != null && AnyJoystickButtonPressed())))
                         engine.isGameRunning = false;
                     break;
             }
             if (startingWindow != MainWindow)
-                lastWindowChange = WindowChangeDelay;
+                Timer.Set("lastWindowChange", WindowChangeDelay);
         }
 
         public bool AnyJoystickButtonPressed()
         {
-            return joystickButtons.Any(button => Joystick.GetButton(JoyStickConfig[button]));
+            return JoystickButtons.Any(button => Joystick.GetButton(JoyStickConfig[button]));
         }
 
         public bool AnyKeyDown()
         {
-            foreach (Key key in Enum.GetValues(typeof (Key)))
+            foreach (Key key in Enum.GetValues(typeof(Key)))
             {
-                if (engine.IsKeyDown((int) key))
+                if (engine.IsKeyDown((int)key))
                     return true;
             }
             return false;
@@ -319,17 +318,18 @@ namespace Futuridium
                 order = 10
             };
             engine.SpawnObject("gameover_background", background);
-            var gameOver = new TextObject("Phosphate", 80, "red") {text = "GAMEOVER"};
+            var gameOver = new TextObject("Phosphate", 80, "red") { text = "GAMEOVER" };
             var gameOverSize = TextRenderer.MeasureText(gameOver.text, gameOver.font);
-            gameOver.x = engine.width/2 - gameOverSize.Width/2;
-            gameOver.y = engine.height/2 - gameOverSize.Height/2;
+            gameOver.x = engine.width / 2 - gameOverSize.Width / 2;
+            gameOver.y = engine.height / 2 - gameOverSize.Height / 2;
             gameOver.order = 11;
             engine.SpawnObject("gameover_text", gameOver);
-            gameOverTimer = GameOverDelay;
+            Timer.Set("gameOverTimer", GameOverDelay);
         }
 
         public override void Update()
         {
+            base.Update();
             ManageJoystick();
             ManageControls();
             if (MainWindow == "game")

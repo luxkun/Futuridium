@@ -1,6 +1,6 @@
-﻿using System;
+﻿using Aiv.Engine;
+using System;
 using System.Diagnostics;
-using Aiv.Engine;
 
 namespace Futuridium
 {
@@ -28,7 +28,8 @@ namespace Futuridium
 
         public override void Start()
         {
-            Blocks = new GameObject[engine.width/BlockW + 1, engine.height/BlockH + 1];
+            base.Start();
+            Blocks = new GameObject[Game.Instance.CurrentFloor.CurrentRoom.Width / BlockW + 1, Game.Instance.CurrentFloor.CurrentRoom.Height / BlockH + 1];
         }
 
         private void SpawnBlock(int bx, int by)
@@ -41,7 +42,7 @@ namespace Futuridium
             }
             else if (BlockAsset != null)
             {
-                var blockSprite = (SpriteObject) ((SpriteObject) engine.objects[$"cache_{BlockAsset.name}"]).Clone();
+                var blockSprite = (SpriteObject)((SpriteObject)engine.objects[$"cache_{BlockAsset.name}"]).Clone();
                 block = blockSprite;
             }
             else
@@ -59,8 +60,8 @@ namespace Futuridium
                 Blocks[bx, by] = spriteObj;
                 Blocks[bx, by].name = blockName;
                 //blocks [x, y].currentSprite = (SpriteAsset) engine.GetAsset ("block");
-                Blocks[bx, by].x = bx*BlockW;
-                Blocks[bx, by].y = by*BlockH;
+                Blocks[bx, by].x = bx * BlockW;
+                Blocks[bx, by].y = by * BlockH;
                 Blocks[bx, by].order = order;
                 if (BlocksWithHitBox)
                     Blocks[bx, by].AddHitBox(blockName, 0, 0, BlockW, BlockH);
@@ -83,22 +84,24 @@ namespace Futuridium
             Debug.WriteLine("Spawning borders.");
             var by = 0;
             int bx;
-            for (bx = 0; bx < engine.width/BlockW; bx++)
+            var width = Game.Instance.CurrentFloor.CurrentRoom.Width;
+            var height = Game.Instance.CurrentFloor.CurrentRoom.Height;
+            for (bx = 0; bx < width / BlockW; bx++)
             {
                 SpawnBlock(bx, by);
             }
-            by = (engine.height - 1)/BlockH;
-            for (bx = 0; bx < engine.width/BlockW; bx++)
+            by = (height - 1) / BlockH;
+            for (bx = 0; bx < width / BlockW; bx++)
             {
                 SpawnBlock(bx, by);
             }
             bx = 0;
-            for (by = 0; by < engine.height/BlockH; by++)
+            for (by = 0; by < height / BlockH; by++)
             {
                 SpawnBlock(bx, by);
             }
-            bx = (engine.width - 1)/BlockW;
-            for (by = 0; by < engine.height/BlockH; by++)
+            bx = (width - 1) / BlockW;
+            for (by = 0; by < height / BlockH; by++)
             {
                 SpawnBlock(bx, by);
             }

@@ -1,12 +1,14 @@
-﻿using System;
+﻿using Aiv.Engine;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using Aiv.Engine;
 
 namespace Futuridium
 {
     public class Room : GameObject
     {
+        private readonly int spawnPadding = 50;
+
         public Room(List<Enemy> enemies, Tuple<int, int> roomIndex, Floor floor)
         {
             name = $"Room_{floor.FloorIndex}_{roomIndex.Item1}.{roomIndex.Item2}";
@@ -33,8 +35,15 @@ namespace Futuridium
 
         public List<Enemy> Enemies { get; private set; }
 
+        public int Width { get; set; }
+        public int Height { get; set; }
+
         public override void Start()
         {
+            base.Start();
+            // TOOD: change
+            Width = engine.width;
+            Height = engine.height;
             //engine.SpawnObject(string.Format("room_{0}", name), background);
             GameBackground = new GameBackground(Floor.FloorBackgroundType, this);
             engine.SpawnObject(GameBackground.name, GameBackground);
@@ -47,7 +56,7 @@ namespace Futuridium
             for (var i = 0; i < numberOfEnemies; i++)
             {
                 var enemy = charactersInfo.RandomEnemy(i + 1, level, RoomType, rnd);
-                enemy.OnDestroy += (object sender) => Game.Instance.CharacterDied((Character) sender);
+                enemy.OnDestroy += (object sender) => Game.Instance.CharacterDied((Character)sender);
                 randomEnemies.Add(enemy);
             }
             Enemies = randomEnemies;
@@ -77,8 +86,8 @@ namespace Futuridium
                 enemy.AddHitBox("tmp_enemy_" + name, 0, 0, enemy.width, enemy.height);
                 do
                 {
-                    enemy.x = rnd.Next(50, engine.width - enemy.width - 5);
-                    enemy.y = rnd.Next(0, engine.height - enemy.height - 5);
+                    enemy.x = rnd.Next(GameBackground.WallWidth + spawnPadding, Width - enemy.width - spawnPadding);
+                    enemy.y = rnd.Next(GameBackground.WallHeight + spawnPadding, Height - enemy.height - spawnPadding);
                 } while (enemy.CheckCollisions().Count > 0);
                 enemy.hitBoxes.Clear();
             }

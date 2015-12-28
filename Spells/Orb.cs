@@ -1,6 +1,6 @@
-﻿using System;
-using Aiv.Engine;
+﻿using Aiv.Engine;
 using OpenTK;
+using System;
 
 namespace Futuridium.Spells
 {
@@ -15,11 +15,11 @@ namespace Futuridium.Spells
 
         public new static string spellName = "Energy Orb";
 
-        public Orb()
+        public Orb(SpellManager spellManager, Character owner) : base(spellManager, owner)
         {
             ActivatedSpell = true;
-            EnergyUsage = 0;
-            EnergyUsagePerSecond = 1;
+            BaseEnergyUsage = 0;
+            BaseEnergyUsagePerSecond = 1;
             HitsDelay = 0.075f; // :>
             KnockBack = 0f;
 
@@ -46,7 +46,6 @@ namespace Futuridium.Spells
             get { return body.fill; }
             set { body.fill = value; }
         }
-
 
         public override int order
         {
@@ -91,7 +90,6 @@ namespace Futuridium.Spells
             body.Destroy();
         }
 
-
         private void StartEvent(object sender)
         {
             // TODO: random startx
@@ -101,10 +99,10 @@ namespace Futuridium.Spells
             Radius = Owner.Level.SpellSize;
             engine.SpawnObject(body);
 
-            AddHitBox("mass", 0, 0, Radius*2, Radius*2);
+            AddHitBox("mass", 0, 0, Radius * 2, Radius * 2);
         }
 
-        protected override void NextMove()
+        public override void NextMove()
         {
             // rotate
             X = Owner.x;
@@ -132,7 +130,7 @@ namespace Futuridium.Spells
             {
                 orbStretching = false;
             }
-            orbStretchStep += OrbStretch/OrbStretchSteps*(orbStretching ? 1 : -1);
+            orbStretchStep += OrbStretch / OrbStretchSteps * (orbStretching ? 1 : -1);
         }
 
         private void UpdateEvent(object sender)

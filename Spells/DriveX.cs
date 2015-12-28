@@ -1,9 +1,9 @@
-﻿using System;
+﻿using Aiv.Engine;
+using OpenTK;
+using System;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Linq;
-using Aiv.Engine;
-using OpenTK;
 
 namespace Futuridium.Spells
 {
@@ -12,13 +12,14 @@ namespace Futuridium.Spells
         // starts from Owner.x/y and goes to x,y
         private readonly DriveXRayObject laserLine;
 
-        public DriveX()
+        public DriveX(SpellManager spellManager, Character owner) : base(spellManager, owner)
         {
-            EnergyUsage = 3;
-            EnergyUsagePerSecond = 5;
+            BaseEnergyUsage = 3;
+            BaseEnergyUsagePerSecond = 5;
             laserLine = new DriveXRayObject();
             laserLine.width = 3;
             KnockBack = 1.33f;
+            UpdateDirection = true;
 
             OnStart += StartEvent;
             OnUpdate += UpdateEvent;
@@ -65,7 +66,7 @@ namespace Futuridium.Spells
 
         public override float HitsDelay
         {
-            get { return base.HitsDelay*0.66f; }
+            get { return base.HitsDelay * 0.66f; }
             set { base.HitsDelay = value; }
         }
 
@@ -79,9 +80,9 @@ namespace Futuridium.Spells
             var hitbox = hitBoxes["mass"];
             var wallSize = GameBackground.WallWidth;
             // why is this needed?
-            if (hitbox.x + X < wallSize || hitbox.y + Y < wallSize ||
-                hitbox.x + X > engine.width - wallSize || hitbox.y + Y > engine.height - wallSize)
-                collisionCheckResult = 2;
+            //if (hitbox.x + X < wallSize || hitbox.y + Y < wallSize ||
+            //    hitbox.x + X > engine.width - wallSize || hitbox.y + Y > engine.height - wallSize)
+            //    collisionCheckResult = 2;
         }
 
         // laser is killed when the casting key is unpressed
@@ -110,6 +111,7 @@ namespace Futuridium.Spells
 
         private void UpdateLaserPoints()
         {
+            // TODO: perlin noise invece che random, lighter
             // the higher the lower precision
             var lastPoint = new Vector2();
             if (laserLine.points.Count > 0)
@@ -117,11 +119,11 @@ namespace Futuridium.Spells
                 var lastPointTuple = laserLine.points.Last();
                 lastPoint = new Vector2(lastPointTuple.Item1, lastPointTuple.Item2);
             }
-            var step = new Vector2(Direction.X, Direction.Y).Normalized()*StepSize;
+            var step = new Vector2(Direction.X, Direction.Y).Normalized() * StepSize;
 
-            var rnd = new Random((int) DateTime.Now.Ticks);
-            var halfStepSize = StepSize/2;
-            var stepModifier = (int) (StepSize*0.66);
+            var rnd = new Random((int)DateTime.Now.Ticks);
+            var halfStepSize = StepSize / 2;
+            var stepModifier = (int)(StepSize * 0.66);
             while (laserLine.points.Count == 0 || !ManageCollisions())
             {
                 var newPoint = new Vector2(lastPoint.X, lastPoint.Y);
@@ -130,15 +132,15 @@ namespace Futuridium.Spells
                 newPoint.Y += rnd.Next(-stepModifier, stepModifier + 1);
                 if (newPoint != lastPoint)
                 {
-                    laserLine.points.Add(Tuple.Create((int) newPoint.X, (int) newPoint.Y));
+                    laserLine.points.Add(Tuple.Create((int)newPoint.X, (int)newPoint.Y));
                     lastPoint = newPoint;
                 }
-                hitBoxes["mass"].x = (int) newPoint.X - halfStepSize;
-                hitBoxes["mass"].y = (int) newPoint.Y - halfStepSize;
+                hitBoxes["mass"].x = (int)newPoint.X - halfStepSize;
+                hitBoxes["mass"].y = (int)newPoint.Y - halfStepSize;
             }
         }
 
-        protected override void NextMove()
+        public override void NextMove()
         {
             // the laser doesn't move
             X = Owner.x + xOffset;
@@ -147,7 +149,7 @@ namespace Futuridium.Spells
 
         public override float CalculateDamage(Character enemy, float baseModifier)
         {
-            return Owner.Level.Attack*DamageModifer*baseModifier;
+            return Owner.Level.Attack * DamageModifer * baseModifier;
         }
     }
 
@@ -165,7 +167,7 @@ namespace Futuridium.Spells
             if (secondaryPen == null)
             {
                 pen.Width = 4;
-                secondaryPen = new Pen(SecondaryColor, pen.Width/2) {DashCap = DashCap.Round};
+                secondaryPen = new Pen(SecondaryColor, pen.Width / 2) { DashCap = DashCap.Round };
                 pen.DashCap = DashCap.Round;
             }
             for (var i = 1; i < points.Count; i++)
@@ -176,9 +178,9 @@ namespace Futuridium.Spells
                 for (var s = 0; s < Waves && (s == 0 || i > 5); s++)
                 {
                     engine.workingGraphics.DrawLine(
-                        s == 0 ? pen : secondaryPen, x + points[i - 1].Item1 + deltaX*s,
-                        y + points[i - 1].Item2 + deltaY*s,
-                        x + points[i].Item1 + deltaX*s, y + points[i].Item2 + deltaY*s);
+                        s == 0 ? pen : secondaryPen, x + points[i - 1].Item1 + deltaX * s,
+                        y + points[i - 1].Item2 + deltaY * s,
+                        x + points[i].Item1 + deltaX * s, y + points[i].Item2 + deltaY * s);
                 }
             }
         }

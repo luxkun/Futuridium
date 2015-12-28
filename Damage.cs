@@ -1,6 +1,6 @@
-﻿using System;
-using Futuridium.Spells;
+﻿using Futuridium.Spells;
 using OpenTK;
+using System;
 
 namespace Futuridium
 {
@@ -20,7 +20,7 @@ namespace Futuridium
             set
             {
                 direction = value;
-                InverseDirection = value*-1;
+                InverseDirection = value * -1;
             }
         }
 

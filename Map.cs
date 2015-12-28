@@ -1,6 +1,6 @@
-﻿using System.Diagnostics;
+﻿using Aiv.Engine;
+using System.Diagnostics;
 using System.Drawing;
-using Aiv.Engine;
 
 namespace Futuridium
 {
@@ -16,6 +16,7 @@ namespace Futuridium
 
         public override void Start()
         {
+            base.Start();
             var floor = Game.Instance.CurrentFloor;
             Debug.WriteLine("Map size: {0}.{1}", floor.MapWidth, floor.MapHeight);
 
@@ -30,10 +31,6 @@ namespace Futuridium
             borders = new MapBorders();
             engine.SpawnObject("map_borders", borders);
         }
-
-        public override void Update()
-        {
-        }
     }
 
     public class MapBorders : Background
@@ -45,6 +42,7 @@ namespace Futuridium
 
         public override void Start()
         {
+            base.Start();
             name = "map_borders";
             BlocksWithHitBox = false;
 
@@ -65,20 +63,20 @@ namespace Futuridium
             };
 
             SpawnBorders();
-            
-            var roomWidth = (engine.width - BlockW*2)/Game.Instance.CurrentFloor.MapWidth;
-            var roomHeight = (engine.height - BlockH*2)/Game.Instance.CurrentFloor.MapHeight;
+
+            var roomWidth = (engine.width - BlockW * 2) / Game.Instance.CurrentFloor.MapWidth;
+            var roomHeight = (engine.height - BlockH * 2) / Game.Instance.CurrentFloor.MapHeight;
             if (Game.Instance.CurrentFloor.MapWidth >= Game.Instance.CurrentFloor.MapHeight)
             {
-                roomHeight = (int) (roomWidth/1.77);
+                roomHeight = (int)(roomWidth / 1.77);
             }
             else if (Game.Instance.CurrentFloor.MapHeight > Game.Instance.CurrentFloor.MapWidth)
             {
-                roomWidth = (int) (roomHeight*1.77);
+                roomWidth = (int)(roomHeight * 1.77);
             }
 
-            var paddingX = (engine.width - roomWidth*Game.Instance.CurrentFloor.MapWidth - BlockW*2)/2 + BlockW;
-            var paddingY = (engine.height - roomHeight*Game.Instance.CurrentFloor.MapHeight - BlockH*2)/2 + BlockH;
+            var paddingX = (engine.width - roomWidth * Game.Instance.CurrentFloor.MapWidth - BlockW * 2) / 2 + BlockW;
+            var paddingY = (engine.height - roomHeight * Game.Instance.CurrentFloor.MapHeight - BlockH * 2) / 2 + BlockH;
 
             for (var bx = 0; bx < Game.Instance.CurrentFloor.MapWidth; bx++)
             {
@@ -92,10 +90,10 @@ namespace Futuridium
                             ? Color.Green
                             : (Game.Instance.CurrentFloor.Rooms[bx, by].Enemies.Count > 0 ? Color.SaddleBrown : Color.Wheat);
                         mapObj.fill = true;
-                        mapObj.x = paddingX + roomWidth*bx + roomHeight/10;
-                        mapObj.y = paddingY + roomHeight*by + roomWidth/10;
-                        mapObj.width = roomWidth - roomWidth/5;
-                        mapObj.height = roomHeight - roomHeight/5;
+                        mapObj.x = paddingX + roomWidth * bx + roomHeight / 10;
+                        mapObj.y = paddingY + roomHeight * by + roomWidth / 10;
+                        mapObj.width = roomWidth - roomWidth / 5;
+                        mapObj.height = roomHeight - roomHeight / 5;
                         mapObj.order = 10;
                         Debug.WriteLine("Spawning map block at: {0}.{1}", mapObj.x, mapObj.y);
                         engine.SpawnObject(string.Format("map_border_{0}_{1}", bx, by), mapObj);

@@ -16,7 +16,7 @@ namespace Futuridium
         // lame workaround, why???
         public static int FixBoxValue(int value)
         {
-            return (int) (value*1.33);
+            return (int)(value * 1.33);
         }
     }
 }

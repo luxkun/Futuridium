@@ -1,9 +1,8 @@
-﻿using System;
+﻿using Aiv.Engine;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Reflection;
-using Aiv.Engine;
 
 namespace Futuridium.Spells
 {
@@ -14,7 +13,6 @@ namespace Futuridium.Spells
         private const float SwapDelay = 0.5f;
         private Dictionary<Type, List<Spell>> activeSpells;
         private int chosenSpellIndex = -1;
-        private float lastSwapTimer;
         private int spellCounter;
         public Dictionary<Type, float> spellsCd;
 
@@ -24,11 +22,11 @@ namespace Futuridium.Spells
             name = $"{owner.name}_spellManager";
         }
 
-        public Type ChosenSpell { get; private set; }
-
         public Spell LastCastedSpell { get; private set; }
 
         public event SpellCdChangedEventHandler OnSpellCdChanged;
+
+        public Type ChosenSpell { get; private set; }
 
         private int ChosenSpellIndex
         {
@@ -37,7 +35,7 @@ namespace Futuridium.Spells
             {
                 if (value != -1)
                 {
-                    chosenSpellIndex = value%Owner.Level.spellList.Count;
+                    chosenSpellIndex = value % Owner.Level.spellList.Count;
                     ChosenSpell = Owner.Level.spellList[chosenSpellIndex];
                 }
                 else
@@ -51,8 +49,12 @@ namespace Futuridium.Spells
 
         public string ChosenSpellName => (string)ChosenSpell.GetField("spellName").GetValue(null);
 
+        // if returns true then the hitted enemy can be hitten
+        public Func<GameObject, bool> Mask { get; set; }
+
         public override void Start()
         {
+            base.Start();
             activeSpells = new Dictionary<Type, List<Spell>>();
             spellsCd = new Dictionary<Type, float>();
 
@@ -61,6 +63,7 @@ namespace Futuridium.Spells
 
         public override void Update()
         {
+            base.Update();
             if (Game.Instance.MainWindow != "game") return;
             bool cdChanged = false;
             foreach (var key in spellsCd.Keys.ToList())
@@ -73,10 +76,7 @@ namespace Futuridium.Spells
             }
             if (cdChanged)
                 OnSpellCdChanged?.Invoke(this);
-            if (lastSwapTimer > 0)
-                lastSwapTimer -= deltaTime;
         }
-
 
         public bool SpellOnCd(Type spellType = null)
         {
@@ -91,32 +91,38 @@ namespace Futuridium.Spells
 
         public void SwapSpell()
         {
-            if (Owner.Level.spellList.Count == 0 || lastSwapTimer > 0)
+            if (Owner.Level.spellList.Count == 0 || Timer.Get("lastSwapTimer") > 0)
                 return;
-            lastSwapTimer = SwapDelay;
+            Timer.Set("lastSwapTimer", SwapDelay);
             ChosenSpellIndex++;
             OnSpellCdChanged?.Invoke(this);
             Debug.WriteLine($"Chosen spell '{ChosenSpell}'.");
         }
 
-        public Spell ActivateSpell(Type spellType = null, Func<bool> castCheck = null)
+        public void ChangeSpell(Type spellType)
         {
-            if (SpellOnCd(spellType))
+            var newIndex = Owner.Level.spellList.IndexOf(spellType);
+            if (newIndex != ChosenSpellIndex)
+                ChosenSpellIndex = newIndex;
+        }
+
+        public Spell ActivateSpell(Type spellType = null, Func<bool> castCheck = null, bool simulate = false)
+        {
+            if (!simulate && SpellOnCd(spellType))
                 return null;
             //    throw new Exception("Spell '$(spellType)' is on cold down.");
             if (spellType == null)
                 spellType = ChosenSpell;
             // if is an activated spell and it's already casted disactivate it
-            if (activeSpells[spellType].Count > 0 && activeSpells[spellType][0].ActivatedSpell)
+            if (activeSpells[spellType].Count > 0 && activeSpells[spellType][0].ActivatedSpell && !simulate)
             {
                 spellsCd[spellType] = activeSpells[spellType][0].StartingCd;
                 DisactivateSpell(activeSpells[spellType][0]);
                 return null;
             }
-            var spell = (Spell) Activator.CreateInstance(spellType);
-            if (Owner.Level.Energy < spell.EnergyUsage)
+            var spell = (Spell)Activator.CreateInstance(spellType, this, Owner);
+            if (Owner.Level.Energy < spell.EnergyUsage && !simulate)
                 return null;
-            spell.Owner = Owner;
             activeSpells[spellType].Add(spell);
             LastCastedSpell = spell;
             spell.CastCheck = castCheck;

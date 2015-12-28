@@ -1,11 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Drawing;
-using Aiv.Engine;
+﻿using Aiv.Engine;
 using Futuridium.Spells;
 using OpenTK;
 using OpenTK.Input;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Drawing;
 
 namespace Futuridium
 {
@@ -21,14 +21,10 @@ namespace Futuridium
         private readonly List<Type> defaultSpells = new List<Type>
         {typeof (Bullet), typeof (DriveX), typeof (Orb)};
 
-        private float disableRedTimer;
         private bool initHud;
-        private float lastFloorChangeTimer;
-        private float lastHitTimer;
         private Vector2 lastPosition;
         public string realName = "Rek";
         private RectangleObject redWindow;
-        private int spawnedOrbs;
 
         private Player() : base("player", "Player", "player")
         {
@@ -45,7 +41,7 @@ namespace Futuridium
             Level0.NeededXp = 100;
             Level0.SpellSpeed = 200f;
             Level0.SpellRange = 400;
-            Level0.SpellSize = 8;
+            Level0.SpellSize = 14;
             Level0.spellList = defaultSpells;
 
             OnStart += StartEvent;
@@ -56,9 +52,16 @@ namespace Futuridium
 
         private void StartEvent(object sender)
         {
-            x = engine.width/2;
-            y = engine.height/2;
-            currentSprite = (SpriteAsset) engine.GetAsset("player");
+            currentSprite = (SpriteAsset)engine.GetAsset("player_animated_2_0");
+
+            //var fwidth = Utils.FixBoxValue(width);
+            //var fheight = Utils.FixBoxValue(height);
+
+            spellManager.Mask = (GameObject enemy) => enemy is Enemy;
+
+            x = engine.width / 2 - width / 2;
+            y = engine.height / 2 - height / 2;
+            order = 9;
 
             redWindow = new RectangleObject
             {
@@ -69,50 +72,91 @@ namespace Futuridium
                 x = 0,
                 y = 0,
                 fill = true,
-                order = 9
+                order = order + 1
             };
             engine.SpawnObject("redWindow", redWindow);
 
-            base.Start();
+            var baseSpriteName = $"player_animated";
+            AnimationFrequency = 0.2f;
+            animationsInfo[MovingState.Idle] = new SpriteAsset[]
+            {
+                (SpriteAsset) engine.GetAsset($"{baseSpriteName}_0_1")
+            };
+            animationsInfo[MovingState.MovingRight] = new SpriteAsset[]
+            {
+                (SpriteAsset) engine.GetAsset($"{baseSpriteName}_2_0"),
+                (SpriteAsset) engine.GetAsset($"{baseSpriteName}_2_1"),
+                (SpriteAsset) engine.GetAsset($"{baseSpriteName}_2_2")
+            };
+            animationsInfo[MovingState.MovingLeft] = new SpriteAsset[]
+            {
+                (SpriteAsset) engine.GetAsset($"{baseSpriteName}_1_0"),
+                (SpriteAsset) engine.GetAsset($"{baseSpriteName}_1_1"),
+                (SpriteAsset) engine.GetAsset($"{baseSpriteName}_1_2")
+            };
+            animationsInfo[MovingState.MovingUp] = new SpriteAsset[]
+            {
+                (SpriteAsset) engine.GetAsset($"{baseSpriteName}_3_0"),
+                (SpriteAsset) engine.GetAsset($"{baseSpriteName}_3_1"),
+                (SpriteAsset) engine.GetAsset($"{baseSpriteName}_3_2")
+            };
+            animationsInfo[MovingState.MovingDown] = new SpriteAsset[]
+            {
+                (SpriteAsset) engine.GetAsset($"{baseSpriteName}_0_0"),
+                (SpriteAsset) engine.GetAsset($"{baseSpriteName}_0_1"),
+                (SpriteAsset) engine.GetAsset($"{baseSpriteName}_0_2")
+            };
+            CalculateRealSpriteHitBoxes();
         }
 
         private void ManageControls()
         {
             // keyboard controls
-
             lastPosition = new Vector2(x, y);
             // Keys.Right for windows.form (Engine)
             // (int) Key.Right for OpenTK
             // should switch to Keys when game.usingOpenTK is false
-            if (engine.IsKeyDown((int) Key.Right))
-            {
-                Vx += Level.Speed*deltaTime;
-            }
-            if (engine.IsKeyDown((int) Key.Left))
-            {
-                Vx -= Level.Speed*deltaTime;
-            }
-            if (engine.IsKeyDown((int) Key.Up))
-            {
-                Vy -= Level.Speed*deltaTime;
-            }
-            if (engine.IsKeyDown((int) Key.Down))
-            {
-                Vy += Level.Speed*deltaTime;
-            }
+            RealSpeed = Level.Speed;
+            var changedState = false;
+            var movingDirection = new Vector2();
+            if (engine.IsKeyDown((int)Key.Right))
+                movingDirection.X = 1f;
+            if (engine.IsKeyDown((int)Key.Left))
+                movingDirection.X = -1f;
+            if (engine.IsKeyDown((int)Key.Up))
+                movingDirection.Y = -1f;
+            if (engine.IsKeyDown((int)Key.Down))
+                movingDirection.Y = 1f;
 
             // joystick controls
             if (Game.Instance.Joystick != null)
             {
-                var moveDirection = new Vector2(
-                    Game.Instance.Joystick.GetAxis(Game.Instance.JoyStickConfig["Lx"])/127f,
-                    Game.Instance.Joystick.GetAxis(Game.Instance.JoyStickConfig["Ly"])/127f
+                var joyMovingDirection = new Vector2(
+                    Game.Instance.Joystick.GetAxis(Game.Instance.JoyStickConfig["Lx"]) / 127f,
+                    Game.Instance.Joystick.GetAxis(Game.Instance.JoyStickConfig["Ly"]) / 127f
                     );
-                if (moveDirection.Length > 0.2)
+                if (joyMovingDirection.Length > 0.2)
                 {
-                    Vx += Level.Speed*moveDirection.X*deltaTime;
-                    Vy += Level.Speed*moveDirection.Y*deltaTime;
+                    movingDirection = joyMovingDirection;
                 }
+                /*foreach (var button in Game.JoystickButtons)
+                    if (Game.Instance.Joystick.GetButton(Game.Instance.JoyStickConfig[button]))
+                        Debug.WriteLine($"Pressed button: {button}");
+
+                for (int index = 0; index < 150; index++)
+                {
+                    if (Game.Instance.Joystick.GetButton(index))
+                        Console.WriteLine($"Pressed button: {index}");
+                }*/
+            }
+            if (movingDirection.LengthFast > 0.2f)
+            {
+                Vx += movingDirection.X * deltaTime * RealSpeed;
+                Vy += movingDirection.Y * deltaTime * RealSpeed;
+                CalculateMovingState(movingDirection);
+            } else
+            {
+                movingState = MovingState.Idle;
             }
         }
 
@@ -124,8 +168,8 @@ namespace Futuridium
             if (Game.Instance.Joystick != null)
             {
                 direction = new Vector2(
-                    Game.Instance.Joystick.GetAxis(Game.Instance.JoyStickConfig["Rx"])/127f,
-                    Game.Instance.Joystick.GetAxis(Game.Instance.JoyStickConfig["Ry"])/127f
+                    Game.Instance.Joystick.GetAxis(Game.Instance.JoyStickConfig["Rx"]) / 127f,
+                    Game.Instance.Joystick.GetAxis(Game.Instance.JoyStickConfig["Ry"]) / 127f
                     );
                 //castJoyInfo = Tuple.Create(game.JoyStickConfig["Rx"], game.JoyStickConfig["Ry"], direction.X, direction.Y);
                 if (direction.X > 0 || direction.Y > 0)
@@ -135,58 +179,59 @@ namespace Futuridium
                         Debug.Write($"{axisIndex}: {Game.Instance.Joystick.GetAxis(axisIndex)} ; ");
                     Debug.WriteLine("");
                 }
-                if (Game.Instance.Joystick.GetButton(Game.Instance.JoyStickConfig["RT"]))
+                if (Game.Instance.Joystick.GetButton(Game.Instance.JoyStickConfig["RB"]) ||
+                    Game.Instance.Joystick.GetButton(Game.Instance.JoyStickConfig["LB"]))
                     spellManager.SwapSpell();
             }
 
             var joyStickConfig = Game.Instance.JoyStickConfig;
             var castKey = Key.Unknown;
 
-            if (engine.IsKeyDown((int) Key.A) ||
+            if (engine.IsKeyDown((int)Key.A) ||
                 (Game.Instance.Joystick != null && Game.Instance.Joystick.GetButton(joyStickConfig["S"])))
             {
                 direction = new Vector2(-1, 0);
                 castKey = Key.A;
             }
-            else if (engine.IsKeyDown((int) Key.W) ||
+            else if (engine.IsKeyDown((int)Key.W) ||
                      (Game.Instance.Joystick != null && Game.Instance.Joystick.GetButton(joyStickConfig["T"])))
             {
                 direction = new Vector2(0, -1);
                 castKey = Key.W;
             }
-            else if (engine.IsKeyDown((int) Key.D) || engine.IsKeyDown((int)Key.Space) ||
+            else if (engine.IsKeyDown((int)Key.D) || engine.IsKeyDown((int)Key.Space) ||
                      (Game.Instance.Joystick != null && Game.Instance.Joystick.GetButton(joyStickConfig["C"])))
             {
                 direction = new Vector2(1, 0);
                 castKey = Key.D;
             }
-            else if (engine.IsKeyDown((int) Key.S) ||
+            else if (engine.IsKeyDown((int)Key.S) ||
                      (Game.Instance.Joystick != null && Game.Instance.Joystick.GetButton(joyStickConfig["X"])))
             {
                 direction = new Vector2(0, 1);
                 castKey = Key.S;
             }
-            else if (engine.IsKeyDown((int) Key.Q))
+            else if (engine.IsKeyDown((int)Key.Q))
             {
                 direction = new Vector2(-0.5f, -0.5f);
                 castKey = Key.Q;
             }
-            else if (engine.IsKeyDown((int) Key.E))
+            else if (engine.IsKeyDown((int)Key.E))
             {
                 direction = new Vector2(0.5f, -0.5f);
                 castKey = Key.E;
             }
-            else if (engine.IsKeyDown((int) Key.Z))
+            else if (engine.IsKeyDown((int)Key.Z))
             {
                 direction = new Vector2(-0.5f, 0.5f);
                 castKey = Key.Z;
             }
-            else if (engine.IsKeyDown((int) Key.C))
+            else if (engine.IsKeyDown((int)Key.C))
             {
                 direction = new Vector2(0.5f, 0.5f);
                 castKey = Key.C;
             }
-            else if (engine.IsKeyDown((int) Key.F))
+            else if (engine.IsKeyDown((int)Key.F))
             {
                 spellManager.SwapSpell();
             }
@@ -194,35 +239,27 @@ namespace Futuridium
             {
                 Func<bool> castCheck;
                 if (castKey != Key.Unknown)
-                    castCheck = () => engine.IsKeyDown((int) castKey);
-                else // for sure casted with joystick 
+                    castCheck = () => engine.IsKeyDown((int)castKey);
+                else // for sure casted with joystick
                     castCheck = () =>
                     {
                         var newDirection = new Vector2(
-                            Game.Instance.Joystick.GetAxis(Game.Instance.JoyStickConfig["Rx"])/127f,
-                            Game.Instance.Joystick.GetAxis(Game.Instance.JoyStickConfig["Ry"])/127f
+                            Game.Instance.Joystick.GetAxis(Game.Instance.JoyStickConfig["Rx"]) / 127f,
+                            Game.Instance.Joystick.GetAxis(Game.Instance.JoyStickConfig["Ry"]) / 127f
                             );
                         // small change == still casting
-                        return (direction - newDirection).Length < 0.1f;
+                        //return (direction - newDirection).Length < 0.1f;
+                        // keeps casting until the axis are activated
+                        if (spellManager.LastCastedSpell.UpdateDirection)
+                            spellManager.LastCastedSpell.Direction = newDirection;
+                        return newDirection.Length > 0.1f;
                     };
                 Shot(direction, castCheck);
             }
         }
 
-        protected override void CreateHitBox()
-        {
-            var fwidth = Utils.FixBoxValue(width);
-            var fheight = Utils.FixBoxValue(height);
-            AddHitBox("mass", 0, (int)(fheight * 0.4f), fwidth, (int)(fheight * 0.6f));
-        }
-
         private void ManageCollisions()
         {
-            if (lastHitTimer > 0)
-                lastHitTimer -= deltaTime;
-            if (lastFloorChangeTimer > 0)
-                lastFloorChangeTimer -= deltaTime;
-
             var collisions = CheckCollisions();
             if (collisions.Count > 0)
                 Debug.WriteLine("Character '{0}' collides with n.{1}", name, collisions.Count);
@@ -233,12 +270,12 @@ namespace Futuridium
                 Debug.WriteLine(
                     $"Character '{name}' ({collision.hitBox}) touches '{collision.other.name}' ({collision.otherHitBox})");
                 var enemy = collision.other as Enemy;
-                if (enemy != null && lastHitTimer <= 0)
+                if (enemy != null && Timer.Get("lastHitTimer") <= 0)
                 {
                     hittingEnemy = enemy;
-                    lastHitTimer = MaxHitsPerTime;
+                    Timer.Set("lastHitTimer", MaxHitsPerTime);
                 }
-                if (collision.other.name.EndsWith("door") && lastFloorChangeTimer <= 0 &&
+                if (collision.other.name.EndsWith("door") && Timer.Get("lastFloorChangeTimer") <= 0 &&
                     collision.other.enabled)
                 {
                     Vx = 0;
@@ -258,13 +295,13 @@ namespace Futuridium
                         changedFloor =
                             Game.Instance.CurrentFloor.OpenRoom(Game.Instance.CurrentFloor.CurrentRoom.Right);
                     if (changedFloor)
-                        lastFloorChangeTimer = ChangeFloorDelay;
+                        Timer.Set("lastFloorChangeTimer", ChangeFloorDelay);
                     break;
                 }
                 if (collision.otherHitBox.StartsWith("wall"))
                 {
-                    x = (int) realLastPos.X;
-                    y = (int) realLastPos.Y;
+                    x = (int)realLastPos.X;
+                    y = (int)realLastPos.Y;
                 }
                 else if (collision.other.name.StartsWith("escape_floor_"))
                 {
@@ -280,7 +317,7 @@ namespace Futuridium
             redWindow.width = engine.width;
             redWindow.height = engine.height;
             Debug.WriteLine("Player got damaged.");
-            disableRedTimer = 0.05f; // 50ms
+            Timer.Set("disableRedTimer", 0.05f); // 50ms
 
             return base.GetDamage(enemy, damage);
         }
@@ -288,7 +325,7 @@ namespace Futuridium
         private void UpdateEvent(object s)
         {
             if (Game.Instance.MainWindow != "game") return;
-            if (!activated) return;
+            if (movingState == MovingState.Inactive) return;
             if (!initHud)
             {
                 initHud = true;
@@ -309,13 +346,11 @@ namespace Futuridium
 
             if (redWindow.width != 0)
             {
-                if (disableRedTimer <= 0)
+                if (Timer.Get("disableRedTimer") <= 0)
                 {
                     redWindow.width = 0;
                     redWindow.height = 0;
                 }
-                else
-                    disableRedTimer -= deltaTime;
             }
         }
     }

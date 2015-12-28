@@ -4,10 +4,11 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
     <ProjectGuid>{1A5B55A5-9105-46CA-BE21-C2FF69D6C577}</ProjectGuid>
-    <OutputType>WinExe</OutputType>
+    <OutputType>Exe</OutputType>
     <RootNamespace>Futuridium</RootNamespace>
     <AssemblyName>Futuridium</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
     <DebugSymbols>true</DebugSymbols>
@@ -30,35 +31,31 @@
     <PlatformTarget>x86</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup>
-    <StartupObject />
+    <StartupObject>Futuridium.MainClass</StartupObject>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="aivengine, Version=1.0.5809.18607, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\aivengine-1\aivengine\bin\Debug\aivengine.dll</HintPath>
-    </Reference>
-    <Reference Include="aivengine-opentk, Version=1.0.5804.29568, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\aivengine-opentk\aivengine-opentk\bin\Debug\aivengine-opentk.dll</HintPath>
-    </Reference>
-    <Reference Include="NVorbis, Version=0.8.4.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>bin\Debug\NVorbis.dll</HintPath>
-    </Reference>
-    <Reference Include="NVorbis.OpenTKSupport, Version=1.1.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>bin\Debug\NVorbis.OpenTKSupport.dll</HintPath>
-    </Reference>
-    <Reference Include="OpenTK, Version=1.1.0.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\opentk\Binaries\OpenTK\Debug\OpenTK.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Drawing" />
     <Reference Include="WindowsBase" />
+    <Reference Include="aivengine">
+      <HintPath>..\aivengine-1\aivengine\bin\Debug\aivengine.dll</HintPath>
+    </Reference>
+    <Reference Include="aivengine-opentk">
+      <HintPath>..\aivengine-opentk\aivengine-opentk\bin\Debug\aivengine-opentk.dll</HintPath>
+    </Reference>
+    <Reference Include="NVorbis">
+      <HintPath>bin\Debug\NVorbis.dll</HintPath>
+    </Reference>
+    <Reference Include="NVorbis.OpenTKSupport">
+      <HintPath>bin\Debug\NVorbis.OpenTKSupport.dll</HintPath>
+    </Reference>
+    <Reference Include="OpenTK">
+      <HintPath>..\opentk\Binaries\OpenTK\Debug\OpenTK.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AI.cs" />
     <Compile Include="Damage.cs" />
     <Compile Include="Force.cs" />
     <Compile Include="Program.cs" />
@@ -92,6 +89,7 @@
     <Folder Include="Enemies\Bosses\" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="app.config" />
     <None Include="Dependencies\SDL2.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

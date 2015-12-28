@@ -13,3 +13,16 @@
 /Users/lucianoferraro/Projects/StupidAivGame/StupidAivGame/bin/Debug/NVorbis.OpenTKSupport.dll
 /Users/lucianoferraro/Projects/StupidAivGame/StupidAivGame/bin/Debug/Dependencies/SDL2.dll
 /Users/lucianoferraro/Projects/StupidAivGame/StupidAivGame/bin/Debug/Dependencies/libSDL2.dylib
+/media/lukian/54381F72381F527A/Users/Lukian/Dropbox/AIV/GitProjects/Futuridium/obj/x86/Debug/.NETFramework,Version=v4.5.AssemblyAttribute.cs
+/media/lukian/54381F72381F527A/Users/Lukian/Dropbox/AIV/GitProjects/Futuridium/bin/Debug/Dependencies/SDL2.dll
+/media/lukian/54381F72381F527A/Users/Lukian/Dropbox/AIV/GitProjects/Futuridium/bin/Debug/Dependencies/libSDL2.dylib
+/media/lukian/54381F72381F527A/Users/Lukian/Dropbox/AIV/GitProjects/Futuridium/bin/Debug/Dependencies/OpenTK.dll.config
+/media/lukian/54381F72381F527A/Users/Lukian/Dropbox/AIV/GitProjects/Futuridium/bin/Debug/Futuridium.exe.mdb
+/media/lukian/54381F72381F527A/Users/Lukian/Dropbox/AIV/GitProjects/Futuridium/bin/Debug/Futuridium.exe
+/media/lukian/54381F72381F527A/Users/Lukian/Dropbox/AIV/GitProjects/Futuridium/obj/x86/Debug/Futuridium.exe
+/media/lukian/54381F72381F527A/Users/Lukian/Dropbox/AIV/GitProjects/Futuridium/obj/x86/Debug/Futuridium.exe.mdb
+/media/lukian/54381F72381F527A/Users/Lukian/Dropbox/AIV/GitProjects/Futuridium/bin/Debug/aivengine.dll
+/media/lukian/54381F72381F527A/Users/Lukian/Dropbox/AIV/GitProjects/Futuridium/bin/Debug/aivengine-opentk.dll
+/media/lukian/54381F72381F527A/Users/Lukian/Dropbox/AIV/GitProjects/Futuridium/bin/Debug/NVorbis.dll
+/media/lukian/54381F72381F527A/Users/Lukian/Dropbox/AIV/GitProjects/Futuridium/bin/Debug/NVorbis.OpenTKSupport.dll
+/media/lukian/54381F72381F527A/Users/Lukian/Dropbox/AIV/GitProjects/Futuridium/bin/Debug/OpenTK.dll

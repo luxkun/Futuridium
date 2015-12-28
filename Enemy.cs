@@ -1,36 +1,38 @@
-﻿using System;
-using System.Linq;
-using Aiv.Engine;
+﻿using Aiv.Engine;
+using Futuridium.Spells;
 using OpenTK;
+using System;
+using System.Linq;
 
 namespace Futuridium
 {
     public class Enemy : Character
     {
-        private const float Minbestdelta = 0.01f;
-        private readonly int maxPointDistance = 400;
+        private readonly int maxPointDistance = 600;
         private readonly int minDistance = 10; // calculate this somehow
+
         // virtual circular radar
         private readonly int radarRadius = 150;
-        private float lastMove;
-        private Vector2 nextStep;
+
+        private bool isShotting;
 
         private Vector2 rndPoint = new Vector2(-1, -1);
-
-        private enum State
-        {
-            Normal = 1, Warned = 2, Damaged = 3
-        }
         private State state = State.Normal;
+        private readonly bool useAI = false; // TESTING
 
         public Enemy(string name, string formattedName, string characterName) : base(name, formattedName, characterName)
         {
+            SpawnParticleOnDestroy = true;
+
+            OnStart += StartEvent;
             OnAfterUpdate += UpdateEvent;
         }
 
-        // TEMP
-        // TODO: A* algorithm if there will ever be obstacles 
-        //      (futuro) algoritmo intelligente che mette in conto dove sta andando il character
+        private void StartEvent(object sender)
+        {
+            spellManager.Mask = (GameObject enemy) => enemy is Player;
+        }
+
         private void RandomizeNextObjective()
         {
             var agentV = new Vector2(x, y);
@@ -38,38 +40,55 @@ namespace Futuridium
             {
                 return;
             }
-            var rnd = new Random(new Guid().GetHashCode());
+            var rnd = new Random((int)DateTime.Now.Ticks);
             int distance;
+            var roomWidth = Game.Instance.CurrentFloor.CurrentRoom.Width;
+            var roomHeight = Game.Instance.CurrentFloor.CurrentRoom.Height;
             do
             {
                 // fix
-                var deltaX = rnd.Next(-1*maxPointDistance, maxPointDistance);
-                var deltaY = rnd.Next(-1*maxPointDistance, maxPointDistance);
+                var deltaX = rnd.Next(-1 * maxPointDistance, maxPointDistance);
+                var deltaY = rnd.Next(-1 * maxPointDistance, maxPointDistance);
                 rndPoint = new Vector2(
-                    x + deltaX + 100*Math.Sign(deltaX),
-                    y + deltaY + 100*Math.Sign(deltaX));
+                    x + deltaX + 100 * Math.Sign(deltaX),
+                    y + deltaY + 100 * Math.Sign(deltaX));
                 distance = Math.Abs(deltaX) + Math.Abs(deltaY);
             } while (rndPoint.X < GameBackground.WallWidth || rndPoint.Y < GameBackground.WallHeight ||
-                     rndPoint.X + width > engine.width - GameBackground.WallWidth ||
-                     rndPoint.Y + height > engine.height - GameBackground.WallHeight || distance < minDistance);
+                     rndPoint.X + width > roomWidth - GameBackground.WallWidth ||
+                     rndPoint.Y + height > roomHeight - GameBackground.WallHeight || distance < minDistance);
         }
 
         private void RandomMove()
         {
             RandomizeNextObjective();
-            MoveTo(rndPoint, (int) (Level.Speed*0.5));
+            RealSpeed = Level.Speed * 0.5f;
+            MoveTo(rndPoint, RealSpeed);
         }
 
-        private void Move(Character character)
+        // TODO: A* algorithm if there will ever be obstacles
+        private void SearchAndDestroy(Character character)
         {
             // center of enemy body
-            var objectiveV = new Vector2(
-                character.x + character.hitBoxes["mass"].x + (character.width - character.hitBoxes["mass"].x) / 2, 
-                character.y + character.hitBoxes["mass"].y + (character.height - character.hitBoxes["mass"].y) / 2
-                );
+            var objectiveV = character.GetHitCenter();
             var agentV = new Vector2(x, y);
             //var paddingV = new Vector2(10, 10);
-            var distance = (int) (objectiveV - agentV).Length;
+            var diffV = objectiveV - agentV;
+            var distance = (int)diffV.Length;
+
+            // check if the the enemy is in spell range when is warned
+            isShotting = state >= State.Warned && Level.spellList.Contains(typeof(Bullet)) &&
+                         Level.SpellRange >= distance;
+            if (isShotting)
+            {
+                // predict enemy position when the shot should hit the enemy
+                //diffV = Bullet.PredictDirection(this, character);
+                spellManager.ChangeSpell(typeof(Bullet));
+                var spell = Shot(
+                    diffV, 
+                    recalculateDirection: (Spell s) => objectiveV - new Vector2(x + s.xOffset, y + s.yOffset)
+                );
+            }
+
             // if has been hitted the radarRadius is doubled
             if (state >= State.Normal && Level.Hp < Level.MaxHp)
                 state = State.Damaged;
@@ -82,25 +101,55 @@ namespace Futuridium
                 state = State.Warned;
             if (rndPoint.X != -1)
                 rndPoint = new Vector2(-1, -1);
-            MoveTo(objectiveV, Level.Speed);
+            // moves slightly slower if is shotting
+            RealSpeed = Level.Speed * (isShotting ? 0.75f : 1f);
+            MoveTo(objectiveV, RealSpeed);
         }
 
         // FIX: stop when near objective
         private void MoveTo(Vector2 objectiveV, float speed)
         {
-            nextStep = new Vector2();
+            var movingDirection = new Vector2();
             var agentV = new Vector2(x, y);
             //var distance = Math.Abs(agentV.X - objectiveV.X) + Math.Abs(agentV.Y + objectiveV.Y);
             // just touching the objective is enough
             if ((Math.Abs(agentV.X - objectiveV.X) > width || Math.Abs(agentV.Y + objectiveV.Y) > height) &&
                 !hitBoxes.FirstOrDefault().Value.CollideWith(Player.Instance.hitBoxes.FirstOrDefault().Value))
-                // first or value dependant key?
+            // first or value dependant key?
             {
-                nextStep = objectiveV - agentV;
-                nextStep.Normalize();
-                //Debug.WriteLine("{0} {1} {2} {3} {4}", playerV, agentV, nextStep, bestDelta, level.speed);
-                Vx += nextStep.X*deltaTime*speed;
-                Vy += nextStep.Y*deltaTime*speed;
+                //movingDirection = objectiveV - agentV;
+                //movingDirection.Normalize();
+                ////Debug.WriteLine("{0} {1} {2} {3} {4}", playerV, agentV, movingDirection, bestDelta, level.speed);
+                //Vx += movingDirection.X * deltaTime * speed;
+                //Vy += movingDirection.Y * deltaTime * speed;
+                if (useAI) { 
+                    var path = AI.CalculatePath(this, objectiveV);
+                    if (path == null) // temp workaround test
+                        return;
+                    movingDirection = path[0];
+                } else
+                {
+                    movingDirection = objectiveV - agentV;
+                }
+                movingDirection.Normalize();
+                Vx += movingDirection.X * deltaTime * speed;
+                Vy += movingDirection.Y * deltaTime * speed;
+
+                CalculateMovingState(movingDirection);
+                MovingDirection = movingDirection;
+            }
+        }
+
+        private void UpdateEvent(object sender)
+        {
+            if (Game.Instance.MainWindow != "game") return;
+            if (movingState >= MovingState.Idle)
+            {
+                if (Timer.Get("lastMove") <= 0)
+                {
+                    SearchAndDestroy(Player.Instance);
+                    Timer.Set("lastMove", 0.005f); // move every 5ms
+                }
             }
         }
 
@@ -114,37 +163,25 @@ namespace Futuridium
                 y = y,
                 FormattedName = FormattedName,
                 CharacterName = CharacterName,
+                AnimationFrequency = AnimationFrequency,
                 Level0 = Level0.Clone(),
-                UseAnimations = UseAnimations
+                BounceTime = BounceTime,
+                BounceSpeed = BounceSpeed,
+                HitBoxOffSet = HitBoxOffSet.ToDictionary(x => x.Key, x => x.Value),
+                HitBoxSize = HitBoxSize.ToDictionary(x => x.Key, x => x.Value)
             };
-            /*if (animations != null)
-            {
-                result.animations = new Dictionary<string, Animation>();
-                foreach (string animKey in animations.Keys)
-                {
-                    result.animations[animKey] = animations[animKey].Clone();
-                    result.animations[animKey].Owner = result;
-                }
-            }*/
-            //result.currentAnimation = currentAnimation;
-            // ---
+            go.animationsInfo = animationsInfo.ToDictionary(
+                x => x.Key, x => (SpriteAsset[])x.Value.Clone()
+                );
             go.LevelCheck();
             return go;
         }
 
-        private void UpdateEvent(object sender)
+        private enum State
         {
-            if (Game.Instance.MainWindow != "game") return;
-            if (activated)
-            {
-                if (lastMove > 0)
-                    lastMove -= deltaTime;
-                if (lastMove <= 0)
-                {
-                    Move(Player.Instance);
-                    lastMove = 0.005f; // move every 5ms
-                }
-            }
+            Normal = 1,
+            Warned = 2,
+            Damaged = 3
         }
     }
 }

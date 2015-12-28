@@ -1,29 +1,35 @@
-﻿using System;
+﻿using Aiv.Engine;
+using System;
 using System.Drawing;
 using System.Windows.Forms;
-using Aiv.Engine;
-using Futuridium.Spells;
 
 namespace Futuridium
 {
     public sealed class Hud : GameObject
     {
-        private const int HudBarWidth = 200;
         private const int FontSize = 12;
+        private const int HudBarWidth = 200;
+
+        private static Hud instance;
 
         private readonly int border = 1;
+
         // Energy bar
         private RectangleObject energyBar;
+
         private RectangleObject energyBarContainer;
         private TextObject energyTextObj;
 
         // LEFTTOP HUD
         // Hp bar
         private RectangleObject hpBar;
+
         private RectangleObject hpBarContainer;
         private TextObject hpTextObj;
+
         // Xp bar
         private TextObject levelTextObj;
+
         private readonly int padding = 10;
         private RectangleObject spellCdBar;
         private RectangleObject spellCdBarContainer;
@@ -31,6 +37,7 @@ namespace Futuridium
         // RIGHTTOP HUD
         // Xp bar
         private TextObject spellTextObj;
+
         private RectangleObject xpBar;
         private RectangleObject xpBarContainer;
 
@@ -40,11 +47,9 @@ namespace Futuridium
             name = "hud";
         }
 
-        private static Hud instance;
-        public static Hud Instance => instance ?? (instance = new Hud());
-
         public override void Start()
         {
+            base.Start();
             var hp = new TextObject("Arial Black", FontSize, "darkred")
             {
                 order = order,
@@ -69,7 +74,7 @@ namespace Futuridium
                 y = hpBarContainer.y + border,
                 color = Color.DarkRed,
                 fill = true,
-                height = hpBarContainer.height - border*2
+                height = hpBarContainer.height - border * 2
             };
             hpTextObj = new TextObject("Arial Black", FontSize, "darkred")
             {
@@ -102,7 +107,7 @@ namespace Futuridium
                 y = energyBarContainer.y + border,
                 color = Color.DarkBlue,
                 fill = true,
-                height = energyBarContainer.height - border*2
+                height = energyBarContainer.height - border * 2
             };
             energyTextObj = new TextObject("Arial Black", FontSize, "darkred")
             {
@@ -135,7 +140,7 @@ namespace Futuridium
                 y = xpBarContainer.y + border,
                 color = Color.DarkOliveGreen,
                 fill = true,
-                height = xpBarContainer.height - border*2
+                height = xpBarContainer.height - border * 2
             };
             levelTextObj = new TextObject("Arial Black", FontSize, "darkgreen")
             {
@@ -161,7 +166,7 @@ namespace Futuridium
                 y = spellCdBarContainer.y + border,
                 color = Color.Gray,
                 fill = true,
-                height = xpBarContainer.height - border*2
+                height = xpBarContainer.height - border * 2
             };
             spellTextObj = new TextObject("Arial Black", FontSize, "black")
             {
@@ -188,27 +193,11 @@ namespace Futuridium
             engine.SpawnObject(name + "_spellCdBar", spellCdBar);
         }
 
-        public void UpdateXpBar()
-        {
-            var player = Player.Instance;
-            var xp = (int) player.Xp;
-            var level = player.Level;
-            var levelManager = Player.Instance.LevelManager;
-            var xpPercentage = Math.Min(1, (double) xp/levelManager.levelUpTable[level.level + 1].NeededXp);
-            levelTextObj.text = Math.Round(xpPercentage*100, 2) + "% to " + (level.level + 1);
-            int newWidth;
-            if (level.level == 99)
-                newWidth = xpBarContainer.width - border*2;
-            else
-                newWidth = (int) ((xpBarContainer.width - border*2)*xpPercentage);
-            xpBar.width = newWidth;
-        }
-
         public void UpdateEnergyBar()
         {
             var player = Player.Instance;
-            var energy = (int) player.Level.Energy;
-            var newWidth = (int) ((energyBarContainer.width - border*2)*(energy/(double) player.Level.MaxEnergy));
+            var energy = (int)player.Level.Energy;
+            var newWidth = (int)((energyBarContainer.width - border * 2) * (energy / (double)player.Level.MaxEnergy));
             energyTextObj.text = $"{energy} / {player.Level.MaxEnergy}";
             if (energyBar != null)
             {
@@ -219,8 +208,8 @@ namespace Futuridium
         public void UpdateHpBar()
         {
             var player = Player.Instance;
-            var hp = (int) player.Level.Hp;
-            var newWidth = (int) ((hpBarContainer.width - border*2)*(hp/(double) player.Level.MaxHp));
+            var hp = (int)player.Level.Hp;
+            var newWidth = (int)((hpBarContainer.width - border * 2) * (hp / (double)player.Level.MaxHp));
             hpTextObj.text = $"{hp} / {player.Level.MaxHp}";
             if (hpBar != null)
             {
@@ -238,13 +227,32 @@ namespace Futuridium
             var spellTextSize = TextRenderer.MeasureText(spellTextObj.text, spellTextObj.font);
             spellTextObj.x = spellCdBarContainer.x - spellTextSize.Width - padding;
             var lastCastedSpell = player.spellManager.LastCastedSpell;
-            if (lastCastedSpell != null) { 
-                var newWidth = (int) (
-                    (spellCdBarContainer.width - border*2)*
-                    (player.spellManager.spellsCd[lastCastedSpell.GetType()]/lastCastedSpell.StartingCd)
+            if (lastCastedSpell != null)
+            {
+                var newWidth = (int)(
+                    (spellCdBarContainer.width - border * 2) *
+                    (player.spellManager.spellsCd[lastCastedSpell.GetType()] / lastCastedSpell.StartingCd)
                     );
                 spellCdBar.width = newWidth;
             }
         }
+
+        public void UpdateXpBar()
+        {
+            var player = Player.Instance;
+            var xp = (int)player.Xp;
+            var level = player.Level;
+            var levelManager = Player.Instance.LevelManager;
+            var xpPercentage = Math.Min(1, (double)xp / levelManager.levelUpTable[level.level + 1].NeededXp);
+            levelTextObj.text = Math.Round(xpPercentage * 100, 2) + "% to " + (level.level + 1);
+            int newWidth;
+            if (level.level == 99)
+                newWidth = xpBarContainer.width - border * 2;
+            else
+                newWidth = (int)((xpBarContainer.width - border * 2) * xpPercentage);
+            xpBar.width = newWidth;
+        }
+
+        public static Hud Instance => instance ?? (instance = new Hud());
     }
 }
