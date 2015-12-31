@@ -37,7 +37,7 @@ namespace Futuridium
 
         private Level level;
         public float RealSpeed { get; set; }
-        public SpellManager spellManager;
+        public SpellManager SpellManager;
 
         private float vx;
         private float vy;
@@ -58,11 +58,13 @@ namespace Futuridium
             }
 
             order = 6;
-
+            
             Level0 = new Level();
             this.name = name;
             FormattedName = formattedName;
             CharacterName = characterName;
+
+            DropManager = new DropManager(this);
 
             OnDestroy += DestroyEvent;
         }
@@ -114,6 +116,8 @@ namespace Futuridium
 
         public bool IsAlive => Level.Hp > 0;
 
+        public DropManager DropManager { get; private set; }
+
         public string CharacterName { get; set; }
 
         public string FormattedName { get; set; }
@@ -129,7 +133,7 @@ namespace Futuridium
             {
                 level = value;
 
-                spellManager?.UpdateSpells();
+                SpellManager?.UpdateSpells();
             }
         }
 
@@ -181,8 +185,8 @@ namespace Futuridium
             LevelCheck();
             movingState = MovingState.Inactive;
 
-            spellManager = new SpellManager(this);
-            engine.SpawnObject(spellManager);
+            SpellManager = new SpellManager(this);
+            engine.SpawnObject(SpellManager);
         }
 
         public override void Update()
@@ -275,7 +279,7 @@ namespace Futuridium
             )
         {
             direction.Normalize();
-            var spell = spellManager.ActivateSpell(castCheck: castCheck, simulate: simulate);
+            var spell = SpellManager.ActivateSpell(castCheck: castCheck, simulate: simulate);
             if (spell == null)
                 return null;
 
@@ -346,6 +350,14 @@ namespace Futuridium
                 };
                 Debug.WriteLine(particleSystem.name);
                 engine.SpawnObject(particleSystem.name, particleSystem);
+            }
+            if (DropManager.DropTable != null)
+            {
+                foreach (Item item in DropManager.Drop())
+                {
+                    Item newItem = (Item)item.Clone();
+                    newItem.name = $"{name}_{newItem.ItemName}";
+                }
             }
         }
 
