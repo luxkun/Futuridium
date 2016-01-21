@@ -1,8 +1,9 @@
-﻿using Aiv.Engine;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using Aiv.Engine;
+using Futuridium.Characters;
 
 namespace Futuridium.Spells
 {
@@ -14,17 +15,16 @@ namespace Futuridium.Spells
         private Dictionary<Type, List<Spell>> activeSpells;
         private int chosenSpellIndex = -1;
         private int spellCounter;
-        public Dictionary<Type, float> spellsCd;
 
         public SpellManager(Character owner)
         {
             Owner = owner;
-            name = $"{owner.name}_spellManager";
+            Name = $"{owner.Name}_spellManager";
         }
 
-        public Spell LastCastedSpell { get; private set; }
+        public Dictionary<Type, float> SpellsCd { get; private set; }
 
-        public event SpellCdChangedEventHandler OnSpellCdChanged;
+        public Spell LastCastedSpell { get; private set; }
 
         public Type ChosenSpell { get; private set; }
 
@@ -35,8 +35,8 @@ namespace Futuridium.Spells
             {
                 if (value != -1)
                 {
-                    chosenSpellIndex = value % Owner.Level.spellList.Count;
-                    ChosenSpell = Owner.Level.spellList[chosenSpellIndex];
+                    chosenSpellIndex = value%Owner.Level.SpellList.Count;
+                    ChosenSpell = Owner.Level.SpellList[chosenSpellIndex];
                 }
                 else
                 {
@@ -47,16 +47,18 @@ namespace Futuridium.Spells
 
         private Character Owner { get; }
 
-        public string ChosenSpellName => (string)ChosenSpell.GetField("spellName").GetValue(null);
+        public string ChosenSpellName => (string) ChosenSpell.GetField("spellName").GetValue(null);
 
         // if returns true then the hitted enemy can be hitten
         public Func<GameObject, bool> Mask { get; set; }
+
+        public event SpellCdChangedEventHandler OnSpellCdChanged;
 
         public override void Start()
         {
             base.Start();
             activeSpells = new Dictionary<Type, List<Spell>>();
-            spellsCd = new Dictionary<Type, float>();
+            SpellsCd = new Dictionary<Type, float>();
 
             UpdateSpells();
         }
@@ -64,13 +66,13 @@ namespace Futuridium.Spells
         public override void Update()
         {
             base.Update();
-            if (Game.Instance.MainWindow != "game") return;
-            bool cdChanged = false;
-            foreach (var key in spellsCd.Keys.ToList())
+            if (Game.Game.Instance.MainWindow != "game") return;
+            var cdChanged = false;
+            foreach (var key in SpellsCd.Keys.ToList())
             {
-                if (spellsCd[key] > 0f)
+                if (SpellsCd[key] > 0f)
                 {
-                    spellsCd[key] -= deltaTime;
+                    SpellsCd[key] -= DeltaTime;
                     cdChanged = true;
                 }
             }
@@ -82,7 +84,7 @@ namespace Futuridium.Spells
         {
             if (spellType == null)
                 spellType = ChosenSpell;
-            var result = spellsCd[spellType] > 0;
+            var result = SpellsCd[spellType] > 0;
             // if spell is alive and still casting
             if (!result && LastCastedSpell != null && LastCastedSpell.IsCasting)
                 return true;
@@ -91,7 +93,7 @@ namespace Futuridium.Spells
 
         public void SwapSpell()
         {
-            if (Owner.Level.spellList.Count == 0 || Timer.Get("lastSwapTimer") > 0)
+            if (Owner.Level.SpellList.Count == 0 || Timer.Get("lastSwapTimer") > 0)
                 return;
             Timer.Set("lastSwapTimer", SwapDelay);
             ChosenSpellIndex++;
@@ -101,9 +103,8 @@ namespace Futuridium.Spells
 
         public void ChangeSpell(Type spellType)
         {
-            var newIndex = Owner.Level.spellList.IndexOf(spellType);
-            if (newIndex != ChosenSpellIndex)
-                ChosenSpellIndex = newIndex;
+            var newIndex = Owner.Level.SpellList.IndexOf(spellType);
+            ChosenSpellIndex = newIndex;
         }
 
         public Spell ActivateSpell(Type spellType = null, Func<bool> castCheck = null, bool simulate = false)
@@ -116,22 +117,22 @@ namespace Futuridium.Spells
             // if is an activated spell and it's already casted disactivate it
             if (activeSpells[spellType].Count > 0 && activeSpells[spellType][0].ActivatedSpell && !simulate)
             {
-                spellsCd[spellType] = activeSpells[spellType][0].StartingCd;
+                SpellsCd[spellType] = activeSpells[spellType][0].StartingCd;
                 DisactivateSpell(activeSpells[spellType][0]);
                 return null;
             }
-            var spell = (Spell)Activator.CreateInstance(spellType, this, Owner);
+            var spell = (Spell) Activator.CreateInstance(spellType, this, Owner);
             if (Owner.Level.Energy < spell.EnergyUsage && !simulate)
                 return null;
             activeSpells[spellType].Add(spell);
             LastCastedSpell = spell;
-            spell.CastCheck = castCheck;
+            if (spell.ContinuousSpell)
+                spell.CastCheck = castCheck;
             spell.OnDestroy += sender => DisactivateSpell(spell, false);
-            spell.name = spell.RoomConstricted
-                ? Game.Instance.CurrentFloor.CurrentRoom.name + "_"
-                : "" + $"{name}_spell_{spell.SpellName}_{spellCounter++}";
-            spell.order = order + 1;
-            spellsCd[spellType] = spell.StartingCd;
+            spell.Name = (spell.RoomConstricted
+                ? Game.Game.Instance.CurrentFloor.CurrentRoom.Name + "_"
+                : "") + $"{Name}_spell_{spell.SpellName}_{spellCounter++}";
+            SpellsCd[spellType] = spell.StartingCd;
             return spell;
         }
 
@@ -146,12 +147,12 @@ namespace Futuridium.Spells
 
         public void UpdateSpells()
         {
-            foreach (var type in Owner.Level.spellList)
+            foreach (var type in Owner.Level.SpellList)
             {
                 if (!activeSpells.ContainsKey(type))
                     activeSpells[type] = new List<Spell>();
-                if (!spellsCd.ContainsKey(type))
-                    spellsCd[type] = 0f;
+                if (!SpellsCd.ContainsKey(type))
+                    SpellsCd[type] = 0f;
             }
             ChosenSpellIndex = -1;
             SwapSpell();

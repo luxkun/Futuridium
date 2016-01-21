@@ -1,25 +1,32 @@
-﻿using Aiv.Engine;
-using OpenTK;
-using System;
+﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
-using System.Drawing.Drawing2D;
 using System.Linq;
+using Aiv.Engine;
+using Aiv.Fast2D;
+using Futuridium.Characters;
+using Futuridium.World;
+using OpenTK;
 
 namespace Futuridium.Spells
 {
     internal sealed class DriveX : Spell
     {
+        public new static string spellName = "Drive-X";
         // starts from Owner.x/y and goes to x,y
         private readonly DriveXRayObject laserLine;
 
         public DriveX(SpellManager spellManager, Character owner) : base(spellManager, owner)
         {
-            BaseEnergyUsage = 3;
-            BaseEnergyUsagePerSecond = 5;
-            laserLine = new DriveXRayObject();
-            laserLine.width = 3;
-            KnockBack = 1.33f;
+            BaseEnergyUsage = (int) (3*Owner.Level.SpellEnergyModifier);
+            BaseEnergyUsagePerSecond = (int) (5*Owner.Level.SpellEnergyModifier);
+            KnockBack = Owner.Level.SpellKnockBack;
+            HitsDelay = Owner.Level.SpellCd*0.4f; // :>
             UpdateDirection = true;
+            ContinuousSpell = true;
+            CastingSound = "sound_drivex";
+
+            laserLine = new DriveXRayObject();
 
             OnStart += StartEvent;
             OnUpdate += UpdateEvent;
@@ -28,47 +35,39 @@ namespace Futuridium.Spells
             OnStartCollisionCheck += StartCollisionEvent;
         }
 
-        public new static string spellName = "Drive-X";
-
-        public override int X
+        public override float X
         {
             get { return base.X; }
             set
             {
                 base.X = value;
-                laserLine.x = value;
+                laserLine.X = value;
             }
         }
 
-        public override int Y
+        public override float Y
         {
             get { return base.Y; }
             set
             {
                 base.Y = value;
-                laserLine.y = value;
+                laserLine.Y = value;
             }
         }
 
-        public override int order
+        public override int Order
         {
-            get { return base.order; }
+            get { return base.Order; }
             set
             {
-                base.order = value;
-                laserLine.order = value;
+                base.Order = value;
+                laserLine.Order = value;
             }
         }
 
-        public int StepSize { get; set; } = 5;
+        public int StepSize { get; set; } = 15;
 
         public float DamageModifer { get; } = 0.66f;
-
-        public override float HitsDelay
-        {
-            get { return base.HitsDelay * 0.66f; }
-            set { base.HitsDelay = value; }
-        }
 
         private void DestroyEvent(object sender)
         {
@@ -77,7 +76,7 @@ namespace Futuridium.Spells
 
         private void StartCollisionEvent(object sender)
         {
-            var hitbox = hitBoxes["mass"];
+            var hitbox = HitBoxes["mass"];
             var wallSize = GameBackground.WallWidth;
             // why is this needed?
             //if (hitbox.x + X < wallSize || hitbox.y + Y < wallSize ||
@@ -93,94 +92,119 @@ namespace Futuridium.Spells
 
         private void StartEvent(object sender)
         {
-            laserLine.color = Color.WhiteSmoke;
+            laserLine.Size = new Vector2(StepSize, 4f);
+            laserLine.Color = Color.WhiteSmoke;
             laserLine.SecondaryColor = DamageColor;
-            engine.SpawnObject($"{name}_laserLine", laserLine);
+            Engine.SpawnObject($"{Name}_laserLine", laserLine);
             // generic hitbox to check if the tip of the laser is hitting something
             AddHitBox("mass", 0, 0, StepSize, StepSize);
         }
 
         private void UpdateEvent(object sender)
         {
-            if (Game.Instance.MainWindow != "game")
+            if (Game.Game.Instance.MainWindow != "game")
                 return;
 
-            laserLine.points.Clear();
-            UpdateLaserPoints();
+            if (Timer.Get($"{Name}_laserUpdateTimer") <= 0f)
+            {
+                Timer.Set($"{Name}_laserUpdateTimer", 0.033f);
+                UpdateLaserPoints();
+            }
         }
 
         private void UpdateLaserPoints()
         {
             // TODO: perlin noise invece che random, lighter
             // the higher the lower precision
+            laserLine.Points.Clear();
             var lastPoint = new Vector2();
-            if (laserLine.points.Count > 0)
+            if (laserLine.Points.Count > 0)
             {
-                var lastPointTuple = laserLine.points.Last();
-                lastPoint = new Vector2(lastPointTuple.Item1, lastPointTuple.Item2);
+                var lastPointTuple = laserLine.Points.Last();
+                lastPoint = new Vector2(lastPointTuple.X, lastPointTuple.Y);
             }
-            var step = new Vector2(Direction.X, Direction.Y).Normalized() * StepSize;
+            var vect = new Vector2(Direction.X, Direction.Y);
+            vect.Normalize();
+            var step = vect*StepSize;
 
-            var rnd = new Random((int)DateTime.Now.Ticks);
-            var halfStepSize = StepSize / 2;
-            var stepModifier = (int)(StepSize * 0.66);
-            while (laserLine.points.Count == 0 || !ManageCollisions())
+            var rnd = new Random((int) DateTime.Now.Ticks);
+            var halfStepSize = StepSize/2;
+            var stepModifier = (int) (StepSize*0.66);
+            var newPoint = new Vector2(X, Y);
+            while (laserLine.Points.Count == 0 || !ManageCollisions())
             {
-                var newPoint = new Vector2(lastPoint.X, lastPoint.Y);
+                newPoint = new Vector2(lastPoint.X, lastPoint.Y);
                 newPoint += step;
                 newPoint.X += rnd.Next(-stepModifier, stepModifier + 1);
                 newPoint.Y += rnd.Next(-stepModifier, stepModifier + 1);
                 if (newPoint != lastPoint)
                 {
-                    laserLine.points.Add(Tuple.Create((int)newPoint.X, (int)newPoint.Y));
+                    laserLine.Points.Add(new Vector2((int) newPoint.X, (int) newPoint.Y));
                     lastPoint = newPoint;
                 }
-                hitBoxes["mass"].x = (int)newPoint.X - halfStepSize;
-                hitBoxes["mass"].y = (int)newPoint.Y - halfStepSize;
+                HitBoxes["mass"].X = (int) newPoint.X - halfStepSize;
+                HitBoxes["mass"].Y = (int) newPoint.Y - halfStepSize;
             }
         }
 
         public override void NextMove()
         {
             // the laser doesn't move
-            X = Owner.x + xOffset;
-            Y = Owner.y + yOffset;
+            X = Owner.X + XOffset;
+            Y = Owner.Y + YOffset;
         }
 
         public override float CalculateDamage(Character enemy, float baseModifier)
         {
-            return Owner.Level.Attack * DamageModifer * baseModifier;
+            return Owner.Level.Attack*DamageModifer*baseModifier;
         }
     }
 
-    public sealed class DriveXRayObject : MultipleRayObject
+    public sealed class DriveXRayObject : GameObject
     {
-        private Pen secondaryPen;
+        private Box box;
 
-        public int Waves { get; set; } = 5;
+        public DriveXRayObject()
+        {
+            Points = new List<Vector2>();
+        }
 
+        public int Waves { get; set; } = 6;
+
+        public Color Color { get; set; }
         public Color SecondaryColor { get; set; }
+
+        public List<Vector2> Points { get; set; }
+
+        public Vector2 Size { get; set; }
+
+        public override void Start()
+        {
+            box = new Box((int) (Size.X*1.5f), (int) Size.Y);
+            box.Fill = true;
+            box.Color = Color;
+        }
 
         public override void Draw()
         {
             base.Draw();
-            if (secondaryPen == null)
+            for (var i = 1; i < Points.Count; i++)
             {
-                pen.Width = 4;
-                secondaryPen = new Pen(SecondaryColor, pen.Width / 2) { DashCap = DashCap.Round };
-                pen.DashCap = DashCap.Round;
-            }
-            for (var i = 1; i < points.Count; i++)
-            {
-                // since engine is going to use only opentk we are going to use opentk
-                var deltaX = points[i - 1].Item1 - points[i].Item1;
-                var deltaY = points[i - 1].Item2 - points[i].Item2;
-                for (var s = 0; s < Waves && (s == 0 || i > 5); s++)
+                //var deltaX = Points[i - 1].X - Points[i].X;
+                //var deltaY = Points[i - 1].Y - Points[i].Y;
+                var delta = Points[i] - Points[i - 1];
+                delta.Normalize();
+                for (var s = 1; s <= Waves && (s == 1 || i > 5); s++)
                 {
-                    engine.workingGraphics.DrawLine(
-                        s == 0 ? pen : secondaryPen, x + points[i - 1].Item1 + deltaX * s,
-                        y + points[i - 1].Item2 + deltaY * s,
-                        x + points[i].Item1 + deltaX * s, y + points[i].Item2 + deltaY * s);
+                    box.Rotation = (float) Math.Atan2(delta.Y, delta.X)*s;
+                    box.position = new Vector2(
+                        DrawX + Points[i - 1].X + delta.X,
+                        DrawY + Points[i - 1].Y + delta.Y);
+                    box.Draw();
+                    //Engine.workingGraphics.DrawLine(
+                    //    s == 0 ? pen : secondaryPen, x + points[i - 1].Item1 + deltaX * s - engine.Camera.X,
+                    //    y + points[i - 1].Item2 + deltaY * s - engine.Camera.Y,
+                    //    x + points[i].Item1 + deltaX * s - engine.Camera.X, y + points[i].Item2 + deltaY * s - engine.Camera.Y);
                 }
             }
         }

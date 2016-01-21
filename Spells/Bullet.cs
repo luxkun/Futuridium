@@ -1,7 +1,8 @@
-﻿using Aiv.Engine;
-using OpenTK;
-using System;
+﻿using System;
 using System.Diagnostics;
+using Aiv.Engine;
+using Futuridium.Characters;
+using OpenTK;
 
 namespace Futuridium.Spells
 {
@@ -9,93 +10,60 @@ namespace Futuridium.Spells
     {
         private const int MinSpeed = 2;
 
-        private readonly CircleObject body;
+        public new static string spellName = "Energy Bullet";
+
+        private SpriteObject body;
         private bool bounced;
         private Vector2 direction;
 
-        private float fadeAwayStep;
-
-        private float virtRadius;
-
-        public new static string spellName = "Energy Bullet";
+        private Vector2 fadeAwayStep = Vector2.Zero;
+        private Vector2 startingScale;
 
         public Bullet(SpellManager spellManager, Character owner) : base(spellManager, owner)
         {
             BaseEnergyUsage = 0;
             BaseEnergyUsagePerSecond = 0;
-            KnockBack = 1f;
-
-            body = new CircleObject();
+            KnockBack = Owner.Level.SpellKnockBack;
+            ContinuousSpell = false;
+            CastSound = "sound_energy_bullet";
 
             OnDestroy += DestroyEvent;
-            OnStart += StartEvent;
+            //OnStart += StartEvent;
             OnUpdate += UpdateEvent;
             OnStartCollisionCheck += StartCollisionEvent;
             OnEndCollisionCheck += EndCollisionEvent;
             OnCollision += CollisionEvent;
         }
 
-        public override int order
+        public override int Order
         {
-            get { return base.order; }
+            get { return base.Order; }
             set
             {
-                base.order = value;
-                body.order = base.order;
+                base.Order = value;
+                body.Order = base.Order;
             }
         }
 
-        public int Radius
-        {
-            get { return body.radius; }
-            set { body.radius = value; }
-        }
+        public float FadeAwayRange { get; set; } = 0.5f;
 
-        private float VirtRadius
-        {
-            get { return virtRadius; }
-
-            set
-            {
-                virtRadius = value;
-                if (virtRadius >= 1f && Radius >= 1 + (int)virtRadius)
-                {
-                    var deltaPos = value / 2f;
-                    Vx += deltaPos;
-                    Vy += deltaPos;
-                    Radius -= (int)virtRadius;
-                    virtRadius -= (int)virtRadius;
-                    hitBoxes["mass"].height = Radius * 2;
-                    hitBoxes["mass"].width = Radius * 2;
-                }
-            }
-        }
-
-        public float FadeAwayRange { get; set; } = 0.33f;
-
-        public bool Fill
-        {
-            get { return body.fill; }
-            set { body.fill = value; }
-        }
-
-        public override int X
+        public override float X
         {
             get { return base.X; }
             set
             {
                 base.X = value;
-                body.x = base.X;
+                body.X = base.X;
             }
         }
 
-        public override int Y
+        public override float Y
         {
             get { return base.Y; }
             set
             {
                 base.Y = value;
-                body.y = base.Y;
+                body.Y = base.Y;
             }
         }
 
@@ -107,27 +75,34 @@ namespace Futuridium.Spells
 
         public double BounceMod { get; set; } = 0.8;
 
+        public override Vector2 Scale
+        {
+            get { return body.Scale; }
+            set { body.Scale = value; }
+        }
+
         private void DestroyEvent(object sender)
         {
-            var roomName = Game.Instance.CurrentFloor.CurrentRoom.name;
-            if (SpawnParticleOnDestroy)
-            {
-                var particleRadius = Radius / 2;
-                if (particleRadius < 1)
-                    particleRadius = 1;
-                var particleSystem = new ParticleSystem($"{roomName}_{name}_psys", "homogeneous", 30, particleRadius,
-                    DamageColor,
-                    400,
-                    (int)Speed, Radius)
-                {
-                    order = order,
-                    x = X,
-                    y = Y,
-                    fade = 200
-                };
-                Debug.WriteLine(particleSystem.name);
-                engine.SpawnObject(particleSystem.name, particleSystem);
-            }
+            var roomName = Game.Game.Instance.CurrentFloor.CurrentRoom.Name;
+            //if (SpawnParticleOnDestroy)
+            //{
+            //    var particleRadius = body.Width;
+            //    if (particleRadius < 1)
+            //        particleRadius = 1;
+            //    var particleSystem = new ParticleSystem($"{roomName}_{Name}_psys", "homogeneous", 30, (int)particleRadius,
+            //        DamageColor,
+            //        4,
+            //        Speed, 
+            //        body.Width * 2)
+            //    {
+            //        Order = Order,
+            //        X = X,
+            //        Y = Y,
+            //        fade = 200
+            //    };
+            //    Debug.WriteLine(particleSystem.Name);
+            //    Engine.SpawnObject(particleSystem.Name, particleSystem);
+            //}
 
             body.Destroy();
         }
@@ -164,39 +139,48 @@ namespace Futuridium.Spells
         //    return new Vector2(-1, -1);
         //}
 
-        public override void Init ()
+        public override void Init()
         {
             base.Init();
-            Fill = true;
-            body.name = name + "_body";
-            body.color = DamageColor;
 
             lastPoint = new Vector2(X, Y);
-            Radius = Owner.Level.SpellSize / 2;
-            AddHitBox("mass", 0, 0, Radius * 2, Radius * 2);
         }
-        private void StartEvent(object sender)
+
+        public override void Start()
         {
-            engine.SpawnObject(body);
+            var bulletSprite = (SpriteAsset)Engine.GetAsset("bullet");
+            body = new SpriteObject(bulletSprite.Width, bulletSprite.Height)
+            {
+                Name = Name + "_body",
+                CurrentSprite = bulletSprite
+            };
+            var scaleX = Owner.Level.SpellSize / body.Width;
+            Scale = new Vector2(scaleX, scaleX);
+            startingScale = new Vector2(scaleX, scaleX);
+            Engine.SpawnObject(body);
+
+            AddHitBox("mass", 0, 0, (int) body.BaseWidth, (int) body.BaseHeight);
+
+            base.Start();
         }
 
         // simulate collision between two GameObject rectangles
         // returns 0: X collision ; 1: Y collision
         private int SimulateCollision(Collision collision)
         {
-            var hitBox1 = hitBoxes[collision.hitBox]; // bullet
-            var hitBox2 = collision.other.hitBoxes[collision.otherHitBox];
+            var hitBox1 = HitBoxes[collision.HitBox]; // bullet
+            var hitBox2 = collision.Other.HitBoxes[collision.OtherHitBox];
 
-            var x2 = hitBox2.x + collision.other.x;
-            var y2 = hitBox2.y + collision.other.y;
-            var w2 = hitBox2.width;
-            var h2 = hitBox2.height;
-            var w1 = hitBox1.width;
-            var h1 = hitBox1.height;
+            var x2 = (int) (hitBox2.X + collision.Other.X);
+            var y2 = (int) (hitBox2.Y + collision.Other.Y);
+            var w2 = hitBox2.Width;
+            var h2 = hitBox2.Height;
+            var w1 = hitBox1.Width;
+            var h1 = hitBox1.Height;
 
             // should have same abs value
-            var diffX = X - (int)lastPoint.X;
-            var diffY = Y - (int)lastPoint.Y;
+            var diffX = (int) (X - lastPoint.X);
+            var diffY = (int) (Y - lastPoint.Y);
             Debug.Assert(Math.Abs(diffX) == Math.Abs(diffY));
             // ignores first Step
             // could optimize by starting near second hitbox
@@ -205,8 +189,8 @@ namespace Futuridium.Spells
             var steps = Math.Max(Math.Abs(diffX), Math.Abs(diffY));
             for (var step = steps; step >= 0; step--)
             {
-                var x1 = hitBox1.x + X - Math.Sign(diffX) * step;
-                var y1 = hitBox1.y + Y - Math.Sign(diffY) * step;
+                var x1 = (int) (hitBox1.X + X - Math.Sign(diffX)*step);
+                var y1 = (int) (hitBox1.Y + Y - Math.Sign(diffY)*step);
 
                 var tempxCollisions = Math.Min(x2 + w2, x1 + w1) - Math.Max(x2, x1);
                 if (y1 != y2 && y1 + h1 != y2 + h2 && y1 != y2 + h2 && y1 + h1 != y2)
@@ -237,7 +221,7 @@ namespace Futuridium.Spells
         {
             if (BounceBullet)
             {
-                var otherHitBox = collision.other.hitBoxes[collision.otherHitBox];
+                var otherHitBox = collision.Other.HitBoxes[collision.OtherHitBox];
                 if (Timer.Get("lastBounce") > 0)
                     return false;
                 if (otherHitBox == null)
@@ -265,30 +249,26 @@ namespace Futuridium.Spells
                 if (collisionDirection == 0)
                 {
                     direction.X *= -1;
-                    Vx = 0;
                 }
                 else if (collisionDirection == 1)
                 {
                     direction.Y *= -1;
-                    Vy = 0;
                 }
                 else
                 {
                     // if the collission simulation failed (ex. reason: multiple moving stuff?)
                     //  then bounce back
-                    Vx = 0;
-                    Vy = 0;
                     direction.X *= -1;
                     direction.Y *= -1;
                 }
-                Speed = (int)(Speed * BounceMod);
+                Speed = (int) (Speed*BounceMod);
                 if (Speed <= MinSpeed)
                     Speed = MinSpeed;
                 else
-                    RangeToGo = (int)(RangeToGo * BounceMod);
+                    RangeToGo = (int) (RangeToGo*BounceMod);
                 Timer.Set("lastBounce", BounceDelay);
-                X = (int)lastPoint.X;
-                Y = (int)lastPoint.Y;
+                X = (int) lastPoint.X;
+                Y = (int) lastPoint.Y;
                 return true;
             }
             Destroy();
@@ -297,7 +277,7 @@ namespace Futuridium.Spells
 
         private void UpdateEvent(object sender)
         {
-            if (Game.Instance.MainWindow != "game")
+            if (Game.Game.Instance.MainWindow != "game")
                 return;
             ManageFade();
 
@@ -322,16 +302,28 @@ namespace Futuridium.Spells
 
         private void ManageFade()
         {
-            if (RangeToGo > FadeAwayRange * Range) return;
-            if (fadeAwayStep == 0)
+            if (RangeToGo > FadeAwayRange*Range) return;
+            if (fadeAwayStep == Vector2.Zero)
             {
-                fadeAwayStep = (Radius - 1) / LifeSpan;
+                fadeAwayStep = body.Scale/LifeSpan;
             }
-            var deltaRadius = fadeAwayStep * deltaTime;
-            if (deltaRadius > 0)
+            if (body.Scale.Length > 0)
             {
-                VirtRadius += deltaRadius;
+                var startingSize = new Vector2(body.Width, body.Height);
+                body.Scale -= fadeAwayStep*DeltaTime;
+                var newSize = new Vector2(body.Width, body.Height);
+                var diffSize = startingSize - newSize;
+                // move the object to keep the same center of position
+                body.X += diffSize.X/2;
+                body.Y += diffSize.Y/2;
+                //HitBoxes["mass"].Height = (int) (body.Width*body.Scale.X);
+                //HitBoxes["mass"].Width = (int) (body.Height*body.Scale.Y);
             }
+        }
+
+        public override float CalculateDamage(Character enemy, float baseModifier)
+        {
+            return Owner.Level.Attack*baseModifier*(body.Scale.X / startingScale.X); //((body.Scale.X * 2 + 1) / 3);
         }
     }
 }

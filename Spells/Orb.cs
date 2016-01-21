@@ -1,123 +1,134 @@
-﻿using Aiv.Engine;
+﻿using System;
+using Aiv.Engine;
+using Futuridium.Characters;
 using OpenTK;
-using System;
 
 namespace Futuridium.Spells
 {
     public sealed class Orb : Spell
     {
-        private double angleTick;
+        public new static string spellName = "Energy Orb";
+        private float angleTick;
 
-        private readonly CircleObject body;
+        private SpriteObject body;
 
         private bool orbStretching; // true: decrease ; false: increase
-        private double orbStretchStep;
+        private float orbStretchStep;
 
-        public new static string spellName = "Energy Orb";
 
         public Orb(SpellManager spellManager, Character owner) : base(spellManager, owner)
         {
             ActivatedSpell = true;
-            BaseEnergyUsage = 0;
-            BaseEnergyUsagePerSecond = 1;
-            HitsDelay = 0.075f; // :>
-            KnockBack = 0f;
-
-            body = new CircleObject();
-
+            BaseEnergyUsage = (int) (1*Owner.Level.SpellEnergyModifier);
+            BaseEnergyUsagePerSecond = (int) (2*Owner.Level.SpellEnergyModifier);
+            HitsDelay = Owner.Level.SpellCd*0.05f; // :>
+            KnockBack = Owner.Level.SpellKnockBack*0.1f;
+            ContinuousSpell = true;
+            RoomConstricted = false;
+            
             OnDestroy += DestroyEvent;
-            OnStart += StartEvent;
+            //OnStart += StartEvent;
             OnUpdate += UpdateEvent;
         }
 
-        public int OrbRange { get; set; } = 150;
+        public int OrbRange { get; set; } = 175;
 
-        public double OrbSpeed { get; set; } = 0.8;
+        public float OrbSpeed { get; set; } = 0.9f;
 
-        public double OrbStretch { get; set; } = 0.25;
+        // % of range to stretch
+        public float OrbStretch { get; set; } = 0.4f;
 
-        public int OrbStretchSteps { get; set; } = 20;
+        // in how many seconds should do a full stretch
+        public float OrbStretchTime { get; set; } = 0.6f;
 
         // can activate/disactivate every StartingCd seconds
         public override float StartingCd => 0.5f;
 
-        public bool Fill
+        public override int Order
         {
-            get { return body.fill; }
-            set { body.fill = value; }
-        }
-
-        public override int order
-        {
-            get { return base.order; }
+            get { return base.Order; }
             set
             {
-                base.order = value;
-                body.order = base.order;
+                base.Order = value;
+                body.Order = base.Order;
             }
         }
 
-        public override int X
+        public override float X
         {
             get { return base.X; }
             set
             {
                 base.X = value;
-                body.x = base.X;
+                body.X = base.X;
             }
         }
 
-        public override int Y
+        public override float Y
         {
             get { return base.Y; }
             set
             {
                 base.Y = value;
-                body.y = base.Y;
+                body.Y = base.Y;
             }
         }
 
-        public int Radius
-        {
-            get { return body.radius; }
-            set { body.radius = value; }
-        }
-
-        public float DamageModifer { get; private set; } = 0.75f;
+        public float DamageModifer { get; } = 0.75f;
 
         private void DestroyEvent(object sender)
         {
             body.Destroy();
         }
 
-        private void StartEvent(object sender)
+        public override void Init()
         {
-            // TODO: random startx
-            body.name = $"{name}_body";
-            Fill = true;
-            body.color = DamageColor;
-            Radius = Owner.Level.SpellSize;
-            engine.SpawnObject(body);
+            base.Init();
+            // randomize start
+            angleTick = (float) (new Random(Guid.NewGuid().GetHashCode()).NextDouble()*2*Math.PI);
 
-            AddHitBox("mass", 0, 0, Radius * 2, Radius * 2);
+            lastPoint = new Vector2(X, Y);
+        }
+
+        public override Vector2 Scale
+        {
+            get { return body.Scale; }
+            set { body.Scale = value; }
+        }
+
+        public override void Start()
+        {
+            var orbSprite = (SpriteAsset)Engine.GetAsset("orb");
+            body = new SpriteObject(orbSprite.Width, orbSprite.Height)
+            {
+                Name = Name + "_body",
+                CurrentSprite = orbSprite
+            };
+            float scaleX = Owner.Level.SpellSize / body.Width + 0.4f;
+            Scale = new Vector2(scaleX, scaleX);
+            Engine.SpawnObject(body);
+
+            AddHitBox("mass", 0, 0, (int)body.BaseWidth, (int)body.BaseHeight);
+
+            base.Start();
         }
 
         public override void NextMove()
         {
             // rotate
-            X = Owner.x;
-            Y = Owner.y;
-            angleTick += OrbSpeed * deltaTime;
-            var points = new Vector2((int)(Math.Cos(angleTick) * OrbRange * (1 - orbStretchStep)),
-                (int)(Math.Sin(angleTick) * OrbRange * (1 - orbStretchStep)));
+            X = Owner.X;
+            Y = Owner.Y;
+            angleTick += OrbSpeed*DeltaTime;
+            var points = new Vector2((int) (Math.Cos(angleTick)*OrbRange*(1 - orbStretchStep)),
+                (int) (Math.Sin(angleTick)*OrbRange*(1 - orbStretchStep)));
 
-            Vx += (int)points.X;
-            Vy += (int)points.Y;
+            X += (int) points.X;
+            Y += (int) points.Y;
         }
 
         public override float CalculateDamage(Character enemy, float baseModifier)
         {
-            return Owner.Level.Attack * DamageModifer * baseModifier;
+            return Owner.Level.Attack*DamageModifer*baseModifier;
         }
 
         private void ManageStretch()
@@ -130,12 +141,12 @@ namespace Futuridium.Spells
             {
                 orbStretching = false;
             }
-            orbStretchStep += OrbStretch / OrbStretchSteps * (orbStretching ? 1 : -1);
+            orbStretchStep += OrbStretch/OrbStretchTime*(orbStretching ? 1 : -1)*DeltaTime;
         }
 
         private void UpdateEvent(object sender)
         {
-            if (Game.Instance.MainWindow != "game") return;
+            if (Game.Game.Instance.MainWindow != "game") return;
             ManageStretch();
             ManageCollisions();
         }
