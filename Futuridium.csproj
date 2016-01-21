@@ -91,9 +91,24 @@
     <Compile Include="Game\Utils.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Assets\sound\interface\" />
+  </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
+    <None Include="Assets\background\futuridium.psd" />
+    <None Include="Assets\background\ps59A2.tmp" />
+    <None Include="Assets\background\shadow.psd" />
+    <None Include="Assets\sound\battle\drivex.ogg" />
+    <None Include="Assets\sound\battle\energy_bullet.ogg" />
+    <None Include="Assets\sound\FlicFlac.ini" />
+    <None Include="Assets\sound\inventory\bottle.ogg" />
+    <None Include="Assets\sound\inventory\powerup.ogg" />
+    <None Include="Assets\sound\misc\levelup.ogg" />
+    <None Include="Assets\sound\misc\soundtrack.ogg" />
+    <None Include="Assets\sound\NPC\death.ogg" />
+    <None Include="Assets\sound\world\door_close.ogg" />
+    <None Include="Assets\sound\world\door_open.ogg" />
     <None Include="Dependencies\SDL2.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -106,9 +121,37 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Assets\background\blood.png" />
+    <Content Include="Assets\background\bottom_door.png" />
+    <Content Include="Assets\background\escape_floor.png" />
+    <Content Include="Assets\background\left_door.png" />
+    <Content Include="Assets\background\right_door.png" />
+    <Content Include="Assets\background\sadskull.png" />
+    <Content Include="Assets\background\shadow_bottom.png" />
+    <Content Include="Assets\background\shadow_left.png" />
+    <Content Include="Assets\background\shadow_right.png" />
+    <Content Include="Assets\background\shadow_top.png" />
+    <Content Include="Assets\background\skull.gif" />
+    <Content Include="Assets\background\skull.png" />
+    <Content Include="Assets\background\static_background.jpg" />
+    <Content Include="Assets\background\top_door.png" />
+    <Content Include="Assets\background\WORKING_ON_4K.jpg" />
+    <Content Include="Assets\characters\goblins.png" />
+    <Content Include="Assets\characters\ogre.png" />
+    <Content Include="Assets\characters\player.png" />
+    <Content Include="Assets\characters\player_big.png" />
+    <Content Include="Assets\characters\scorpion.png" />
+    <Content Include="Assets\characters\snake.png" />
+    <Content Include="Assets\font.png" />
+    <Content Include="Assets\Futuridium.png" />
+    <Content Include="Assets\items\items.png" />
+    <Content Include="Assets\items\potions.png" />
     <Content Include="Assets\openal32.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Assets\sound\FlicFlac.exe" />
+    <Content Include="Assets\spells\bullets.png" />
+    <Content Include="Assets\spells\singleBullet.png" />
     <Content Include="Dependencies\openal32.dll" />
   </ItemGroup>
 </Project>
