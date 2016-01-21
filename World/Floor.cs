@@ -184,6 +184,7 @@ namespace Futuridium.World
 
         private void DestroyEvent(object sender)
         {
+            AudioSource.Pause();
             foreach (var room in RoomsList)
                 Game.Game.OnDestroyHelper(room);
         }

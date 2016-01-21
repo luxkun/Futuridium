@@ -66,7 +66,6 @@ namespace Futuridium.Game
         //public List<Floor> floors;
 
         private string lastWindow;
-        private AudioAsset soundTrackStream;
 
         private Game()
         {
@@ -195,10 +194,6 @@ namespace Futuridium.Game
             Engine.SpawnObject("score", Score);
 
             InitializeNewFloor();
-
-            soundTrackStream = (AudioAsset) Engine.GetAsset("sound_soundtrack");
-            AudioSource.Play(soundTrackStream.Clip, true);
-            //soundTrackStream = Engine.PlaySoundLoop("sound_soundtrack", 0.4f);
         }
 
         private void StartGameOver()
@@ -206,7 +201,6 @@ namespace Futuridium.Game
             Engine.TimeModifier = 0f;
 
             AudioSource.Pause();
-            //soundTrackStream?.Stop();
             MainWindow = "gameover";
             var background = new RectangleObject(Engine.Width, Engine.Height)
             {
@@ -348,6 +342,9 @@ namespace Futuridium.Game
             MainWindow = "logo";
 
             BasicItems.Initialize(Engine);
+
+            AudioSource.Volume = 0.66f;
+            AudioSource.Stream(((AudioAsset)Engine.GetAsset("sound_soundtrack")).FileName, true);
         }
 
         public void StartLoading()

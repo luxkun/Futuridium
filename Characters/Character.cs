@@ -52,12 +52,12 @@ namespace Futuridium.Characters
         {
             forces = new List<Force>();
 
-            HitBoxOffSet = new Dictionary<MovingState, Point>();
-            HitBoxSize = new Dictionary<MovingState, Point>();
+            HitBoxOffSet = new Dictionary<MovingState, Vector2>();
+            HitBoxSize = new Dictionary<MovingState, Vector2>();
             foreach (MovingState state in Enum.GetValues(typeof (MovingState)))
             {
-                HitBoxOffSet[state] = new Point();
-                HitBoxSize[state] = new Point();
+                HitBoxOffSet[state] = new Vector2();
+                HitBoxSize[state] = new Vector2();
             }
 
             Order = 8;
@@ -72,8 +72,8 @@ namespace Futuridium.Characters
             OnDestroy += DestroyEvent;
         }
 
-        public Dictionary<MovingState, Point> HitBoxOffSet { get; set; }
-        public Dictionary<MovingState, Point> HitBoxSize { get; set; }
+        public Dictionary<MovingState, Vector2> HitBoxOffSet { get; set; }
+        public Dictionary<MovingState, Vector2> HitBoxSize { get; set; }
         public float RealSpeed { get; set; }
 
         public long Xp
@@ -422,52 +422,9 @@ namespace Futuridium.Characters
             if (sprite == null || movingState != MovingState.Idle)
                 sprite = Animations[GetMovingStateString(movingState)].Sprites[0];
 
-            var offSetDone = false;
-            // CALCULATE Y
-            for (var posY = 0; posY < sprite.Height; posY++)
-            {
-                var emptyRow = true;
-                for (var posX = 0; posX < sprite.Width; posX++)
-                {
-                    if (sprite.Texture.Bitmap[posY*sprite.Width*4 + posX*4] != 0)
-                    {
-                        emptyRow = false;
-                        break;
-                    }
-                }
-                if (emptyRow && !offSetDone)
-                {
-                    HitBoxOffSet[movingState] = new Point(HitBoxOffSet[movingState].X, posY);
-                }
-                else if (!emptyRow)
-                {
-                    offSetDone = true;
-                    HitBoxSize[movingState] = new Point(HitBoxSize[movingState].X, posY - HitBoxOffSet[movingState].Y);
-                }
-            }
-            // CALCULATE X
-            offSetDone = false;
-            for (var posX = 0; posX < sprite.Width; posX++)
-            {
-                var emptyCol = true;
-                for (var posY = 0; posY < sprite.Height; posY++)
-                {
-                    if (sprite.Texture.Bitmap[posY*sprite.Width*4 + posX*4] != 0)
-                    {
-                        emptyCol = false;
-                        break;
-                    }
-                }
-                if (emptyCol && !offSetDone)
-                {
-                    HitBoxOffSet[movingState] = new Point(posX, HitBoxOffSet[movingState].Y);
-                }
-                else if (!emptyCol)
-                {
-                    offSetDone = true;
-                    HitBoxSize[movingState] = new Point(posX - HitBoxOffSet[movingState].X, HitBoxSize[movingState].Y);
-                }
-            }
+            var resultTuple = sprite.CalculateRealHitBox();
+            HitBoxOffSet[movingState] = resultTuple.Item1;
+            HitBoxSize[movingState] = resultTuple.Item2;
             //Debug.WriteLine($"Calculated real hitbox: {CharacterName}, ({HitBoxOffSet.X},{HitBoxOffSet.Y}) to ({HitBoxSize.X},{HitBoxSize.Y})");
         }
 

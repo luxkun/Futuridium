@@ -109,15 +109,6 @@
     <None Include="Assets\sound\NPC\death.ogg" />
     <None Include="Assets\sound\world\door_close.ogg" />
     <None Include="Assets\sound\world\door_open.ogg" />
-    <None Include="Dependencies\SDL2.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Dependencies\libSDL2.dylib">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Dependencies\OpenTK.dll.config">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
@@ -152,6 +143,8 @@
     <Content Include="Assets\sound\FlicFlac.exe" />
     <Content Include="Assets\spells\bullets.png" />
     <Content Include="Assets\spells\singleBullet.png" />
-    <Content Include="Dependencies\openal32.dll" />
+    <None Include="openal32.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 </Project>
