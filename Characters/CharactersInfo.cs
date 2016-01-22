@@ -69,7 +69,7 @@ namespace Futuridium.Characters
                     SpellSize = 12,
                     SpellList = new List<Type>
                     {typeof (Bullet)},
-                    Luck = 1f
+                    DropModifier = 1f
                 }
             };
             mageGoblin.AddAnimation(idleName, Utils.GetAssetName(goblinSpriteName, 1, 4), 5, Engine).Loop = false;
@@ -88,7 +88,7 @@ namespace Futuridium.Characters
                     Attack = 40,
                     XpReward = 18,
                     Speed = 150f,
-                    Luck = 0.55f
+                    DropModifier = 0.55f
                 }
             };
             goblin.AddAnimation(idleName, Utils.GetAssetName(goblinSpriteName, 4, 0), 5, Engine).Loop = false;
@@ -107,7 +107,7 @@ namespace Futuridium.Characters
                     Attack = 60,
                     XpReward = 20,
                     Speed = 140f,
-                    Luck = 0.65f
+                    DropModifier = 0.65f
                 }
             };
             undeadGoblin.AddAnimation(idleName, Utils.GetAssetName(goblinSpriteName, 1, 0), 5, Engine).Loop = false;
@@ -126,7 +126,7 @@ namespace Futuridium.Characters
                     Attack = 70,
                     XpReward = 20,
                     Speed = 130f,
-                    Luck = 0.75f
+                    DropModifier = 0.75f
                 }
             };
             mummyGoblin.AddAnimation(idleName, Utils.GetAssetName(goblinSpriteName, 7, 4), 5, Engine).Loop = false;
@@ -151,7 +151,7 @@ namespace Futuridium.Characters
                     SpellSize = 15,
                     SpellList = new List<Type>
                     {typeof (Bullet)},
-                    Luck = 0.8f
+                    DropModifier = 0.8f
                 }
             };
             warriorGoblin.AddAnimation(idleName, Utils.GetAssetName(goblinSpriteName, 10, 0), 5, Engine).Loop = false;
@@ -176,7 +176,7 @@ namespace Futuridium.Characters
                     SpellSize = 16,
                     SpellList = new List<Type>
                     {typeof (Bullet)},
-                    Luck = 1f
+                    DropModifier = 1f
                 }
             };
             captainGoblin.AddAnimation(idleName, Utils.GetAssetName(goblinSpriteName, 7, 0), 5, Engine).Loop = false;
@@ -196,7 +196,7 @@ namespace Futuridium.Characters
                     Attack = 40,
                     XpReward = 15,
                     Speed = 170f,
-                    Luck = 0.5f
+                    DropModifier = 0.5f
                 }
             };
             scorpion.AddAnimation(idleName, Utils.GetAssetName(scorpionSpriteName, 0, 0), 5, Engine).Loop = false;
@@ -216,7 +216,7 @@ namespace Futuridium.Characters
                     Attack = 50,
                     XpReward = 15,
                     Speed = 160f,
-                    Luck = 0.5f
+                    DropModifier = 0.5f
                 }
             };
             snake.AddAnimation(idleName, Utils.GetAssetName(snakeSpriteName, 0, 0), 5, Engine).Loop = false;
@@ -252,7 +252,7 @@ namespace Futuridium.Characters
                     SpellSize = 14,
                     SpellList = new List<Type>
                     {typeof (Bullet)},
-                    Luck = 6f
+                    DropModifier = 6f
                 }
             };
             kingGoblin.AddAnimation(idleName, Utils.GetAssetName(goblinSpriteName, 4, 4), 5, Engine).Loop = false;
@@ -278,7 +278,7 @@ namespace Futuridium.Characters
                     SpellSize = 35,
                     SpellList = new List<Type>
                     {typeof (Bullet)},
-                    Luck = 5f
+                    DropModifier = 5f
                 }
             };
             ogre.AddAnimation(idleName, Utils.GetAssetName(ogreSpriteName, 0, 0), 5, Engine).Loop = false;

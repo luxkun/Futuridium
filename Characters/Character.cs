@@ -48,7 +48,8 @@ namespace Futuridium.Characters
 
         private long xp;
 
-        public Character(string name, string formattedName, string characterName, int width, int height) : base(width, height)
+        public Character(string name, string formattedName, string characterName, int width, int height)
+            : base(width, height, true)
         {
             forces = new List<Force>();
 
@@ -127,8 +128,8 @@ namespace Futuridium.Characters
             set
             {
                 _movingState = value;
-                if (value != MovingState.Inactive)
-                    UpdateHitBox();
+                //if (value != MovingState.Inactive)
+                //    UpdateHitBox();
             }
         }
 
@@ -217,26 +218,16 @@ namespace Futuridium.Characters
 
         protected virtual void CreateHitBox()
         {
-            AddHitBox("mass", 0, 0, 0, 0);
-            UpdateHitBox();
+            //AddHitBox("mass", 0, 0, 0, 0);
+            //UpdateHitBox();
         }
 
         private void UpdateHitBox()
         {
-            float hitboxWidth;
-            float hitboxHeight;
-            if (HitBoxSize[movingState].X != 0 && HitBoxSize[movingState].Y != 0)
-            {
-                hitboxWidth = HitBoxSize[movingState].X;
-                hitboxHeight = HitBoxSize[movingState].Y;
-            }
-            else
-            {
-                hitboxWidth = BaseWidth;
-                hitboxHeight = BaseHeight;
-            }
+            var hitboxWidth = HitBoxSize[movingState].X;
+            var hitboxHeight = HitBoxSize[movingState].Y;
 
-            var mod = 0.33f;
+            var mod = 0f;
             if (Height < 50)
                 mod = 0f;
             HitBoxes["mass"].X = HitBoxOffSet[movingState].X;
@@ -248,8 +239,8 @@ namespace Futuridium.Characters
         public Vector2 GetHitCenter()
         {
             return new Vector2(
-                X + HitBoxes["mass"].X + HitBoxes["mass"].Width/2,
-                Y + HitBoxes["mass"].Y + HitBoxes["mass"].Height/2
+                X + HitBoxes["auto"].X + HitBoxes["auto"].Width/2,
+                Y + HitBoxes["auto"].Y + HitBoxes["auto"].Height/2
                 );
         }
 
@@ -332,7 +323,7 @@ namespace Futuridium.Characters
                 //Debug.WriteLine(particleSystem.Name);
                 //Engine.SpawnObject(particleSystem.Name, particleSystem);
             }
-            DropManager.DropAndSpawn();
+            DropManager.DropAndSpawn(LastHitCharacter);
         }
 
         internal void HpChanged()
@@ -376,6 +367,8 @@ namespace Futuridium.Characters
             var dmg = damage.Caculate(this, enemy);
             Level.Hp -= dmg;
 
+            LastHitCharacter = enemy;
+
             var floatingText = new FloatingText(this, "-" + (int) dmg, Color.Orange, 0.6f + dmg/300f);
             Engine.SpawnObject(
                 floatingText.Name, floatingText
@@ -388,6 +381,8 @@ namespace Futuridium.Characters
             TookDamage(dmg);
             return Level.Hp;
         }
+
+        public Character LastHitCharacter { get; private set; }
 
         private void BounceBack(Damage damage)
         {
@@ -425,7 +420,7 @@ namespace Futuridium.Characters
             var resultTuple = sprite.CalculateRealHitBox();
             HitBoxOffSet[movingState] = resultTuple.Item1;
             HitBoxSize[movingState] = resultTuple.Item2;
-            //Debug.WriteLine($"Calculated real hitbox: {CharacterName}, ({HitBoxOffSet.X},{HitBoxOffSet.Y}) to ({HitBoxSize.X},{HitBoxSize.Y})");
+            Debug.WriteLine($"Calculated real hitbox: {CharacterName}, ({resultTuple.Item1.X},{resultTuple.Item1.Y}) to ({resultTuple.Item2.X},{resultTuple.Item2.Y})");
         }
 
         public void CalculateAnimationHitBoxes()

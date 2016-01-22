@@ -298,7 +298,7 @@ namespace Futuridium.Game
             if (!Engine.Objects.ContainsKey(escapeFloorName))
             {
                 var spriteAsset = (SpriteAsset) Engine.GetAsset("escape_floor");
-                var escapeFloorObj = new SpriteObject(spriteAsset.Width, spriteAsset.Height)
+                var escapeFloorObj = new SpriteObject(spriteAsset.Width, spriteAsset.Height, true)
                 {
                     Name = escapeFloorName,
                     Order = 5,
@@ -306,7 +306,7 @@ namespace Futuridium.Game
                     Y = Engine.Height/2,
                     CurrentSprite = spriteAsset
                 };
-                escapeFloorObj.AddHitBox(escapeFloorName, 0, 0, 32, 32);
+                //escapeFloorObj.AddHitBox(escapeFloorName, 0, 0, 32, 32);
                 Engine.SpawnObject(escapeFloorObj);
             }
         }

@@ -9,6 +9,7 @@ namespace Futuridium.Characters
         private float energy;
         private float hp;
         private float luck = 1f;
+        private float dropModifier = 1f;
         private float maxEnergy;
         private float maxHp;
 
@@ -150,6 +151,13 @@ namespace Futuridium.Characters
         {
             get { return spellEnergyModifier + LevelManager.GetStatBuff("spellEnergyModifier"); }
             set { spellEnergyModifier = value; }
+        }
+
+        // chance of THIS character to drop more enemies when he dies
+        public float DropModifier
+        {
+            get { return dropModifier + LevelManager.GetStatBuff("dropModifier"); }
+            set { dropModifier = value; }
         }
 
         public void Init(Level oldLevel)

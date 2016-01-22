@@ -16,7 +16,7 @@ namespace Futuridium.Items
             PerRoom
         }
 
-        public Item(int width, int height) : base(width, height)
+        public Item(int width, int height) : base(width, height, true)
         {
             Effects = new List<Tuple<Action<Character>, EffectType>>();
         }
@@ -27,12 +27,12 @@ namespace Futuridium.Items
         public string ActivateSound { get; set; }
         public Room Room { get; set; }
 
-        public override void Start()
-        {
-            base.Start();
+        //public override void Start()
+        //{
+        //    base.Start();
 
-            AddHitBox("mass", 0, 0, (int)BaseWidth, (int)BaseHeight);
-        }
+        //    //AddHitBox("mass", 0, 0, (int)BaseWidth, (int)BaseHeight);
+        //}
 
         public override void Update()
         {

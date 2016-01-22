@@ -36,13 +36,13 @@ namespace Futuridium.Items
         public DropTableType DropTable { get; set; }
         public Character Owner { get; }
 
-        public List<Item> DropAndSpawn()
+        public List<Item> DropAndSpawn(Character enemy)
         {
             if (DropTable == null) return null;
 
             var padding = 2;
             Vector2 maxItemSize;
-            var droppedItems = Drop(out maxItemSize);
+            var droppedItems = Drop(out maxItemSize, enemy);
             maxItemSize.X += padding;
             maxItemSize.Y += padding;
             var rows = (int) Math.Sqrt(droppedItems.Count);
@@ -76,7 +76,7 @@ namespace Futuridium.Items
             return droppedItems;
         }
 
-        public List<Item> Drop(out Vector2 maxSize)
+        public List<Item> Drop(out Vector2 maxSize, Character enemy)
         {
             var results = new List<Item>();
             var rnd = Game.Game.Instance.Random.GetRandom(Owner.Name + "_dropm");
@@ -84,7 +84,7 @@ namespace Futuridium.Items
             foreach (var tuple in DropTable)
             {
                 var item = tuple.Item1;
-                var P = tuple.Item3*Owner.Level.Luck * GlobalDropModifier;
+                var P = tuple.Item3 * Owner.Level.DropModifier * enemy.Level.Luck * GlobalDropModifier;
                 for (var i = 0; i < tuple.Item2; i++)
                 {
                     if (rnd.NextDouble() <= P)
