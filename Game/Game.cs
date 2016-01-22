@@ -9,6 +9,7 @@ using Futuridium.Characters;
 using Futuridium.Items;
 using Futuridium.UI;
 using Futuridium.World;
+using OpenTK;
 using TextObject = Aiv.Engine.TextObject;
 
 namespace Futuridium.Game
@@ -321,12 +322,71 @@ namespace Futuridium.Game
                     obj.Destroy();
         }
 
+        private static Dictionary<char, Tuple<Vector2, Vector2>> charToSprite = new Dictionary<char, Tuple<Vector2, Vector2>>()
+        {
+                {'0', Tuple.Create(new Vector2(0f, 0f), new Vector2(44f, 31f))},
+                {'1', Tuple.Create(new Vector2(45f, 0f), new Vector2(22f, 31f))},
+                {'2', Tuple.Create(new Vector2(66f, 0f), new Vector2(44f, 31f))},
+                {'3', Tuple.Create(new Vector2(109f, 0f), new Vector2(44f, 31f))},
+                {'4', Tuple.Create(new Vector2(152f, 0f), new Vector2(44f, 31f))},
+                {'5', Tuple.Create(new Vector2(195f, 0f), new Vector2(44f, 31f))},
+                {'6', Tuple.Create(new Vector2(239f, 0f), new Vector2(44f, 31f))},
+                {'7', Tuple.Create(new Vector2(281f, 0f), new Vector2(44f, 31f))},
+                {'8', Tuple.Create(new Vector2(325f, 0f), new Vector2(44f, 31f))},
+                {'9', Tuple.Create(new Vector2(369f, 0f), new Vector2(44f, 31f))},
+                {'A', Tuple.Create(new Vector2(411f, 0f), new Vector2(51f, 31f))},
+                {'B', Tuple.Create(new Vector2(462f, 0f), new Vector2(46f, 31f))},
+                {'C', Tuple.Create(new Vector2(0f, 31f), new Vector2(44f, 31f))},
+                {'D', Tuple.Create(new Vector2(44f, 31f), new Vector2(44f, 31f))},
+                {'E', Tuple.Create(new Vector2(88f, 31f), new Vector2(44f, 31f))},
+                {'F', Tuple.Create(new Vector2(132f, 31f), new Vector2(44f, 31f))},
+                {'G', Tuple.Create(new Vector2(175f, 31f), new Vector2(44f, 31f))},
+                {'H', Tuple.Create(new Vector2(219f, 31f), new Vector2(44f, 31f))},
+                {'I', Tuple.Create(new Vector2(262f, 31f), new Vector2(15f, 31f))},
+                {'J', Tuple.Create(new Vector2(275f, 31f), new Vector2(44f, 31f))},
+                {'K', Tuple.Create(new Vector2(319f, 31f), new Vector2(44f, 31f))},
+                {'L', Tuple.Create(new Vector2(362f, 31f), new Vector2(44f, 31f))},
+                {'M', Tuple.Create(new Vector2(404f, 31f), new Vector2(44f, 31f))},
+                {'N', Tuple.Create(new Vector2(450f, 31f), new Vector2(44f, 31f))},
+                {'O', Tuple.Create(new Vector2(0f, 62f), new Vector2(44f, 31f))},
+                {'P', Tuple.Create(new Vector2(44f, 62f), new Vector2(44f, 31f))},
+                {'Q', Tuple.Create(new Vector2(88f, 62f), new Vector2(44f, 31f))},
+                {'R', Tuple.Create(new Vector2(131f, 62f), new Vector2(44f, 31f))},
+                {'S', Tuple.Create(new Vector2(175f, 62f), new Vector2(44f, 31f))},
+                {'T', Tuple.Create(new Vector2(218f, 62f), new Vector2(44f, 31f))},
+                {'U', Tuple.Create(new Vector2(262f, 62f), new Vector2(44f, 31f))},
+                {'V', Tuple.Create(new Vector2(306f, 62f), new Vector2(44f, 31f))},
+                {'W', Tuple.Create(new Vector2(350f, 62f), new Vector2(44f, 31f))},
+                {'X', Tuple.Create(new Vector2(395f, 62f), new Vector2(44f, 31f))},
+                {'Y', Tuple.Create(new Vector2(439f, 62f), new Vector2(44f, 31f))},
+                {'Z', Tuple.Create(new Vector2(0f, 93f), new Vector2(44f, 31f))},
+                {'%', Tuple.Create(new Vector2(44f, 93f), new Vector2(44f, 31f))},
+                {'!', Tuple.Create(new Vector2(87f, 93f), new Vector2(13f, 31f))},
+                {'?', Tuple.Create(new Vector2(100f, 93f), new Vector2(44f, 31f))},
+                {'+', Tuple.Create(new Vector2(142f, 93f), new Vector2(36f, 31f))},
+                {'-', Tuple.Create(new Vector2(179f, 93f), new Vector2(30f, 31f))},
+                {'*', Tuple.Create(new Vector2(209f, 93f), new Vector2(30f, 31f))},
+                {'/', Tuple.Create(new Vector2(238f, 93f), new Vector2(34f, 31f))},
+                {':', Tuple.Create(new Vector2(296f, 93f), new Vector2(13f, 31f))},
+                {'.', Tuple.Create(new Vector2(272f, 93f), new Vector2(13f, 31f))},
+                {',', Tuple.Create(new Vector2(272f, 93f), new Vector2(13f, 31f))},
+                {'\'', Tuple.Create(new Vector2(285f, 93f), new Vector2(13f, 31f))}
+        };
+
         public override void Start()
         {
             base.Start();
 
             MainClass.LoadAssets(Engine);
 
+            TextConfig.Default = new TextConfig(new Asset("font.png"), charToSprite, 
+                paddingFunc: (float width) =>
+                {
+                    float result = width;
+                    result *= -0.066f;
+                    return result;
+                });
+            
             GameBackground.Initialize(Engine);
 
             Engine.SpawnObject(new CharactersInfo());

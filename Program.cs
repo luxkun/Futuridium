@@ -36,9 +36,9 @@ namespace Futuridium
         public static void LoadAssets(Engine engine)
         {
             // set the base path for assets
-            Asset.BasePath = "../../Assets";
+            Asset.BasePath = "..\\..\\Assets";
             // misc music
-            engine.LoadAsset("sound_soundtrack", new AudioAsset(Path.Combine("sound", "misc", "soundtrack.ogg")));
+            engine.LoadAsset("sound_soundtrack", new AudioAsset(Path.Combine("sound", "misc", "soundtrack.ogg"), true));
             engine.LoadAsset("sound_levelup", new AudioAsset(Path.Combine("sound", "misc", "levelup.ogg")));
             // base
             engine.LoadAsset("logo", new SpriteAsset("Futuridium.png"));

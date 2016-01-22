@@ -8,8 +8,8 @@ namespace Futuridium.UI
 {
     public sealed class Hud : GameObject
     {
-        private const float FontScale = 0.66f;
-        private const float FontScaleSecondary = 0.66f;
+        private const float FontScale = 0.4f;
+        private const float FontScaleSecondary = 0.4f;
         private const int HudBarWidth = 160;
         private const float HudPadding = 10f;
 
@@ -203,7 +203,7 @@ namespace Futuridium.UI
             };
 
             // Bottom left
-            var seedTextObj = new TextObject(0.5f, Color.White, alpha: 0.66f) // Color.Black
+            var seedTextObj = new TextObject(FontScaleSecondary * 0.66f, Color.White, alpha: 0.66f) // Color.Black
             {
                 Order = Order,
                 Text = "Seed: " + Game.Game.Instance.Random.Seed,
