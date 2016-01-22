@@ -46,7 +46,6 @@ namespace Futuridium.Characters
             Level0.SpellSize = 14;
             Level0.SpellList = defaultSpells;
             Level0.DropModifier = 0f;
-            Level0.Size = 2f;
 
             OnStart += StartEvent;
             OnAfterUpdate += UpdateEvent;

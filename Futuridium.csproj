@@ -34,17 +34,17 @@
     <StartupObject>Futuridium.MainClass</StartupObject>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="aiv-fast2d, Version=1.0.5863.36405, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\aiv-fast2d\aiv-fast2d\bin\Debug\aiv-fast2d.dll</HintPath>
+    <Reference Include="aiv-fast2d, Version=1.0.5864.5000, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>packages\aiv-fast2d-fork.1.0.0\lib\aiv-fast2d.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="aiv-vorbis, Version=1.0.5858.19585, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\aivengine-1\aivengine\bin\Debug\aiv-vorbis.dll</HintPath>
     </Reference>
-    <Reference Include="aivengine, Version=1.0.5859.24433, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\aivengine-1\aivengine\bin\Debug\aivengine.dll</HintPath>
+    <Reference Include="aivengine, Version=1.0.5864.26313, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>packages\aiv-engine-fast2d.1.0.0\lib\aivengine.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="NVorbis">
       <HintPath>..\aivengine-1\aivengine\bin\Debug\NVorbis.dll</HintPath>
