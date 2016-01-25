@@ -45,7 +45,7 @@ namespace Futuridium.World
         public List<Enemy> Enemies { get; private set; }
 
         // usually items dropped on the room
-        public List<GameObject> RoomObjects { get; }
+        public List<GameObject> RoomObjects { get; set; }
 
         public int Width { get; set; }
         public int Height { get; set; }
@@ -72,8 +72,12 @@ namespace Futuridium.World
 
         private void DestroyEvent(object sender)
         {
-            foreach (var obj in RoomObjects)
+            var newObjects = new List<GameObject>();
+            foreach (var obj in RoomObjects) { 
+                newObjects.Add(obj.Clone());
                 obj.Destroy();
+            }
+            RoomObjects = newObjects;
         }
 
         public void RandomizeRoom(int minEnemies, int maxEnemies, int level, Random rnd, CharactersInfo charactersInfo)
@@ -126,7 +130,7 @@ namespace Futuridium.World
                         (int) (Width - enemy.Width - spawnPadding));
                     enemy.Y = rnd.Next(GameBackground.WallHeight + spawnPadding,
                         (int) (Height - enemy.Height - spawnPadding));
-                } while (enemy.CheckCollisions().Count > 0);
+                } while (enemy.HasCollisions());
                 enemy.HitBoxes.Remove("tmp_enemy_" + Name);
             }
 

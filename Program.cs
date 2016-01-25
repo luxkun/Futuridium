@@ -18,7 +18,7 @@ namespace Futuridium
 
         private static void Run(Size size)
         {
-            var engine = new Engine("Futuridium", (int) size.Width, (int) size.Height, 60, false);
+            var engine = new Engine("Futuridium", (int) size.Width, (int) size.Height, 60);
 #if DEBUG
             engine.debugCollisions = true;
 #else

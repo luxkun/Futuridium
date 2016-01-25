@@ -27,25 +27,19 @@ namespace Futuridium.Items
         public string ActivateSound { get; set; }
         public Room Room { get; set; }
 
-        //public override void Start()
-        //{
-        //    base.Start();
-
-        //    //AddHitBox("mass", 0, 0, (int)BaseWidth, (int)BaseHeight);
-        //}
-
         public override void Update()
         {
             base.Update();
             ManageCollisions();
         }
 
-        private void SpawnInfoText()
+        private ItemInfo SpawnInfoText()
         {
             if (Engine.Objects.ContainsKey("infoText"))
                 Engine.Objects["infoText"].Destroy();
             var itemInfo = new ItemInfo(this);
             Engine.SpawnObject(itemInfo);
+            return itemInfo;
         }
 
         private void ManageCollisions()
@@ -60,14 +54,14 @@ namespace Futuridium.Items
                     {
                         player.ApplyEffect(tuple.Item1, tuple.Item2);
                     }
-                    if (ActivateSound != null)
-                        AudioSource.Play(((AudioAsset)Engine.GetAsset("sound_" + ActivateSound)).Clip);
 
                     //Engine.PlaySound("sound_" + ActivateSound);
                     Room.RoomObjects.Remove(this);
                     Destroy();
 
-                    SpawnInfoText();
+                    var infoText = SpawnInfoText();
+                    if (ActivateSound != null)
+                        infoText.AudioSource.Play(((AudioAsset)Engine.GetAsset("sound_" + ActivateSound)).Clip);
                 }
             }
         }
@@ -92,7 +86,7 @@ namespace Futuridium.Items
                 foreach (var animKey in Animations.Keys)
                 {
                     go.Animations[animKey] = Animations[animKey].Clone();
-                    go.Animations[animKey].owner = go;
+                    go.Animations[animKey].Owner = go;
                 }
             }
             go.CurrentAnimation = CurrentAnimation;

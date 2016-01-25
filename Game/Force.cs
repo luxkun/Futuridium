@@ -22,8 +22,7 @@ namespace Futuridium.Game
             var lastPoint = new Vector2(Owner.X, Owner.Y);
             Owner.X += direction.X;
             Owner.Y += direction.Y;
-            // TODO: AnyCollision(delegate) in aiv-engine
-            if (Owner.CheckCollisions().Count > 0)
+            if (Owner.HasCollisions())
             {
                 Owner.X = (int) lastPoint.X;
                 Owner.Y = (int) lastPoint.Y;

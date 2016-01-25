@@ -189,7 +189,7 @@ namespace Futuridium.Characters
                 foreach (var animKey in Animations.Keys)
                 {
                     go.Animations[animKey] = Animations[animKey].Clone();
-                    go.Animations[animKey].owner = go;
+                    go.Animations[animKey].Owner = go;
                 }
             }
             go.CurrentAnimation = CurrentAnimation;

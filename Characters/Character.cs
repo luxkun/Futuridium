@@ -13,16 +13,17 @@ namespace Futuridium.Characters
 {
     public class Character : SpriteObject
     {
+        public delegate void DamageTakenEventHandler(object sender, float delta);
+
         public delegate void EnergyChangedEventHandler(object sender);
 
-        public delegate void HPChangedEventHandler(object sender);
+        public delegate void HpChangedEventHandler(object sender);
 
         public delegate void LevelupEventHandler(object sender);
 
         public delegate void RoomChangedHandler(object sender);
 
-        public delegate void XPChangedEventHandler(object sender, long delta);
-        public delegate void DamageTakenEventHandler(object sender, float delta);
+        public delegate void XpChangedEventHandler(object sender, long delta);
 
         public enum MovingState
         {
@@ -35,8 +36,6 @@ namespace Futuridium.Characters
         }
 
         private readonly List<Force> forces;
-
-        private MovingState _movingState;
 
         protected float delayBeforeActivation = 1.5f;
 
@@ -75,7 +74,7 @@ namespace Futuridium.Characters
 
         public Dictionary<MovingState, Vector2> HitBoxOffSet { get; set; }
         public Dictionary<MovingState, Vector2> HitBoxSize { get; set; }
-        public float RealSpeed { get; set; }
+        public float RealSpeed { get; protected set; }
 
         public long Xp
         {
@@ -122,18 +121,11 @@ namespace Futuridium.Characters
 
         public bool SpawnParticleOnDestroy { get; set; }
 
-        public MovingState movingState
-        {
-            get { return _movingState; }
-            set
-            {
-                _movingState = value;
-                //if (value != MovingState.Inactive)
-                //    UpdateHitBox();
-            }
-        }
+        public MovingState movingState { get; set; }
 
-        public event HPChangedEventHandler OnHpChanged;
+        public Character LastHitCharacter { get; private set; }
+
+        public event HpChangedEventHandler OnHpChanged;
 
         public event EnergyChangedEventHandler OnEnergyChanged;
 
@@ -151,7 +143,7 @@ namespace Futuridium.Characters
             OnRoomChange?.Invoke(this);
         }
 
-        public event XPChangedEventHandler OnXpChanged;
+        public event XpChangedEventHandler OnXpChanged;
 
         public void XpChanged(long delta)
         {
@@ -244,7 +236,7 @@ namespace Futuridium.Characters
                 );
         }
 
-        public Spell Shot(
+        protected Spell Shot(
             Vector2 direction, Func<bool> castCheck = null,
             Func<Spell, Vector2> recalculateDirection = null, bool simulate = false
             )
@@ -323,7 +315,6 @@ namespace Futuridium.Characters
                 //Debug.WriteLine(particleSystem.Name);
                 //Engine.SpawnObject(particleSystem.Name, particleSystem);
             }
-            DropManager.DropAndSpawn(LastHitCharacter);
         }
 
         internal void HpChanged()
@@ -331,7 +322,10 @@ namespace Futuridium.Characters
             OnHpChanged?.Invoke(this);
             Debug.WriteLine($"{Name} hp changed to {Level.Hp}");
             if (Level.Hp <= 0)
+            {
+                DropManager.DropAndSpawn(LastHitCharacter);
                 Destroy();
+            }
         }
 
         // spell hits enemy
@@ -351,7 +345,7 @@ namespace Futuridium.Characters
             if (damage == null)
             {
                 // simple (closecombat usually) damage
-                damage = new Damage(this, enemy) {DamageFunc = (Character ch0, Character ch1) => ch1.Level.Attack};
+                damage = new Damage(this, enemy) {DamageFunc = (ch0, ch1) => ch1.Level.Attack};
             }
 
             enemy.GetDamage(this, damage);
@@ -365,9 +359,9 @@ namespace Futuridium.Characters
             LevelCheck(); // could happen that the player kills the enemy before he fully spawn (before Start "starts")
             enemy.LevelCheck();
             var dmg = damage.Caculate(this, enemy);
-            Level.Hp -= dmg;
 
             LastHitCharacter = enemy;
+            Level.Hp -= dmg;
 
             var floatingText = new FloatingText(this, "-" + (int) dmg, Color.Orange, 0.6f + dmg/300f);
             Engine.SpawnObject(
@@ -381,8 +375,6 @@ namespace Futuridium.Characters
             TookDamage(dmg);
             return Level.Hp;
         }
-
-        public Character LastHitCharacter { get; private set; }
 
         private void BounceBack(Damage damage)
         {
@@ -420,7 +412,8 @@ namespace Futuridium.Characters
             var resultTuple = sprite.CalculateRealHitBox();
             HitBoxOffSet[movingState] = resultTuple.Item1;
             HitBoxSize[movingState] = resultTuple.Item2;
-            Debug.WriteLine($"Calculated real hitbox: {CharacterName}, ({resultTuple.Item1.X},{resultTuple.Item1.Y}) to ({resultTuple.Item2.X},{resultTuple.Item2.Y})");
+            Debug.WriteLine(
+                $"Calculated real hitbox: {CharacterName}, ({resultTuple.Item1.X},{resultTuple.Item1.Y}) to ({resultTuple.Item2.X},{resultTuple.Item2.Y})");
         }
 
         public void CalculateAnimationHitBoxes()

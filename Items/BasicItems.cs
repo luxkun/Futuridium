@@ -24,6 +24,12 @@ namespace Futuridium.Items
 
         public static Item JohnnysMind { get; private set; }
 
+        public static Item ManaStone { get; private set; }
+
+        public static Item EnergyAmulet { get; private set; }
+
+        public static Item DrGregoryHouse { get; private set; }
+
         public static void LoadAssets(Engine engine)
         {
             // items
@@ -45,7 +51,7 @@ namespace Futuridium.Items
                 Effects =
                 {
                     Tuple.Create<Action<Character>, Item.EffectType>(
-                        (Character owner) => owner.Level.Hp += owner.Level.MaxHp*0.07f, Item.EffectType.Instant)
+                        owner => owner.Level.Hp += owner.Level.MaxHp*0.07f, Item.EffectType.Instant)
                 },
                 ItemName = "Minor HP Potion",
                 Description = "Phew there, some health points for you.",
@@ -62,7 +68,7 @@ namespace Futuridium.Items
                 Effects =
                 {
                     Tuple.Create<Action<Character>, Item.EffectType>(
-                        (Character owner) => owner.Level.Hp += owner.Level.MaxHp*0.14f, Item.EffectType.Instant)
+                        owner => owner.Level.Hp += owner.Level.MaxHp*0.14f, Item.EffectType.Instant)
                 },
                 ItemName = "HP Potion",
                 Description = "Feels good!",
@@ -77,7 +83,7 @@ namespace Futuridium.Items
                 Effects =
                 {
                     Tuple.Create<Action<Character>, Item.EffectType>(
-                        (Character owner) => owner.Level.Hp += owner.Level.MaxHp*0.24f, Item.EffectType.Instant)
+                        owner => owner.Level.Hp += owner.Level.MaxHp*0.24f, Item.EffectType.Instant)
                 },
                 ItemName = "Medium HP Potion",
                 Description = "+24% hp",
@@ -92,7 +98,7 @@ namespace Futuridium.Items
                 Effects =
                 {
                     Tuple.Create<Action<Character>, Item.EffectType>(
-                        (Character owner) => owner.Level.Hp += owner.Level.MaxHp*0.4f, Item.EffectType.Instant)
+                        owner => owner.Level.Hp += owner.Level.MaxHp*0.4f, Item.EffectType.Instant)
                 },
                 ItemName = "Big HP Potion",
                 Description = "Gnom gnom gnom gnom",
@@ -102,13 +108,13 @@ namespace Futuridium.Items
             };
 
             // ENERGY
-            var minorEnergyPotionAsset = (SpriteAsset)engine.GetAsset(Utils.GetAssetName("items", 3, 3)[0]);
+            var minorEnergyPotionAsset = (SpriteAsset) engine.GetAsset(Utils.GetAssetName("items", 3, 3)[0]);
             MinorEnergyPotion = new Item(minorEnergyPotionAsset.Width, minorEnergyPotionAsset.Height)
             {
                 Effects =
                 {
                     Tuple.Create<Action<Character>, Item.EffectType>(
-                        (Character owner) => owner.Level.Energy += owner.Level.MaxEnergy*0.07f, Item.EffectType.Instant)
+                        owner => owner.Level.Energy += owner.Level.MaxEnergy*0.07f, Item.EffectType.Instant)
                 },
                 ItemName = "Minor Energy Potion",
                 Description = "Spam time?",
@@ -123,7 +129,7 @@ namespace Futuridium.Items
                 Effects =
                 {
                     Tuple.Create<Action<Character>, Item.EffectType>(
-                        (Character owner) => owner.Level.Energy += owner.Level.MaxEnergy*0.14f, Item.EffectType.Instant)
+                        owner => owner.Level.Energy += owner.Level.MaxEnergy*0.14f, Item.EffectType.Instant)
                 },
                 ItemName = "Energy Potion",
                 Description = "More energy for you",
@@ -138,7 +144,7 @@ namespace Futuridium.Items
                 Effects =
                 {
                     Tuple.Create<Action<Character>, Item.EffectType>(
-                        (Character owner) => owner.Level.Energy += owner.Level.MaxEnergy*0.24f, Item.EffectType.Instant)
+                        owner => owner.Level.Energy += owner.Level.MaxEnergy*0.24f, Item.EffectType.Instant)
                 },
                 ItemName = "Medium Energy Potion",
                 Description = "Mmmhana",
@@ -153,7 +159,7 @@ namespace Futuridium.Items
                 Effects =
                 {
                     Tuple.Create<Action<Character>, Item.EffectType>(
-                        (Character owner) => owner.Level.Energy += owner.Level.MaxEnergy*0.4f, Item.EffectType.Instant)
+                        owner => owner.Level.Energy += owner.Level.MaxEnergy*0.4f, Item.EffectType.Instant)
                 },
                 ItemName = "Big Energy Potion",
                 Description = "Eeeeeeeeeeeeeeeeeeeeeeeenergy!!!",
@@ -168,14 +174,14 @@ namespace Futuridium.Items
             {
                 Effects =
                 {
-                    Tuple.Create<Action<Character>, Item.EffectType>((Character owner) =>
+                    Tuple.Create<Action<Character>, Item.EffectType>(owner =>
                     {
                         owner.Level.Attack *= 1.15f;
                         owner.Level.Luck *= 1.05f;
                         owner.Level.MaxEnergy *= 1.05f;
                         owner.Level.SpellCd *= 0.95f;
                     }, Item.EffectType.Persistent),
-                    Tuple.Create<Action<Character>, Item.EffectType>((Character owner) =>
+                    Tuple.Create<Action<Character>, Item.EffectType>(owner =>
                     {
                         owner.Level.Hp += owner.Level.MaxHp*0.33f;
                         owner.Level.Energy += owner.Level.MaxEnergy*0.33f;
@@ -194,9 +200,9 @@ namespace Futuridium.Items
                 Effects =
                 {
                     Tuple.Create<Action<Character>, Item.EffectType>(
-                        (Character owner) => { owner.Level.Speed *= 1.2f; }, Item.EffectType.Persistent),
+                        owner => { owner.Level.Speed *= 1.2f; }, Item.EffectType.Persistent),
                     Tuple.Create<Action<Character>, Item.EffectType>(
-                        (Character owner) => { owner.Level.Hp += owner.Level.MaxHp*0.1f; }, Item.EffectType.Instant)
+                        owner => { owner.Level.Hp += owner.Level.MaxHp*0.1f; }, Item.EffectType.Instant)
                 },
                 ItemName = "Usain Bolt",
                 Description = "100m in 9.58s",
@@ -210,7 +216,7 @@ namespace Futuridium.Items
             {
                 Effects =
                 {
-                    Tuple.Create<Action<Character>, Item.EffectType>((Character owner) =>
+                    Tuple.Create<Action<Character>, Item.EffectType>(owner =>
                     {
                         var mod = 0.2f;
                         var choose = new Random(Guid.NewGuid().GetHashCode()).Next(6);
@@ -248,7 +254,7 @@ namespace Futuridium.Items
                         owner.LevelManager.AddBuff(buff);
                     }, Item.EffectType.PerRoom),
                     Tuple.Create<Action<Character>, Item.EffectType>(
-                        (Character owner) => { owner.Level.Luck *= 1.1f; }, Item.EffectType.Persistent)
+                        owner => { owner.Level.Luck *= 1.1f; }, Item.EffectType.Persistent)
                 },
                 ItemName = "Johnny's mind",
                 Description = "The random one",
@@ -262,7 +268,7 @@ namespace Futuridium.Items
             {
                 Effects =
                 {
-                    Tuple.Create<Action<Character>, Item.EffectType>((Character owner) =>
+                    Tuple.Create<Action<Character>, Item.EffectType>(owner =>
                     {
                         owner.Level.Attack *= 1.22f;
                         owner.Level.Size += 0.20f;
@@ -270,15 +276,15 @@ namespace Futuridium.Items
                         owner.Level.SpellSize *= 1.25f;
                     }, Item.EffectType.Persistent),
                     Tuple.Create<Action<Character>, Item.EffectType>(
-                        (Character owner) => { owner.Level.Hp -= owner.Level.MaxHp*0.2f; }, Item.EffectType.Instant),
+                        owner => { owner.Level.Hp -= owner.Level.MaxHp*0.2f; }, Item.EffectType.Instant),
                     Tuple.Create<Action<Character>, Item.EffectType>(
-                        (Character owner) => { owner.Level.Hp += owner.Level.MaxHp*0.01f; }, Item.EffectType.PerRoom)
+                        owner => { owner.Level.Hp += owner.Level.MaxHp*0.01f; }, Item.EffectType.PerRoom)
                 },
                 ItemName = "Growth Hormone",
                 Description = "Stimulates growth, cell reproduction, and cell regeneration.",
                 ActivateSound = "powerup",
                 CurrentSprite = growthHormoneAsset,
-                Scale = potionScale * 2f
+                Scale = potionScale*2f
             };
 
             var drGregoryHouseAsset = (SpriteAsset) engine.GetAsset(Utils.GetAssetName("items", 7, 22)[0]);
@@ -286,14 +292,12 @@ namespace Futuridium.Items
             {
                 Effects =
                 {
-                    Tuple.Create<Action<Character>, Item.EffectType>((Character owner) =>
-                    {
-                        owner.Level.MaxHp *= 1.1f;
-                    }, Item.EffectType.Persistent),
                     Tuple.Create<Action<Character>, Item.EffectType>(
-                        (Character owner) => { owner.Level.Hp = owner.Level.MaxHp; }, Item.EffectType.Instant),
+                        owner => { owner.Level.MaxHp *= 1.1f; }, Item.EffectType.Persistent),
                     Tuple.Create<Action<Character>, Item.EffectType>(
-                        (Character owner) => { owner.Level.Hp += owner.Level.MaxHp*0.03f; }, Item.EffectType.PerRoom)
+                        owner => { owner.Level.Hp = owner.Level.MaxHp; }, Item.EffectType.Instant),
+                    Tuple.Create<Action<Character>, Item.EffectType>(
+                        owner => { owner.Level.Hp += owner.Level.MaxHp*0.03f; }, Item.EffectType.PerRoom)
                 },
                 ItemName = "Dr. Gregory House",
                 Description = "Want some vicodin?",
@@ -307,14 +311,13 @@ namespace Futuridium.Items
             {
                 Effects =
                 {
-                    Tuple.Create<Action<Character>, Item.EffectType>((Character owner) =>
-                    {
-                        owner.Level.MaxEnergy *= 1.1f;
-                    }, Item.EffectType.Persistent),
                     Tuple.Create<Action<Character>, Item.EffectType>(
-                        (Character owner) => { owner.Level.Energy = owner.Level.MaxEnergy; }, Item.EffectType.Instant),
+                        owner => { owner.Level.MaxEnergy *= 1.1f; }, Item.EffectType.Persistent),
                     Tuple.Create<Action<Character>, Item.EffectType>(
-                        (Character owner) => { owner.Level.Energy += owner.Level.MaxEnergy*0.03f; }, Item.EffectType.PerRoom)
+                        owner => { owner.Level.Energy = owner.Level.MaxEnergy; }, Item.EffectType.Instant),
+                    Tuple.Create<Action<Character>, Item.EffectType>(
+                        owner => { owner.Level.Energy += owner.Level.MaxEnergy*0.03f; },
+                        Item.EffectType.PerRoom)
                 },
                 ItemName = "Energy Amulet",
                 Description = "You feel full of energy!",
@@ -328,13 +331,14 @@ namespace Futuridium.Items
             {
                 Effects =
                 {
-                    Tuple.Create<Action<Character>, Item.EffectType>((Character owner) =>
+                    Tuple.Create<Action<Character>, Item.EffectType>(owner =>
                     {
                         owner.Level.Attack *= 1.05f;
                         owner.Level.SpellEnergyModifier *= 0.9f;
                     }, Item.EffectType.Persistent),
                     Tuple.Create<Action<Character>, Item.EffectType>(
-                        (Character owner) => { owner.Level.Energy -= owner.Level.MaxEnergy*0.03f; }, Item.EffectType.PerRoom)
+                        owner => { owner.Level.Energy -= owner.Level.MaxEnergy*0.03f; },
+                        Item.EffectType.PerRoom)
                 },
                 ItemName = "Mana Stone",
                 Description = "Mana? What's 'mana'? Why is this thing leeching my energy??",
@@ -343,11 +347,5 @@ namespace Futuridium.Items
                 Scale = potionScale
             };
         }
-
-        public static Item ManaStone { get; private set; }
-
-        public static Item EnergyAmulet { get; private set; }
-
-        public static Item DrGregoryHouse { get; private set; }
     }
 }

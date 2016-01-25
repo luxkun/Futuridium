@@ -108,7 +108,7 @@ namespace Futuridium.Items
             return results;
         }
 
-        public double GlobalDropModifier { get; private set; } = 2f;
+        public double GlobalDropModifier { get; private set; } = 10f;
 
         // (item, max_num_of_drops, perc_of_dropping)
         public class DropTableType : List<Tuple<Item, int, float>>
