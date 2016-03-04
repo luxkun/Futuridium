@@ -125,13 +125,13 @@ namespace Futuridium.Game
                     break;
 
                 case "logo":
-                    if (AnyKeyDown() || (Joystick != null && AnyJoystickButtonPressed()))
+                    if (Engine.AnyKeyDown() || (Joystick != null && AnyJoystickButtonPressed()))
                         StartGame();
                     break;
 
                 case "gameover":
                     if (Timer.Get("gameOverTimer") <= 0 &&
-                        (AnyKeyDown() || (Joystick != null && AnyJoystickButtonPressed())))
+                        (Engine.AnyKeyDown() || (Joystick != null && AnyJoystickButtonPressed())))
                         Engine.IsGameRunning = false;
                     break;
             }
@@ -236,16 +236,6 @@ namespace Futuridium.Game
         {
             return false;
             //return JoystickButtons.Any(button => Joystick.GetButton(JoyStickConfig[button]));
-        }
-
-        public bool AnyKeyDown()
-        {
-            foreach (KeyCode key in Enum.GetValues(typeof (KeyCode)))
-            {
-                if (Engine.IsKeyDown(key))
-                    return true;
-            }
-            return false;
         }
 
         public void CharacterDied(Character character)
@@ -398,7 +388,41 @@ namespace Futuridium.Game
             };
             logoObj.X = Engine.Width/2 - logoObj.Width/2;
             logoObj.Y = Engine.Height/2 - logoObj.Height/2;
+            // game controls text
+            var padding = 3f;
+            var fontSize = 0.66f;
+            var gameControls = new TextObject(fontSize, Color.White);
+            gameControls.Text = "WASD: movements";
+            var gameControlsSize = gameControls.Measure();
+            gameControls.X = Engine.Width/2 - gameControlsSize.X/2;
+            gameControls.Y = logoObj.Y + logoObj.Height + padding;
+            var gameControls2 = new TextObject(fontSize, Color.White);
+            gameControls2.Text = "Arrows+QEZC: shot";
+            var gameControls2Size = gameControls2.Measure();
+            gameControls2.X = Engine.Width / 2 - gameControls2Size.X / 2;
+            gameControls2.Y = gameControls.Y + gameControlsSize.Y + padding;
+            var gameControls3 = new TextObject(fontSize, Color.White);
+            gameControls3.Text = "F: change spell";
+            var gameControls3Size = gameControls3.Measure();
+            gameControls3.X = Engine.Width / 2 - gameControls3Size.X / 2;
+            gameControls3.Y = gameControls2.Y + gameControls2Size.Y + padding;
+            var gameControls4 = new TextObject(fontSize, Color.White);
+            gameControls4.Text = "M: map - Esc: pause";
+            var gameControls4Size = gameControls4.Measure();
+            gameControls4.X = Engine.Width / 2 - gameControls4Size.X / 2;
+            gameControls4.Y = gameControls3.Y + gameControls3Size.Y + padding;
+            var continueText = new TextObject(fontSize, Color.White);
+            continueText.Text = "Press anything to play!";
+            var continueTextSize = continueText.Measure();
+            continueText.X = Engine.Width / 2 - continueTextSize.X / 2;
+            continueText.Y = Engine.Height -padding - continueTextSize.Y;
+
             Engine.SpawnObject("logo", logoObj);
+            Engine.SpawnObject("logo_controls", gameControls);
+            Engine.SpawnObject("logo_controls2", gameControls2);
+            Engine.SpawnObject("logo_controls3", gameControls3);
+            Engine.SpawnObject("logo_controls4", gameControls4);
+            Engine.SpawnObject("logo_continueText", continueText);
             MainWindow = "logo";
 
             BasicItems.Initialize(Engine);

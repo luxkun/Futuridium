@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Windows;
 using Aiv.Engine;
 using Futuridium.Characters;
@@ -14,6 +15,7 @@ namespace Futuridium
         {
             var size = new Size(1280, 720);
             Run(size);
+            Environment.Exit(0);
         }
 
         private static void Run(Size size)

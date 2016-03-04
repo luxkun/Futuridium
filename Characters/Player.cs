@@ -35,21 +35,28 @@ namespace Futuridium.Characters
             Name = "Player";
             Order = 7;
 
-            Level0.MaxHp = 423;
-            Level0.MaxEnergy = 100;
-            Level0.Speed = 150;
-            Level0.SpellCd = 1.1f;
-            Level0.Attack = 25;
-            Level0.NeededXp = 100;
-            Level0.SpellSpeed = 200f;
-            Level0.SpellRange = 400;
-            Level0.SpellSize = 14;
+            Level0.MaxHp = 1000;
+            Level0.MaxEnergy = 200;
+            Level0.Speed = 175;
+            Level0.SpellCd = 1f;
+            Level0.Attack = 35;
+            Level0.NeededXp = 75;
+            Level0.SpellSpeed = 250f;
+            Level0.SpellRange = 450;
+            Level0.SpellSize = 15;
             Level0.SpellList = defaultSpells;
             Level0.DropModifier = 0f;
+            Level0.Luck = 1.5f;
 
             OnStart += StartEvent;
             OnAfterUpdate += UpdateEvent;
             OnLevelup += LevelUpEvent;
+            OnRoomChange += RoomChangeEvent;
+        }
+
+        private void RoomChangeEvent(object sender)
+        {
+            ManageCamera(false);
         }
 
         public static Player Instance { get; private set; }
@@ -346,7 +353,7 @@ namespace Futuridium.Characters
             }
         }
 
-        private void ManageCamera()
+        private void ManageCamera(bool lerp = true)
         {
             // center on the player
             var cameraX = X - Width/2 - Engine.Width/2;
@@ -362,8 +369,15 @@ namespace Futuridium.Characters
                 cameraY = 0;
             if (cameraY > room.Height - Engine.Height)
                 cameraY = room.Height - Engine.Height;
-            Engine.Camera.X = cameraX;
-            Engine.Camera.Y = cameraY;
+            Vector2 camera;
+            if (lerp)
+                camera = Vector2.Lerp(
+                    new Vector2(Engine.Camera.X, Engine.Camera.Y),
+                    new Vector2(cameraX, cameraY), DeltaTime*2f);
+            else
+                camera = new Vector2(cameraX, cameraY);
+            Engine.Camera.X = camera.X;
+            Engine.Camera.Y = camera.Y;
             //Debug.WriteLine($"{Engine.Camera.X},{Engine.Camera.Y}");
         }
 
